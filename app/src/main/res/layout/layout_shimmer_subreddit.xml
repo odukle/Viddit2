@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/s1"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="20dp"
+        android:src="@color/grey"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:shapeAppearance="@style/ImageViewShape50" />
+
+    <com.google.android.material.imageview.ShapeableImageView
+        app:shapeAppearance="@style/ImageViewShape50"
+        android:src="@color/grey"
+        android:id="@+id/s2"
+        android:layout_width="0dp"
+        android:layout_height="30dp"
+        android:layout_marginStart="20dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/s1"
+        app:layout_constraintTop_toTopOf="@+id/s1" />
+
+    <com.google.android.material.imageview.ShapeableImageView
+        app:shapeAppearance="@style/ImageViewShape50"
+        android:src="@color/grey"
+        android:id="@+id/s3"
+        android:layout_width="0dp"
+        android:layout_height="20dp"
+        android:layout_marginTop="10dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/s2"
+        app:layout_constraintTop_toBottomOf="@+id/s2" />
+
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/tv_members2"
+        android:layout_width="0dp"
+        android:layout_height="20dp"
+        android:src="@color/grey"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="10dp"
+        app:layout_constraintStart_toStartOf="@+id/s3"
+        app:layout_constraintTop_toBottomOf="@+id/s3"
+        app:shapeAppearance="@style/ImageViewShape50" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
