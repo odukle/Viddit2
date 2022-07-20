@@ -1,27 +1,34 @@
 package com.odukle.viddit.adapters
 
 import android.annotation.SuppressLint
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.util.Log
 import android.view.*
+import androidx.appcompat.widget.ThemedSpinnerAdapter
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
+import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.util.MimeTypes
 import com.google.android.gms.ads.*
 import com.google.android.gms.ads.nativead.NativeAd
+import com.google.android.material.snackbar.Snackbar
 import com.odukle.viddit.MainActivity
 import com.odukle.viddit.R
+import com.odukle.viddit.fragments.FragmentHome
 import com.odukle.viddit.fragments.SubredditFragment
+import com.odukle.viddit.models.AboutPost
 import com.odukle.viddit.models.SubReddit
 import com.odukle.viddit.utils.*
 import kotlinx.android.synthetic.main.item_view_ad.view.*
 import kotlinx.android.synthetic.main.item_view_video.view.*
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import net.dean.jraw.RedditClient
 import net.dean.jraw.models.Submission
 import net.dean.jraw.models.VoteDirection
 
@@ -39,6 +46,7 @@ class VideoAdapter(var vList: MutableList<Any>) :
     private lateinit var adLoader: AdLoader
     private var nativeAd: MutableLiveData<NativeAd?> = MutableLiveData(null)
     private var loadAds: Runnable
+    var content: String = FRONT_PAGE
 
     init {
         loadAds = Runnable { setUpAds() }
@@ -79,27 +87,38 @@ class VideoAdapter(var vList: MutableList<Any>) :
     override fun onViewAttachedToWindow(holder: RecyclerView.ViewHolder) {
         if (getItemViewType(holder.bindingAdapterPosition) == ITEM_VIDEO) {
             holder as VideoAdapter.VideoViewHolder
+            (getCurrentFragment(activity) as FragmentHome).onShowChips()
             val post = vList[holder.bindingAdapterPosition] as Submission
             if (holder.playerReleased) setupPlayer(holder, post)
-            if (firstRun) {
-                try {
-                    holder.player.play()
-                } catch (e: Exception) {
-                    runAfter(100) {
+            if (!post.isNsfw || (post.isNsfw && nsfwAllowed(activity))) {
+                if (firstRun) {
+                    try {
+                        activity.pauseAllPlayers()
                         holder.player.play()
+                    } catch (e: Exception) {
+                        runAfter(100) {
+                            holder.player.play()
+                        }
+                    }
+                    firstRun = false
+                }
+
+                playOnDetach = Runnable {
+                    if (!holder.playerReleased) {
+                        if (holder.player.isLoading) holder.player.playWhenReady = true
+                        else {
+                            activity.pauseAllPlayers()
+                            holder.player.play()
+                        }
+                        activity.onPlayerAcquired(holder.player)
                     }
                 }
-                firstRun = false
+            } else {
+                if (holder.isPlayerInitialized()) holder.player.pause()
+                holder.itemView.layout_nsfw.show()
             }
-
-
-            playOnDetach = Runnable {
-                if (!holder.playerReleased) {
-                    if (holder.player.isLoading) holder.player.playWhenReady = true
-                    else holder.player.play()
-                    activity.onPlayerAcquired(holder.player)
-                }
-            }
+        } else {
+            (getCurrentFragment(activity) as FragmentHome).onHideChips()
         }
 
 
@@ -108,18 +127,18 @@ class VideoAdapter(var vList: MutableList<Any>) :
 
     override fun onViewDetachedFromWindow(holder: RecyclerView.ViewHolder) {
         if (getItemViewType(holder.bindingAdapterPosition) == ITEM_VIDEO) {
-            holder as VideoViewHolder
-            val releasePlayer = Runnable {
-                holder.player.pause()
-                activity.release(holder.player)
-                holder.playerReleased = true
-            }
+            if (holder is VideoViewHolder) {
+                val releasePlayer = Runnable {
+                    holder.player.pause()
+                    activity.release(holder.player)
+                    holder.playerReleased = true
+                }
 
-            if (holder.isPlayerInitialized()) releasePlayer.run()
-            else runAfter(100) {
                 if (holder.isPlayerInitialized()) releasePlayer.run()
+                else runAfter(100) {
+                    if (holder.isPlayerInitialized()) releasePlayer.run()
+                }
             }
-
         }
         try {
             playOnDetach.run()
@@ -134,7 +153,7 @@ class VideoAdapter(var vList: MutableList<Any>) :
     }
 
     override fun getItemViewType(position: Int): Int {
-        return if (position != 0 && position % 5 == 0) ITEM_AD else ITEM_VIDEO
+        return if (position != 0 && position % AD_DIST == 0) ITEM_AD else ITEM_VIDEO
     }
 
 
@@ -143,6 +162,8 @@ class VideoAdapter(var vList: MutableList<Any>) :
 
         val player = activity.acquire()
         holder.player = player
+        holder.addPlayBackListener(holder.player)
+        holder.setMute(holder.player)
         holder.playerReleased = false
         player.repeatMode = ExoPlayer.REPEAT_MODE_ONE
         playerView.controllerAutoShow = false
@@ -158,11 +179,12 @@ class VideoAdapter(var vList: MutableList<Any>) :
             player.setMediaItem(mediaItem)
             player.prepare()
         } else {
-            Log.d(TAG, "setupPlayer: ${holder.bindingAdapterPosition} is a gif")
             holder.itemView.gif_loader.show()
             holder.gifJob?.cancel()
             holder.gifJob = ioScope().launch {
                 holder.gifMp4 = getGifMp4(post.permalink, activity.client).second
+                Log.d(TAG, "setupPlayer: ${holder.gifMp4}")
+                Log.d(TAG, "setupPlayer: ${post.postHint}")
                 if (holder.playerReleased) return@launch
                 mainScope().launch {
                     val mimeType = MimeTypes.APPLICATION_MP4
@@ -180,33 +202,44 @@ class VideoAdapter(var vList: MutableList<Any>) :
         }
 
         playerView.setControllerVisibilityListener {
-            if (it == View.VISIBLE) {
-                holder.itemView.layout_stats.hide()
-                holder.itemView.layout_subreddit_n_desc.hide()
-                holder.itemView.layout_user.hide()
-            } else {
-                holder.itemView.layout_stats.show()
-                holder.itemView.layout_subreddit_n_desc.show()
-                holder.itemView.layout_user.show()
+            holder.itemView.apply {
+                if (it == View.VISIBLE) {
+                    layout_stats.hide()
+                    layout_subreddit_n_desc.hide()
+                    layout_user.hide()
+                    btn_toggle_play.show()
+                    if (post.isNsfw && nsfwAllowed(activity)) uncheck_nsfw.show()
+                    btn_mute.show()
+                } else {
+                    layout_stats.show()
+                    layout_subreddit_n_desc.show()
+                    layout_user.show()
+                    btn_toggle_play.hide()
+                    uncheck_nsfw.hide()
+                    btn_mute.hide()
+                }
             }
         }
     }
 
     private fun setVote(post: Submission, holder: VideoAdapter.VideoViewHolder) {
-        holder.itemView.apply {
-            try {
-                if (post.vote == VoteDirection.UP) {
-                    activity.runOnUiThread {
-                        iv_upvotes.setImageResource(R.drawable.ic_upvote_red)
-                        tv_upvotes.setTextColor(activity.getColor(R.color.orange))
+        ioScope().launch {
+            holder.itemView.apply {
+                try {
+                    val submission = activity.reddit.submission(post.id).inspect()
+                    if (submission.vote == VoteDirection.UP) {
+                        activity.runOnUiThread {
+                            iv_upvotes.setImageResource(R.drawable.ic_upvote_red)
+                            tv_upvotes.setTextColor(activity.getColor(R.color.orange))
+                        }
+                    } else {
+                        activity.runOnUiThread {
+                            iv_upvotes.setImageResource(R.drawable.ic_upvote)
+                            tv_upvotes.setTextColor(activity.getColor(R.color.white))
+                        }
                     }
-                } else {
-                    activity.runOnUiThread {
-                        iv_upvotes.setImageResource(R.drawable.ic_upvote)
-                        tv_upvotes.setTextColor(activity.getColor(R.color.white))
-                    }
+                } catch (e: IllegalStateException) {
                 }
-            } catch (e: IllegalStateException) {
             }
         }
     }
@@ -292,8 +325,8 @@ class VideoAdapter(var vList: MutableList<Any>) :
         fun populateViewHolder(post: Submission) {
             itemView.apply {
                 gif_loader.hide()
-                tv_comments.text = post.commentCount.toString()
-                tv_upvotes.text = bindingAdapterPosition.toString()
+                tv_comments.text = truncateNumber(post.commentCount.toFloat())
+                tv_upvotes.text = truncateNumber(post.score.toFloat())
                 tv_user.text = "u/" + post.author + " • " + post.created.time.toTimeAgo()
                 tv_title.text = post.title
                 tv_full_title.text = post.title
@@ -311,7 +344,170 @@ class VideoAdapter(var vList: MutableList<Any>) :
 
                 arrayOf(tv_subreddit, iv_icon_sr).forEach { view ->
                     view.setOnClickListener {
-                        activity.openFragment(SubredditFragment.newInstance(post.subreddit))
+                        activity.onOpenFragment(SubredditFragment.newInstance(post.subreddit))
+                    }
+                }
+
+                arrayOf(tv_user, iv_user_icon).forEach {
+                    it.setOnClickListener {
+                        activity.onOpenFragment(SubredditFragment.newInstance(post.author, true))
+                    }
+                }
+
+                tv_title.setOnClickListener {
+                    tv_title.hide()
+                    tv_full_title.show()
+                }
+
+                tv_full_title.setOnClickListener {
+                    tv_full_title.hide()
+                    tv_title.show()
+                }
+
+                btn_watch_anyway.setOnClickListener {
+                    layout_nsfw.hide()
+                    player.play()
+                    if (check_nsfw.isChecked) {
+                        allowNSFW(activity)
+                    }
+                }
+
+                uncheck_nsfw.setOnCheckedChangeListener { _, isChecked ->
+                    if (isChecked) {
+                        doNotAllowNSFW(activity)
+                        check_nsfw.isChecked = false
+                        layout_nsfw.show()
+                        player.pause()
+                    } else allowNSFW(activity)
+                }
+
+                arrayOf(iv_upvotes, tv_upvotes).forEach {
+                    it.setOnClickListener {
+                        vote(VoteDirection.UP, activity.reddit, post.id, post.score, this@VideoViewHolder)
+                    }
+                }
+
+                iv_downvote.setOnClickListener {
+                    vote(VoteDirection.DOWN, activity.reddit, post.id, post.score, this@VideoViewHolder)
+                }
+
+                btn_toggle_play.setOnClickListener {
+                    if (player.isPlaying) {
+                        player.pause()
+                    } else {
+                        player.play()
+                    }
+                }
+
+                btn_mute.setOnClickListener {
+                    if (player.volume > 0f) {
+                        player.volume = 0f
+                        btn_mute.setImageResource(R.drawable.ic_mute)
+                        activity.playOnMute = true
+                    } else {
+                        player.volume = 1f
+                        btn_mute.setImageResource(R.drawable.ic_volume)
+                        activity.playOnMute = false
+                    }
+                }
+
+                iv_download.setOnClickListener {
+                    iv_download.bounce()
+                    if (activity.checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
+                        activity.tempPost = post
+                        activity.tempHolder = this@VideoViewHolder
+                        activity.requestPermissions(
+                            arrayOf(android.Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                            111
+                        )
+                    } else {
+                        activity.onStartDownloading(post, this@VideoViewHolder)
+                    }
+                }
+
+                iv_comments.setOnClickListener {
+                    (getCurrentFragment(activity) as FragmentHome).showComments(post.permalink)
+                }
+            }
+        }
+
+        fun addPlayBackListener(player: ExoPlayer) {
+            player.addListener(object : Player.Listener {
+                override fun onIsPlayingChanged(isPlaying: Boolean) {
+                    if (isPlaying) {
+                        itemView.btn_toggle_play.setImageResource(R.drawable.ic_pause)
+                    } else {
+                        itemView.btn_toggle_play.setImageResource(R.drawable.ic_round_play_circle_filled_24)
+                    }
+                    super.onIsPlayingChanged(isPlaying)
+                }
+            })
+        }
+
+        fun setMute(player: ExoPlayer) {
+            if (activity.playOnMute) {
+                player.volume = 0f
+                itemView.btn_mute.setImageResource(R.drawable.ic_mute)
+            } else {
+                player.volume = 1f
+                itemView.btn_mute.setImageResource(R.drawable.ic_volume)
+            }
+        }
+    }
+
+
+    private fun vote(
+        dir: VoteDirection,
+        reddit: RedditClient?,
+        id: String,
+        score: Int,
+        holder: VideoAdapter.VideoViewHolder
+    ) {
+        holder.itemView.apply {
+            val strVote = if (dir == VoteDirection.UP) "upvote" else "downvote"
+            val strVoted = if (dir == VoteDirection.UP) "Upvoted" else "Downvoted"
+            val tv = if (dir == VoteDirection.UP) tv_upvotes else null
+            val iv = if (dir == VoteDirection.UP) iv_upvotes else iv_downvote
+            val tvEx = if (dir == VoteDirection.UP) null else tv_upvotes
+            val ivEx = if (dir == VoteDirection.UP) iv_downvote else iv_upvotes
+            val src = if (dir == VoteDirection.UP) R.drawable.ic_upvote else R.drawable.ic_downvote
+            val srcEx = if (dir == VoteDirection.UP) R.drawable.ic_downvote else R.drawable.ic_upvote
+            val srcRed = if (dir == VoteDirection.UP) R.drawable.ic_upvote_red else R.drawable.ic_downvote_red
+            if (reddit == null) {
+                holder.player.pause()
+                Snackbar.make(rootView, "Sign in to $strVote", Snackbar.LENGTH_SHORT)
+                    .setAction("Sign in") { activity.startSignIn() }.show()
+            } else {
+                ioScope().launch {
+                    shortToast(activity, "Voting...")
+                    val submission = reddit.submission(id)
+                    val voteDir = submission.inspect().vote
+                    if (voteDir != dir) {
+                        //change vote image color
+                        mainScope().launch {
+                            shortToast(activity, strVoted)
+                            iv.setImageResource(srcRed)
+                            tv?.setTextColor(activity.getColor(R.color.orange))
+                            iv.bounce(); tv?.bounce()
+                            if (voteDir != VoteDirection.NONE) {
+                                ivEx.setImageResource(srcEx)
+                                tvEx?.setTextColor(activity.getColor(R.color.white))
+                            }
+                            tv_upvotes.text = if (dir == VoteDirection.DOWN) (score-1).toString() else (score+1).toString()
+                        }
+                        //upvote
+                        submission.setVote(dir)
+                    } else {
+                        //change vote image color
+                        mainScope().launch {
+                            shortToast(activity, "Removed $strVote")
+                            iv.setImageResource(src)
+                            iv.bounce(); tv?.bounce()
+                            tv?.setTextColor(activity.getColor(R.color.white))
+                            tv_upvotes.text = if (dir == VoteDirection.DOWN) (score+1).toString() else (score-1).toString()
+                        }
+                        //remove vote
+                        submission.setVote(VoteDirection.NONE)
                     }
                 }
             }
@@ -320,8 +516,20 @@ class VideoAdapter(var vList: MutableList<Any>) :
 
     inner class AdViewHolder(view: View) : RecyclerView.ViewHolder(view)
 
-    interface OnAdapterCallback {
+    interface OnCallback {
         fun onLoadMoreData()
+        fun onStartDownloading(
+            post: Submission?,
+            holder: VideoAdapter.VideoViewHolder?,
+            aboutPost: AboutPost? = null,
+            bsdView: View? = null
+        )
+    }
+
+    interface OnFragmentCallback {
+        fun onHideChips()
+        fun onShowChips()
+        fun showComments(permalink: String)
     }
 
     interface OnPlayerAcquired {

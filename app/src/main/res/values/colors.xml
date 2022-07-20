@@ -10,4 +10,5 @@
     <color name="orange">#ff4500</color>
     <color name="grey">#BBBBBB</color>
     <color name="window_bg_dark">#151516</color>
+    <color name="chipBg">#19FFFFFF</color>
 </resources>

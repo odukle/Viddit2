@@ -5,7 +5,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.Nullable
-import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.DataSource
@@ -15,24 +14,30 @@ import com.bumptech.glide.request.target.Target
 import com.odukle.viddit.MainActivity
 import com.odukle.viddit.R
 import com.odukle.viddit.fragments.FragmentHome
-import com.odukle.viddit.utils.HOT
-import com.odukle.viddit.utils.hide
-import com.odukle.viddit.utils.show
-import com.squareup.moshi.JsonAdapter
-import com.squareup.moshi.Moshi
+import com.odukle.viddit.fragments.SubredditFragment
+import com.odukle.viddit.utils.*
 import com.squareup.moshi.Types
 import kotlinx.android.synthetic.main.item_view_subreddit.view.*
+import kotlinx.coroutines.launch
 import net.dean.jraw.JrawUtils
 import net.dean.jraw.models.Submission
+import net.dean.jraw.pagination.DefaultPaginator
 import java.lang.reflect.Type
+import kotlin.properties.Delegates
 
-class SubredditAdapter(var vList: MutableList<Submission>, val sorting: String = HOT) : RecyclerView.Adapter<SubredditAdapter.SRViewHolder>() {
+class SubredditAdapter(
+    var vList: MutableList<Submission>,
+    val sorting: String = HOT,
+) : RecyclerView.Adapter<SubredditAdapter.SRViewHolder>() {
 
     lateinit var activity: MainActivity
+    var pages: DefaultPaginator<Submission>? = null
 
     inner class SRViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
         fun populateViewHolder(post: Submission, position: Int) {
+
+
             itemView.apply {
                 Glide.with(this)
                     .load(post.thumbnail)
@@ -41,14 +46,14 @@ class SubredditAdapter(var vList: MutableList<Submission>, val sorting: String =
                     .into(iv_thumb)
 
                 iv_thumb.setOnClickListener {
-                    val type: Type = Types.newParameterizedType(
+                    val typeList: Type = Types.newParameterizedType(
                         MutableList::class.java,
                         Submission::class.java
                     )
 
-                    val jsonAdapter = JrawUtils.moshi.adapter<MutableList<Submission>>(type).serializeNulls()
-                    val jsonList = jsonAdapter.toJson(vList)
-                    activity.onOpenFragment(FragmentHome.newInstance(false, jsonList, position, post.subreddit, sorting))
+                    val jsonListAdapter = JrawUtils.moshi.adapter<MutableList<Submission>>(typeList).serializeNulls()
+                    val jsonList = jsonListAdapter.toJson(vList)
+                    activity.onOpenFragment(FragmentHome.newInstance(FOR_SUBREDDIT, jsonList, position, post.subreddit, sorting))
                 }
             }
         }
@@ -100,10 +105,6 @@ class SubredditAdapter(var vList: MutableList<Submission>, val sorting: String =
                 return false
             }
         }
-    }
-
-    interface OnOpenFragment {
-        fun onOpenFragment(fragment: Fragment)
     }
 
     interface OnLoadMoreDataSR {

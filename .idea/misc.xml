@@ -3,6 +3,7 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/Users/91942/Desktop/Flutter/Viddit2/app/src/main/res/drawable/bottom_navigation_selector.xml" value="0.2205" />
         <entry key="..\:/Users/91942/Desktop/Flutter/Viddit2/app/src/main/res/drawable/ic_add.xml" value="0.203" />
         <entry key="..\:/Users/91942/Desktop/Flutter/Viddit2/app/src/main/res/drawable/ic_comment.xml" value="0.203" />
         <entry key="..\:/Users/91942/Desktop/Flutter/Viddit2/app/src/main/res/drawable/ic_download.xml" value="0.203" />
@@ -10,14 +11,21 @@
         <entry key="..\:/Users/91942/Desktop/Flutter/Viddit2/app/src/main/res/drawable/ic_share.xml" value="0.203" />
         <entry key="..\:/Users/91942/Desktop/Flutter/Viddit2/app/src/main/res/drawable/ic_upvote.xml" value="0.203" />
         <entry key="..\:/Users/91942/Desktop/Flutter/Viddit2/app/src/main/res/layout/activity_main.xml" value="0.23229166666666667" />
+        <entry key="..\:/Users/91942/Desktop/Flutter/Viddit2/app/src/main/res/layout/bottom_sheet_comments.xml" value="0.23125" />
+        <entry key="..\:/Users/91942/Desktop/Flutter/Viddit2/app/src/main/res/layout/bottom_sheet_download.xml" value="0.23125" />
+        <entry key="..\:/Users/91942/Desktop/Flutter/Viddit2/app/src/main/res/layout/bottom_sheet_subreddits_cf.xml" value="0.23229166666666667" />
+        <entry key="..\:/Users/91942/Desktop/Flutter/Viddit2/app/src/main/res/layout/bottomsheet_cf.xml" value="0.23125" />
         <entry key="..\:/Users/91942/Desktop/Flutter/Viddit2/app/src/main/res/layout/fragment_custom_feeds.xml" value="0.23229166666666667" />
         <entry key="..\:/Users/91942/Desktop/Flutter/Viddit2/app/src/main/res/layout/fragment_discover.xml" value="0.23229166666666667" />
         <entry key="..\:/Users/91942/Desktop/Flutter/Viddit2/app/src/main/res/layout/fragment_home.xml" value="0.23229166666666667" />
-        <entry key="..\:/Users/91942/Desktop/Flutter/Viddit2/app/src/main/res/layout/fragment_subreddit.xml" value="0.21822916666666667" />
+        <entry key="..\:/Users/91942/Desktop/Flutter/Viddit2/app/src/main/res/layout/fragment_subreddit.xml" value="0.264" />
         <entry key="..\:/Users/91942/Desktop/Flutter/Viddit2/app/src/main/res/layout/item_view_ad.xml" value="0.23229166666666667" />
+        <entry key="..\:/Users/91942/Desktop/Flutter/Viddit2/app/src/main/res/layout/item_view_search.xml" value="0.23125" />
         <entry key="..\:/Users/91942/Desktop/Flutter/Viddit2/app/src/main/res/layout/item_view_subreddit.xml" value="0.23125" />
+        <entry key="..\:/Users/91942/Desktop/Flutter/Viddit2/app/src/main/res/layout/item_view_subreddits_cf.xml" value="0.23125" />
         <entry key="..\:/Users/91942/Desktop/Flutter/Viddit2/app/src/main/res/layout/item_view_video.xml" value="0.23229166666666667" />
         <entry key="..\:/Users/91942/Desktop/Flutter/Viddit2/app/src/main/res/layout/layout_shimmer_subreddit.xml" value="0.23125" />
+        <entry key="..\:/Users/91942/Desktop/Flutter/Viddit2/app/src/main/res/layout/shimmer_for_reddit_comments.xml" value="0.18974358974358974" />
         <entry key="..\:/Users/91942/Desktop/Flutter/Viddit2/app/src/main/res/menu/bottom_navigation_menu.xml" value="0.23229166666666667" />
         <entry key="..\:/Users/91942/Desktop/Flutter/Viddit2/nativetemplates/src/main/res/drawable/gnt_button_round.xml" value="0.203" />
         <entry key="..\:/Users/91942/Desktop/Flutter/Viddit2/nativetemplates/src/main/res/drawable/gnt_outline_shape.xml" value="0.203" />

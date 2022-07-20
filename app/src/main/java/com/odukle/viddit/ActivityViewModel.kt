@@ -8,8 +8,7 @@ import net.dean.jraw.pagination.DefaultPaginator
 import net.dean.jraw.references.SubredditReference
 
 class ActivityViewModel : ViewModel() {
-    var pages: DefaultPaginator<Submission>? = null
-    var subredditRef: SubredditReference? = null
+    var srPages: DefaultPaginator<Submission>? = null
     var prevSubredditName = ""
     val vList = mutableListOf<Submission>()
     var srPosition: Int = 0
