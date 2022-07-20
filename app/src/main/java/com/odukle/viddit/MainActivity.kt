@@ -1,10 +1,19 @@
 package com.odukle.viddit
 
+import android.app.DownloadManager
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.util.Log
+import android.view.LayoutInflater
+import android.view.View
 import android.webkit.CookieManager
 import android.webkit.WebSettings
 import android.webkit.WebView
@@ -13,17 +22,23 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.MutableLiveData
+import com.bumptech.glide.Glide
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.gms.ads.MobileAds
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.odukle.viddit.adapters.SubredditAdapter
 import com.odukle.viddit.adapters.VideoAdapter
 import com.odukle.viddit.fragments.FragmentCustomFeeds
 import com.odukle.viddit.fragments.FragmentDiscover
 import com.odukle.viddit.fragments.FragmentHome
 import com.odukle.viddit.fragments.SubredditFragment
+import com.odukle.viddit.interfaces.OpenFragment
+import com.odukle.viddit.models.AboutPost
 import com.odukle.viddit.utils.*
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.bottom_sheet_download.view.*
+import kotlinx.android.synthetic.main.item_view_video.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -31,6 +46,7 @@ import kotlinx.coroutines.launch
 import net.dean.jraw.RedditClient
 import net.dean.jraw.http.OkHttpNetworkAdapter
 import net.dean.jraw.http.UserAgent
+import net.dean.jraw.models.Submission
 import net.dean.jraw.oauth.StatefulAuthHelper
 import okhttp3.OkHttpClient
 
@@ -41,10 +57,14 @@ class MainActivity : AppCompatActivity(),
     ExoPool,
     VideoAdapter.OnPlayerAcquired,
     FragmentHome.OnFragmentStateChanged,
-    SubredditAdapter.OnOpenFragment,
-    VideoAdapter.OnAdapterCallback,
+    OpenFragment,
+    VideoAdapter.OnCallback,
     SubredditAdapter.OnLoadMoreDataSR {
 
+    private var downloadedUri: Uri? = null
+    var tempPost: Submission? = null
+    var tempHolder: VideoAdapter.VideoViewHolder? = null
+    var playOnMute = false
     private lateinit var networkAdapter: OkHttpNetworkAdapter
     private lateinit var authHelper: StatefulAuthHelper
     var redditLive = MutableLiveData<RedditClient>()
@@ -66,22 +86,26 @@ class MainActivity : AppCompatActivity(),
         bottom_navigation.setOnItemSelectedListener {
             when (it.itemId) {
                 R.id.home -> {
-                    if (getCurrentFragment() !is FragmentHome) {
+                    if (bottom_navigation.selectedItemId != R.id.home) {
                         openFragment(FragmentHome.newInstance())
                     }
                 }
                 R.id.discover -> {
-                    openFragment(FragmentDiscover.newInstance())
+                    if (getCurrentFragment(this) !is FragmentDiscover) {
+                        openFragment(FragmentDiscover.newInstance())
+                    }
                 }
                 R.id.custom_feed -> {
-                    openFragment(FragmentCustomFeeds.newInstance())
+                    if (getCurrentFragment(this) !is FragmentCustomFeeds) {
+                        openFragment(FragmentCustomFeeds.newInstance())
+                    }
                 }
             }
             true
         }
     }
 
-    fun openFragment(fragment: Fragment) {
+    private fun openFragment(fragment: Fragment) {
         val tag = when (fragment) {
             is FragmentHome -> FragmentHome::class.simpleName
             is FragmentDiscover -> FragmentDiscover::class.simpleName
@@ -142,7 +166,10 @@ class MainActivity : AppCompatActivity(),
                         reddit = authHelper.onUserChallenge(url)
                         reddit.autoRenew = true
                         reddit.authManager.refreshToken?.let {
-                            reddit.authManager.current?.let { it1 -> App.tokenStore.storeLatest(reddit.authManager.currentUsername(), it1) }
+                            reddit.authManager.current?.let { it1 ->
+                                App.tokenStore.clear()
+                                App.tokenStore.storeLatest(reddit.authManager.currentUsername(), it1)
+                            }
                             App.tokenStore.storeRefreshToken(reddit.authManager.currentUsername(), it)
                         }
                         mainScope().launch {
@@ -211,8 +238,82 @@ class MainActivity : AppCompatActivity(),
         }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
+    override fun onNewIntent(intent: Intent?) {
+        if (intent != null) {
+            if (intent.action == Intent.ACTION_SEND) {
+                handleIntent(intent)
+            }
+        }
+        super.onNewIntent(intent)
+    }
+
+    private fun handleIntent(intent: Intent) {
+        val link = intent.getStringExtra(Intent.EXTRA_TEXT)
+        if (link != null) {
+            if (link.contains("reddit.com")) {
+                val dialog = BottomSheetDialog(this)
+                val view = LayoutInflater.from(this).inflate(R.layout.bottom_sheet_download, null, false)
+                dialog.setContentView(view)
+                dialog.show()
+                try {
+                    view.apply {
+                        ioScope().launch {
+                            val post = getAboutPost(link, this@MainActivity)
+                            val subreddit = getSubredditInfo(post.subreddit, client)
+                            mainScope().launch {
+                                tv_title_bsd.text = post.title
+                                Glide.with(this@apply).load(post.image).centerCrop().into(iv_thumb_bsd)
+                                chip_subreddit_bsd.text = "Go to ${post.subreddit}"
+                                onStartDownloading(null, null, post, this@apply)
+
+                                chip_subreddit_bsd.setOnClickListener {
+                                    if (isOnline(this@MainActivity)) {
+                                        shortToast(this@MainActivity, "No internet 😔")
+                                        return@setOnClickListener
+                                    }
+
+                                    dialog.dismiss()
+                                    mainScope().launch {
+                                        val fragment = SubredditFragment.newInstance(subreddit.title)
+                                        openFragment(fragment)
+                                    }
+                                }
+
+                                iv_play_bsd.setOnClickListener {
+
+                                    grantUriPermission(packageName, downloadedUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                                    val playIntent = Intent(Intent.ACTION_VIEW)
+                                        .setDataAndType(downloadedUri, "video/*")
+                                        .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                                    startActivity(Intent.createChooser(playIntent, "Complete action using"));
+                                }
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    shortToast(this, "${e.message}")
+                }
+
+            }
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        when (requestCode) {
+            111 -> {
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                    onStartDownloading(tempPost, tempHolder)
+                } else {
+                    shortToast(this, "Permission denied")
+                }
+            }
+        }
     }
 
     override fun onPause() {
@@ -225,10 +326,11 @@ class MainActivity : AppCompatActivity(),
         super.onResume()
     }
 
-    fun getCurrentFragment(): Fragment? = supportFragmentManager.findFragmentById(R.id.fragment_container)
-
     override fun onBackPressed() {
-        if (supportFragmentManager.backStackEntryCount == 1) {
+        val currentFragment = getCurrentFragment(this)
+        if (supportFragmentManager.backStackEntryCount == 1
+            || currentFragment is FragmentDiscover
+            || currentFragment is FragmentCustomFeeds) {
             moveTaskToBack(false)
         } else super.onBackPressed()
     }
@@ -237,8 +339,10 @@ class MainActivity : AppCompatActivity(),
         currentPlayer = player
     }
 
-    override fun pauseCurrentPlayer() {
-        currentPlayer?.pause()
+    override fun pauseAllPlayers() {
+        playerList.forEach {
+            it.pause()
+        }
     }
 
     override fun onOpenFragment(fragment: Fragment) {
@@ -246,12 +350,107 @@ class MainActivity : AppCompatActivity(),
     }
 
     override fun onLoadMoreData() {
-        val fh = getCurrentFragment() as FragmentHome
+        val fh = getCurrentFragment(this) as FragmentHome
         fh.onLoadMoreData()
     }
 
+    override fun onStartDownloading(
+        post: Submission?,
+        holder: VideoAdapter.VideoViewHolder?,
+        aboutPost: AboutPost?,
+        bsdView: View?
+    ) {
+        val permalink = post?.let { "https://www.reddit.com$it.permalink" } ?: aboutPost!!.permalink
+        val name = (post?.title ?: aboutPost!!.title).removeSpecialChars().replace(" ", "_")
+        shortToast(this, "Download started")
+        holder?.itemView?.progress_download?.show()
+        holder?.itemView?.iv_download?.hide()
+        var audioUrl = ""
+
+        ioScope().launch {
+            if (!hasAudio(permalink, this@MainActivity)) {
+                audioUrl = "false"
+            }
+
+            mainScope().launch {
+                val url = if (post != null) {
+                    if (post.postHint == HOSTED_VIDEO) {
+                        val fallbackUrl = post.embeddedMedia?.redditVideo?.fallbackUrl ?: "null"
+                        audioUrl = audioUrl.ifEmpty {
+                            fallbackUrl.substring(0, fallbackUrl.indexOf("DASH_")) + "DASH_audio.mp4?source=fallback"
+                        }
+                        "https://sd.redditsave.com/download.php?permalink=$permalink&video_url=$fallbackUrl&audio_url=$audioUrl"
+                    } else {
+                        getGifMp4(post.permalink, client).second
+                    }
+                } else {
+                    if (aboutPost!!.downloadLink.contains("DASH_", false)) {
+                        val fallbackUrl = aboutPost.downloadLink
+                        audioUrl = audioUrl.ifEmpty {
+                            fallbackUrl.substring(0, fallbackUrl.indexOf("DASH_")) + "DASH_audio.mp4?source=fallback"
+                        }
+                        "https://sd.redditsave.com/download.php?permalink=$permalink&video_url=$fallbackUrl&audio_url=$audioUrl"
+                    } else aboutPost.downloadLink
+                }
+
+                Log.d(TAG, "onStartDownloading: $url")
+                
+                try {
+                    val request = DownloadManager.Request(Uri.parse(url))
+                    request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI or DownloadManager.Request.NETWORK_MOBILE)
+                        .setDescription("Downloading reddit video...")
+                        .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                        .setDestinationInExternalPublicDir(Environment.DIRECTORY_MOVIES, "Viddit/$name.mp4")
+
+                    val manager = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+                    val id = manager.enqueue(request)
+
+                    val receiver = object : BroadcastReceiver() {
+                        override fun onReceive(context: Context?, intent: Intent?) {
+                            val mId = intent?.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
+                            if (id == mId) {
+                                longToast(this@MainActivity, "Downloaded $name.mp4 to Movies/Viddit")
+                                holder?.itemView?.apply {
+                                    progress_download?.hide()
+                                    iv_download.show()
+                                }
+                                bsdView?.apply {
+                                    progress_download_bsd?.hide()
+                                    iv_play_bsd.show()
+                                    tv_downloading.text = "Downloaded $name.mp4 to Movies/Viddit"
+                                }
+
+                                downloadedUri = manager.getUriForDownloadedFile(id)
+                            }
+                        }
+                    }
+
+                    registerReceiver(receiver, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE))
+                } catch (e: Exception) {
+                    shortToast(this@MainActivity, "${e.message}")
+                    bsdView?.apply {
+                        progress_download_bsd.hide()
+                        iv_thumb_bsd.setImageResource(android.R.drawable.ic_menu_report_image)
+                        tv_downloading.text = "Link is not valid"
+                    }
+                }
+            }
+        }
+    }
+
     override fun onLoadMoreDataSR() {
-        val srf = getCurrentFragment() as SubredditFragment
+        val srf = getCurrentFragment(this) as SubredditFragment
         srf.onLoadMoreDataSR()
+    }
+
+    fun restartFragment(fragmentId: Int) {
+        val currentFragment = this.supportFragmentManager.findFragmentById(fragmentId)!!
+
+        this.supportFragmentManager.beginTransaction()
+            .detach(currentFragment)
+            .commit()
+        this.supportFragmentManager.beginTransaction()
+            .attach(currentFragment)
+            .commit()
     }
 }
