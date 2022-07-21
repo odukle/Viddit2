@@ -97,9 +97,9 @@ class FragmentHome : Fragment(), VideoAdapter.OnCallback, VideoAdapter.OnFragmen
         viewModel = ViewModelProvider(activity)[HomeViewModel::class.java]
         activityViewModel = ViewModelProvider(activity)[ActivityViewModel::class.java]
 
+        layout_refresh.setProgressViewOffset(false, 60F.toDp(), 100F.toDp())
         when (calledFor) {
             FOR_MAIN -> {
-                chip_group_choose_feed.show()
                 chip_sr.hide()
                 chip_multi.hide()
                 if (viewModel.adapter.content == POPULAR) {
@@ -122,6 +122,9 @@ class FragmentHome : Fragment(), VideoAdapter.OnCallback, VideoAdapter.OnFragmen
                             viewModel.loadMoreData(viewModel.pages!!)
                         }
                     }
+
+                    if (it.authManager.currentUsername() == USER_LESS) chip_group_choose_feed.hide()
+                    else chip_group_choose_feed.show()
                 }
             }
 
@@ -182,14 +185,6 @@ class FragmentHome : Fragment(), VideoAdapter.OnCallback, VideoAdapter.OnFragmen
 
         viewModel.isRefreshing.observe(viewLifecycleOwner) {
             layout_refresh.isRefreshing = it
-            if (it) {
-                chip_group_choose_feed.hide()
-            } else {
-                try {
-                    if (calledFor == FOR_MAIN && activity.reddit.authManager.currentUsername() != USER_LESS) chip_group_choose_feed.show()
-                } catch (e: Exception) {
-                }
-            }
         }
         viewModel.videosExhausted.observe(viewLifecycleOwner) {
             if (it) {
@@ -198,7 +193,7 @@ class FragmentHome : Fragment(), VideoAdapter.OnCallback, VideoAdapter.OnFragmen
         }
 
         viewModel.commentsArray.observe(viewLifecycleOwner) {
-            if (it != null) {
+            if (it != null && this::commentsView.isInitialized) {
                 val childLayout2 = LinearLayout(activity)
                 val params = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
                 params.setMargins(10, 10, 10, 10)
@@ -494,7 +489,11 @@ class FragmentHome : Fragment(), VideoAdapter.OnCallback, VideoAdapter.OnFragmen
 
     override fun onShowChips() {
         when (calledFor) {
-            FOR_MAIN -> chip_group_choose_feed.show()
+            FOR_MAIN -> {
+                if (activity.reddit.authManager.currentUsername() != USER_LESS) {
+                    chip_group_choose_feed.show()
+                }
+            }
             FOR_SUBREDDIT -> chip_sr.show()
             FOR_MULTI -> chip_multi.show()
         }

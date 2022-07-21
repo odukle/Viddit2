@@ -1,22 +1,38 @@
 package com.odukle.viddit.fragments
 
 import android.annotation.SuppressLint
+import android.graphics.Typeface
 import androidx.lifecycle.ViewModelProvider
 import android.os.Bundle
 import android.util.Log
+import android.util.TypedValue
+import android.view.Gravity
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
+import android.widget.LinearLayout
+import android.widget.TextView
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import com.bumptech.glide.Glide
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.chip.Chip
+import com.google.android.material.imageview.ShapeableImageView
+import com.google.android.material.shape.CornerFamily
+import com.google.android.material.textfield.TextInputEditText
+import com.google.common.base.CharMatcher
+import com.google.gson.JsonParser
 import com.odukle.viddit.ActivityViewModel
 import com.odukle.viddit.MainActivity
 import com.odukle.viddit.R
 import com.odukle.viddit.adapters.SubredditAdapter
+import com.odukle.viddit.models.MultiReddit
 import com.odukle.viddit.utils.*
+import kotlinx.android.synthetic.main.bottomsheet_cf.*
+import kotlinx.android.synthetic.main.bottomsheet_cf.view.*
 import kotlinx.android.synthetic.main.fragment_subreddit.*
 import kotlinx.coroutines.launch
 import net.dean.jraw.models.TimePeriod
@@ -41,6 +57,9 @@ class SubredditFragment : Fragment(), SubredditAdapter.OnLoadMoreDataSR {
     private lateinit var subredditName: String
     private lateinit var activity: MainActivity
     var isUser by Delegates.notNull<Boolean>()
+    private var bottomSheetDialog: BottomSheetDialog? = null
+    private var bottomSheetView: View? = null
+    private lateinit var subredditToAdd: String
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -209,6 +228,155 @@ class SubredditFragment : Fragment(), SubredditAdapter.OnLoadMoreDataSR {
                 viewModel.subredditRef.value?.let { viewModel.getSRPages(it, getSubredditSort(TOP), isUser, timePeriod) }
             }
         }
+
+        chip_add_to_cf.setOnClickListener {
+            showCustomFeeds(subredditName)
+        }
+
+        viewModel.cfJson.observe(viewLifecycleOwner) { cfJson ->
+            if (cfJson.isEmpty()) return@observe
+
+            bottomSheetView?.apply {
+                try {
+                    layout_cf.removeAllViews()
+                    val feedArray = JsonParser.parseString(cfJson).asJsonArray
+                    feedArray.forEach { ele ->
+                        val feed = ele.asJsonObject["data"].asJsonObject
+                        val multiReddit = MultiReddit(
+                            feed["name"].asString,
+                            feed["display_name"].asString,
+                            feed["icon_url"].asString,
+                            feed["subreddits"].asJsonArray.map { it.asJsonObject["name"].asString }.toMutableList()
+                        )
+
+                        addFeedToBottomSheet(multiReddit, subredditToAdd)
+                    }
+                    progress_bar_cf.hide()
+                } catch (e: Exception) {
+                }
+            }
+        }
+
+        viewModel.subredditAdded.observe(viewLifecycleOwner) {
+            if (it) {
+                Log.d(TAG, "addFeedToBottomSheet: this was not supposed to happen")
+                bottomSheetDialog?.dismiss()
+                shortToast(activity, "Added successfully 🎉")
+            }
+        }
+    }
+
+    private fun showCustomFeeds(subredditName: String) {
+        subredditToAdd = subredditName
+        showBottomSheetDialog()
+        bottomSheetView?.apply {
+            progress_bar_cf.show()
+            val reddit = activity.reddit
+            if (reddit.authManager.currentUsername() == USER_LESS) return@apply
+            ioScope().launch {
+                viewModel.getCustomFeeds(reddit)
+            }
+
+            layout_sign_in.setOnClickListener {
+                bottomSheetDialog?.dismiss()
+                activity.startSignIn()
+            }
+
+            create_new_feed.setOnClickListener {
+                layout_add_new_feed.apply {
+                    if (isVisible) hide() else show()
+                }
+            }
+
+            et_new_feed.filters = arrayOf(filter)
+            et_new_feed.setOnEditorActionListener { v, _, _ ->
+                if (v.text.isNullOrEmpty()) return@setOnEditorActionListener false
+
+                layout_add_new_feed.hide()
+                val displayName = (v as TextInputEditText).text.toString()
+                val charMatcher = CharMatcher.anyOf(displayName)
+                if (charMatcher.matchesAnyOf(blockCharacterSet)) {
+                    shortToast(activity, "Please enter a name without special characters")
+                    return@setOnEditorActionListener false
+                }
+
+                shortToast(activity, "Adding new feed...")
+                v.text?.clear()
+                viewModel.addMulti(displayName, reddit)
+                false
+            }
+
+            btn_add.setOnClickListener {
+                et_new_feed.onEditorAction(EditorInfo.IME_ACTION_DONE)
+            }
+
+            viewModel.multiReddit.observe(viewLifecycleOwner) {
+                if (it != null) {
+                    addFeedToBottomSheet(it, subredditName)
+                }
+            }
+        }
+    }
+
+    private fun showBottomSheetDialog() {
+        bottomSheetDialog = BottomSheetDialog(activity)
+        bottomSheetView = LayoutInflater.from(activity).inflate(R.layout.bottomsheet_cf, null, false)
+        bottomSheetDialog?.setContentView(bottomSheetView!!)
+        bottomSheetDialog?.show()
+
+        bottomSheetView?.apply {
+            if (activity.reddit.authManager.currentUsername() == USER_LESS) {
+                layout_main_content.hide()
+                layout_sign_in.show()
+            } else {
+                layout_main_content.show()
+                layout_sign_in.hide()
+            }
+        }
+    }
+
+    private fun addFeedToBottomSheet(multiReddit: MultiReddit, subredditName: String) {
+        val iv = ShapeableImageView(activity)
+        iv.shapeAppearanceModel = iv.shapeAppearanceModel
+            .toBuilder()
+            .setTopRightCorner(CornerFamily.ROUNDED, 10F)
+            .setTopLeftCorner(CornerFamily.ROUNDED, 10F)
+            .setBottomRightCorner(CornerFamily.ROUNDED, 10F)
+            .setBottomLeftCorner(CornerFamily.ROUNDED, 10F)
+            .build()
+        val ivParams = LinearLayout.LayoutParams(30f.toDp(), 30f.toDp())
+        iv.layoutParams = ivParams
+        Glide.with(activity).load(multiReddit.iconUrl).into(iv)
+
+        val tv = TextView(activity)
+        tv.typeface = Typeface.DEFAULT_BOLD
+        tv.textSize = 20f
+        tv.text = multiReddit.displayName
+        val tvParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+        tvParams.setMargins(10f.toDp(), 0, 0, 0)
+        tvParams.gravity = Gravity.CENTER_VERTICAL
+        tv.layoutParams = tvParams
+
+        val ll = LinearLayout(activity)
+        ll.orientation = LinearLayout.HORIZONTAL
+        val llParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+        ll.setPadding(0, 10f.toDp(), 0, 10f.toDp())
+        val outValue = TypedValue()
+        activity.theme.resolveAttribute(android.R.attr.selectableItemBackground, outValue, true)
+        ll.foreground = AppCompatResources.getDrawable(activity, outValue.resourceId)
+        ll.layoutParams = llParams
+
+        ll.addView(iv)
+        ll.addView(tv)
+
+        ll.setOnClickListener {
+            shortToast(activity, "Adding..")
+            viewModel.addSubRedditToCf(activity.reddit, multiReddit.name, subredditName)
+        }
+
+        bottomSheetView?.apply {
+            layout_cf.addView(ll)
+        }
     }
 
     private fun showShimmer() {
@@ -244,5 +412,13 @@ class SubredditFragment : Fragment(), SubredditAdapter.OnLoadMoreDataSR {
                 runnable.run()
             }
         } ?: runnable.run()
+    }
+
+    private fun Float.toDp(): Int {
+        return TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP,
+            this,
+            activity.resources.displayMetrics
+        ).toInt()
     }
 }
