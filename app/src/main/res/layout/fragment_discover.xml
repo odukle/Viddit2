@@ -215,16 +215,6 @@
                         android:layout_marginVertical="5dp" />
                 </RelativeLayout>
 
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chip_delete_feed"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"
-                    android:layout_marginTop="20dp"
-                    android:backgroundTint="@color/orange"
-                    android:text="@string/delete_this_feed"
-                    android:visibility="gone" />
-
                 <com.google.android.material.switchmaterial.SwitchMaterial
                     android:id="@+id/switch_nsfw_discover"
                     android:layout_width="wrap_content"
@@ -234,47 +224,6 @@
                     android:switchPadding="8dp"
                     android:text="@string/allow_nsfw_content" />
 
-                <LinearLayout
-                    android:id="@+id/contact_layout"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"
-                    android:layout_marginVertical="20dp"
-                    android:orientation="horizontal">
-
-                    <ImageView
-                        android:id="@+id/iv_playstore"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="5dp"
-                        android:layout_marginBottom="10dp"
-                        android:onClick="openStore"
-                        android:padding="10dp"
-                        android:src="@drawable/ic_playstore"
-                        android:tag="https://play.google.com/store/apps/dev?id=6258518222272137551" />
-
-                    <ImageView
-                        android:id="@+id/iv_gmail"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="5dp"
-                        android:layout_marginBottom="10dp"
-                        android:onClick="openEmail"
-                        android:padding="10dp"
-                        android:src="@drawable/ic_gmail"
-                        android:tag="sodukle@gmail.com" />
-
-                    <ImageView
-                        android:id="@+id/iv_instagram"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="5dp"
-                        android:layout_marginBottom="10dp"
-                        android:onClick="openInsta"
-                        android:padding="10dp"
-                        android:src="@drawable/ic_instagram"
-                        android:tag="https://www.instagram.com/odukle.jpg/" />
-                </LinearLayout>
             </LinearLayout>
         </androidx.core.widget.NestedScrollView>
     </LinearLayout>

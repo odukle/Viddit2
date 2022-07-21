@@ -20,6 +20,7 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.MutableLiveData
 import com.bumptech.glide.Glide
@@ -29,10 +30,7 @@ import com.google.android.gms.ads.MobileAds
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.odukle.viddit.adapters.SubredditAdapter
 import com.odukle.viddit.adapters.VideoAdapter
-import com.odukle.viddit.fragments.FragmentCustomFeeds
-import com.odukle.viddit.fragments.FragmentDiscover
-import com.odukle.viddit.fragments.FragmentHome
-import com.odukle.viddit.fragments.SubredditFragment
+import com.odukle.viddit.fragments.*
 import com.odukle.viddit.interfaces.OpenFragment
 import com.odukle.viddit.models.AboutPost
 import com.odukle.viddit.utils.*
@@ -44,6 +42,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import net.dean.jraw.RedditClient
+import net.dean.jraw.android.BuildConfig
 import net.dean.jraw.http.OkHttpNetworkAdapter
 import net.dean.jraw.http.UserAgent
 import net.dean.jraw.models.Submission
@@ -100,6 +99,11 @@ class MainActivity : AppCompatActivity(),
                         openFragment(FragmentCustomFeeds.newInstance())
                     }
                 }
+                R.id.user -> {
+                    if (getCurrentFragment(this) !is UserFragment) {
+                        openFragment(UserFragment.newInstance())
+                    }
+                }
             }
             true
         }
@@ -135,7 +139,11 @@ class MainActivity : AppCompatActivity(),
             try {
                 if (App.tokenStore.usernames.isNotEmpty()) {
                     reddit = App.accountHelper.switchToUser(App.tokenStore.usernames[0])
-                    Log.d(TAG, "initReddit user: ${reddit.me().username}")
+                    if (reddit.authManager.currentUsername() == USER_LESS) {
+                        shortToast(this@MainActivity, "Browsing Anonymously")
+                    } else {
+                        shortToast(this@MainActivity, "Signed in as ${reddit.authManager.currentUsername()}")
+                    }
                 } else {
                     reddit = App.accountHelper.switchToUserless()
                 }
@@ -173,7 +181,6 @@ class MainActivity : AppCompatActivity(),
                             App.tokenStore.storeRefreshToken(reddit.authManager.currentUsername(), it)
                         }
                         mainScope().launch {
-                            shortToast(this@MainActivity, "Logged in as " + reddit.me().username)
                             clearCookies()
                             browser_layout.hide()
                             delay(200)
@@ -328,7 +335,10 @@ class MainActivity : AppCompatActivity(),
 
     override fun onBackPressed() {
         val currentFragment = getCurrentFragment(this)
-        if (supportFragmentManager.backStackEntryCount == 1
+
+        if (browser_layout.isVisible) {
+            browser_layout.hide()
+        } else if (supportFragmentManager.backStackEntryCount == 1
             || currentFragment is FragmentDiscover
             || currentFragment is FragmentCustomFeeds) {
             moveTaskToBack(false)
@@ -394,7 +404,7 @@ class MainActivity : AppCompatActivity(),
                 }
 
                 Log.d(TAG, "onStartDownloading: $url")
-                
+
                 try {
                     val request = DownloadManager.Request(Uri.parse(url))
                     request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI or DownloadManager.Request.NETWORK_MOBILE)

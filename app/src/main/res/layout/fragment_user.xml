@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".fragments.UserFragment">
+
+    <LinearLayout
+        android:id="@+id/layout_user"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toTopOf="@+id/contact_layout"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:gravity="center_horizontal"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <com.facebook.shimmer.ShimmerFrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/shimmer_icon_user"
+            android:layout_marginBottom="20dp"
+            android:visibility="gone">
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:src="@color/grey"
+                app:shapeAppearance="@style/ImageViewShape50"/>
+        </com.facebook.shimmer.ShimmerFrameLayout>
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/iv_icon_user"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:layout_marginBottom="20dp"
+            app:shapeAppearance="@style/ImageViewShape50" />
+
+        <TextView
+            android:id="@+id/tv_user_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:textSize="25sp"
+            android:textStyle="bold"
+            tools:text="User Name" />
+
+        <TextView
+            android:id="@+id/tv_post_karma"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            tools:text="post karma: 1248" />
+
+        <TextView
+            android:id="@+id/tv_comment_karma"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            tools:text="comment karma: 1248" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_sign_out"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/orange"
+            android:text="@string/sign_out"
+            app:cornerRadius="50dp" />
+    </LinearLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_sign_in_user"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:backgroundTint="@color/orange"
+        android:text="@string/sign_in"
+        app:cornerRadius="50dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@+id/contact_layout"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <LinearLayout
+        android:id="@+id/contact_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginVertical="20dp"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <ImageView
+            android:id="@+id/iv_playstore"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="5dp"
+            android:layout_marginBottom="10dp"
+            android:onClick="openStore"
+            android:padding="10dp"
+            android:src="@drawable/ic_playstore"
+            android:tag="https://play.google.com/store/apps/dev?id=6258518222272137551" />
+
+        <ImageView
+            android:id="@+id/iv_gmail"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="5dp"
+            android:layout_marginBottom="10dp"
+            android:onClick="openEmail"
+            android:padding="10dp"
+            android:src="@drawable/ic_gmail"
+            android:tag="sodukle@gmail.com" />
+
+        <ImageView
+            android:id="@+id/iv_instagram"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="5dp"
+            android:layout_marginBottom="10dp"
+            android:onClick="openInsta"
+            android:padding="10dp"
+            android:src="@drawable/ic_instagram"
+            android:tag="https://www.instagram.com/odukle.jpg/" />
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

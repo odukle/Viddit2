@@ -4,19 +4,23 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.google.gson.JsonParser
 import com.odukle.viddit.adapters.SubredditAdapter
+import com.odukle.viddit.models.MultiReddit
 import com.odukle.viddit.models.SubReddit
 import com.odukle.viddit.utils.CONTAINS_GIF
 import com.odukle.viddit.utils.RICH_VIDEO
 import com.odukle.viddit.utils.getSubredditInfo
 import com.odukle.viddit.utils.ioScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import net.dean.jraw.Endpoint
+import net.dean.jraw.JrawUtils
 import net.dean.jraw.RedditClient
-import net.dean.jraw.models.Submission
-import net.dean.jraw.models.SubredditSort
-import net.dean.jraw.models.TimePeriod
-import net.dean.jraw.models.UserHistorySort
+import net.dean.jraw.http.HttpRequest
+import net.dean.jraw.models.*
 import net.dean.jraw.pagination.DefaultPaginator
 import net.dean.jraw.references.AbstractReference
 import net.dean.jraw.references.OtherUserReference
@@ -37,6 +41,14 @@ class SubredditViewModel : ViewModel() {
     val subredditRef: LiveData<AbstractReference?> = _subredditRef
     private val _subreddit = MutableLiveData<SubReddit>(SubReddit.getEmpty())
     val subreddit: LiveData<SubReddit> = _subreddit
+    //
+
+    private val _cfJson: MutableLiveData<String> = MutableLiveData("")
+    val cfJson: LiveData<String> = _cfJson
+    private val _subredditAdded = MutableLiveData<Boolean>(false)
+    val subredditAdded: LiveData<Boolean> = _subredditAdded
+    private val _multiReddit = MutableLiveData<MultiReddit?>(null)
+    val multiReddit: LiveData<MultiReddit?> = _multiReddit
 
     var oldSize = 0
     val pagesLive = MutableLiveData<DefaultPaginator<Submission>?>(null)
@@ -129,5 +141,73 @@ class SubredditViewModel : ViewModel() {
     suspend fun getSubreddit(subredditName: String, client: OkHttpClient) {
         val sr = getSubredditInfo("r/$subredditName", client)
         _subreddit.postValue(sr)
+    }
+
+    fun getCustomFeeds(reddit: RedditClient) {
+
+        //TODO check for internet
+
+        ioScope().launch {
+            val request = HttpRequest.Builder()
+                .secure(true)
+                .host("oauth.reddit.com")
+                .endpoint(Endpoint.GET_MULTI_MINE)
+                .header("Authorization", "bearer ${reddit.authManager.accessToken}")
+                .build()
+
+            val res = reddit.request(request)
+
+            _cfJson.postValue(res.body)
+        }
+    }
+
+    fun addSubRedditToCf(reddit: RedditClient, name: String, subredditName: String) {
+        //TODO check for internet
+        ioScope().launch {
+            reddit.me().multi(name).addSubreddit(subredditName)
+            _subredditAdded.postValue(true)
+        }
+    }
+
+    fun addMulti(displayName: String, reddit: RedditClient) {
+        val name = displayName.replace(" ", "")
+        val patch = MultiredditPatch.Builder()
+            .iconName("png")
+            .displayName(displayName)
+            .build()
+        ioScope().launch {
+            try {
+                reddit.me().createMulti(name, patch)
+            } catch (e: Exception) {
+            }
+
+            val json = getMultiRedditAbout(reddit, name)
+            val feed = JsonParser.parseString(json).asJsonObject
+            val multi = MultiReddit(
+                name,
+                displayName,
+                feed["data"].asJsonObject["icon_url"].asString,
+                feed["data"].asJsonObject["subreddits"].asJsonArray.map { it.asJsonObject["name"].asString }.toMutableList()
+            )
+
+            _multiReddit.postValue(multi)
+        }
+    }
+
+    private suspend fun getMultiRedditAbout(reddit: RedditClient, title: String) = withContext(Dispatchers.IO) {
+
+        //TODO check for internet
+
+        val multiPath = "user/${JrawUtils.urlEncode(reddit.me().username)}/m/${JrawUtils.urlEncode(title)}"
+        val request = HttpRequest.Builder()
+            .secure(true)
+            .host("oauth.reddit.com")
+            .endpoint(Endpoint.GET_MULTI_MULTIPATH, multiPath)
+            .header("Authorization", "bearer ${reddit.authManager.accessToken}")
+            .build()
+
+        val res = reddit.request(request)
+
+        return@withContext res.body
     }
 }
