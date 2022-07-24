@@ -68,9 +68,12 @@ class FragmentDiscover : Fragment(), SearchAdapter.OnShowCustomFeeds {
             rv_search.adapter = SearchAdapter(viewModel.rList.value!!)
             card_loading.hide()
         } else {
-            ioScope().launch {
-                viewModel.getTopSubreddits(activity.client)
-            }
+            if (isOnline(activity)) {
+                ioScope().launch {
+                    viewModel.getTopSubreddits(activity.client)
+                }
+            } else showNoInternetToast(activity)
+
         }
 
         viewModel.rList.observe(viewLifecycleOwner) {
@@ -88,9 +91,11 @@ class FragmentDiscover : Fragment(), SearchAdapter.OnShowCustomFeeds {
                 ioScope().launch {
                     card_loading.show()
                     if (query == "videos") {
-                        viewModel.getTopSubreddits(activity.client)
+                        if (isOnline(activity)) viewModel.getTopSubreddits(activity.client)
+                        else showNoInternetToast(activity)
                     } else {
-                        viewModel.searchSubreddits(query, nsfwAllowed(activity), activity.client)
+                        if (isOnline(activity)) viewModel.searchSubreddits(query, nsfwAllowed(activity), activity.client)
+                        else showNoInternetToast(activity)
                     }
                 }
             }
@@ -102,7 +107,8 @@ class FragmentDiscover : Fragment(), SearchAdapter.OnShowCustomFeeds {
             val query = (v as TextInputEditText).text.toString()
             ioScope().launch {
                 card_loading.show()
-                viewModel.searchSubreddits(query, nsfwAllowed(activity), activity.client)
+                if (isOnline(activity)) viewModel.searchSubreddits(query, nsfwAllowed(activity), activity.client)
+                else showNoInternetToast(activity)
             }
 
             v.clearFocus()
@@ -190,7 +196,8 @@ class FragmentDiscover : Fragment(), SearchAdapter.OnShowCustomFeeds {
             val reddit = activity.reddit
             if (reddit.authManager.currentUsername() == USER_LESS) return@apply
             ioScope().launch {
-                viewModel.getCustomFeeds(reddit)
+                if (isOnline(activity)) viewModel.getCustomFeeds(reddit)
+                else showNoInternetToast(activity)
             }
 
             layout_sign_in.setOnClickListener {
@@ -206,6 +213,10 @@ class FragmentDiscover : Fragment(), SearchAdapter.OnShowCustomFeeds {
 
             et_new_feed.filters = arrayOf(filter)
             et_new_feed.setOnEditorActionListener { v, _, _ ->
+                if (!isOnline(activity)) {
+                    showNoInternetToast(activity)
+                    return@setOnEditorActionListener false
+                }
                 if (v.text.isNullOrEmpty()) return@setOnEditorActionListener false
 
                 layout_add_new_feed.hide()
@@ -270,7 +281,8 @@ class FragmentDiscover : Fragment(), SearchAdapter.OnShowCustomFeeds {
 
         ll.setOnClickListener {
             shortToast(activity, "Adding..")
-            viewModel.addSubRedditToCf(activity.reddit, multiReddit.name, subredditName)
+            if (isOnline(activity)) viewModel.addSubRedditToCf(activity.reddit, multiReddit.name, subredditName)
+            else showNoInternetToast(activity)
         }
 
         bottomSheetView?.apply {

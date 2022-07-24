@@ -70,7 +70,8 @@ class FragmentCustomFeeds : Fragment(), SearchAdapter.OnRemoveSubreddit {
                 btn_sign_in.show()
                 return@observe
             }
-            viewModel.getCustomFeeds(it)
+            if (isOnline(activity)) viewModel.getCustomFeeds(it)
+            else showNoInternetToast(activity)
         }
 
         viewModel.cfJson.observe(viewLifecycleOwner) { cfJson ->
@@ -105,6 +106,10 @@ class FragmentCustomFeeds : Fragment(), SearchAdapter.OnRemoveSubreddit {
 
         et_new_feed_cf.filters = arrayOf(filter)
         et_new_feed_cf.setOnEditorActionListener { v, _, _ ->
+            if (!isOnline(activity)) {
+                showNoInternetToast(activity)
+                return@setOnEditorActionListener false
+            }
             if (v.text.isNullOrEmpty()) return@setOnEditorActionListener false
 
             layout_add_new_feed_cf.hide()

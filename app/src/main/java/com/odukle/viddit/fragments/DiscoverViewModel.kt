@@ -35,7 +35,6 @@ class DiscoverViewModel : ViewModel() {
     @Suppress("BlockingMethodInNonBlockingContext")
     suspend fun getTopSubreddits(client: OkHttpClient) {
         val list = mutableListOf<Pair<String, String>>()
-        //TODO check for internet
 
         try {
             val request = Request.Builder()
@@ -61,7 +60,7 @@ class DiscoverViewModel : ViewModel() {
             _rList.postValue(list)
         } catch (e: Exception) {
             if (e is SocketTimeoutException) {
-                //TODO
+                // Handle Timeout
             } else {
                 Log.e(TAG, "getTopSubreddits: ${e.stackTraceToString()}")
             }
@@ -73,8 +72,6 @@ class DiscoverViewModel : ViewModel() {
         Log.d(TAG, "getSubreddits: called")
         val list = mutableListOf<Pair<String, String>>()
         val strNsfw = if (nsfwAllowed) "&restrict_sr=true&include_over_18=on" else ""
-
-        //TODO check internet
 
         try {
             val request = Request.Builder()
@@ -110,7 +107,7 @@ class DiscoverViewModel : ViewModel() {
             _rList.postValue(list)
         } catch (e: Exception) {
             if (e is SocketTimeoutException) {
-                //TODO
+                // Handle timeout
             } else {
                 Log.e(TAG, "getSubreddits: ${e.stackTraceToString()}")
             }
@@ -118,8 +115,6 @@ class DiscoverViewModel : ViewModel() {
     }
 
     fun getCustomFeeds(reddit: RedditClient) {
-
-        //TODO check for internet
 
         ioScope().launch {
             val request = HttpRequest.Builder()
@@ -136,7 +131,6 @@ class DiscoverViewModel : ViewModel() {
     }
 
     fun addSubRedditToCf(reddit: RedditClient, name: String, subredditName: String) {
-        //TODO check for internet
         ioScope().launch {
             reddit.me().multi(name).addSubreddit(subredditName)
             _subredditAdded.postValue(true)
@@ -169,8 +163,6 @@ class DiscoverViewModel : ViewModel() {
     }
 
     private suspend fun getMultiRedditAbout(reddit: RedditClient, title: String) = withContext(Dispatchers.IO) {
-
-        //TODO check for internet
 
         val multiPath = "user/${JrawUtils.urlEncode(reddit.me().username)}/m/${JrawUtils.urlEncode(title)}"
         val request = HttpRequest.Builder()

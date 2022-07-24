@@ -4,6 +4,7 @@ package com.odukle.viddit.utils
 
 import android.animation.ObjectAnimator
 import android.app.Activity
+import android.app.ProgressDialog.show
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
@@ -98,6 +99,14 @@ fun shortToast(context: Context, text: String) {
     context.runOnUiThread {
         toast.cancel()
         toast = Toast.makeText(context, text, Toast.LENGTH_SHORT).apply { show() }
+    }
+}
+
+fun showNoInternetToast(context: Context) {
+    context as Activity
+    context.runOnUiThread {
+        toast.cancel()
+        toast = Toast.makeText(context, "No internet 😔", Toast.LENGTH_SHORT).apply { show() }
     }
 }
 

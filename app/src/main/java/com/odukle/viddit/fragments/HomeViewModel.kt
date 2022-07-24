@@ -80,7 +80,7 @@ class HomeViewModel : ViewModel() {
     }
 
     fun loadMoreData(pages: DefaultPaginator<Submission>, doShuffle: Boolean = false) {
-        //TODO check internet
+        // Can check for internet
         Log.d(TAG, "loadMoreData: loading")
         job = ioScope().launch {
             _isRefreshing.postValue(true)
@@ -116,7 +116,7 @@ class HomeViewModel : ViewModel() {
                     _videosExhausted.postValue(true)
                 }
             } catch (e: Exception) {
-                //TODO handle failure
+                // Can handle failure
                 Log.d(TAG, "loadMoreData: failed")
             }
 
@@ -125,7 +125,6 @@ class HomeViewModel : ViewModel() {
     }
 
     fun getComments(permalink: String, client: OkHttpClient) {
-        //TODO check Internet
 
         ioScope().launch {
             val request = Request.Builder()

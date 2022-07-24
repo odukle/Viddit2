@@ -52,30 +52,35 @@ class UserFragment : Fragment() {
                 layout_user.hide()
                 btn_sign_in_user.show()
             } else {
-                viewModel.getUserIcon(rc.me().username, activity.client)
+                if (isOnline(activity)) {
+                    viewModel.getUserIcon(rc.me().username, activity.client)
+                    ioScope().launch {
+                        val postKarma: Int? = rc.me().query().account?.linkKarma
+                        val commentKarma: Int? = rc.me().query().account?.commentKarma
+                        mainScope().launch {
+                            tv_post_karma.text = "Post karma: " + postKarma.toString()
+                            tv_comment_karma.text = "Comment karma: " + commentKarma.toString()
+                        }
+                    }
+                    mainScope().launch {
+                        tv_user_name.text = rc.me().username
+                    }
+                }
                 userName = rc.me().username
                 layout_user.show()
                 shimmer_icon_user.show()
                 btn_sign_in_user.hide()
-
-                ioScope().launch {
-                    val postKarma: Int? = rc.me().query().account?.linkKarma
-                    val commentKarma: Int? = rc.me().query().account?.commentKarma
-                    mainScope().launch {
-                        tv_post_karma.text = "Post karma:" + postKarma.toString()
-                        tv_comment_karma.text = "Comment karma: " + commentKarma.toString()
-                    }
-                }
-                tv_user_name.text = rc.me().username
             }
         }
 
         viewModel.userIcon.observe(viewLifecycleOwner) {
-            Glide.with(activity)
-                .load(it)
-                .placeholder(R.drawable.ic_reddit_user)
-                .into(iv_icon_user)
-            shimmer_icon_user.hide()
+            if (isOnline(activity)) {
+                Glide.with(activity)
+                    .load(it)
+                    .placeholder(R.drawable.ic_reddit_user)
+                    .into(iv_icon_user)
+                shimmer_icon_user.hide()
+            }
         }
 
         btn_sign_in_user.setOnClickListener {
@@ -83,6 +88,10 @@ class UserFragment : Fragment() {
         }
 
         btn_sign_out.setOnClickListener {
+            if (!isOnline(activity)) {
+                showNoInternetToast(activity)
+                return@setOnClickListener
+            }
             Snackbar.make(requireView(), "u/$userName", Snackbar.LENGTH_SHORT)
                 .setAction("Sign out") {
                     ioScope().launch {
