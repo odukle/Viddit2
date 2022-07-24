@@ -30,8 +30,6 @@ class CustomFeedsViewModel : ViewModel() {
 
     fun getCustomFeeds(reddit: RedditClient) {
 
-        //TODO check for internet
-
         ioScope().launch {
             val request = HttpRequest.Builder()
                 .secure(true)
@@ -72,8 +70,6 @@ class CustomFeedsViewModel : ViewModel() {
     }
 
     private suspend fun getMultiRedditAbout(reddit: RedditClient, title: String) = withContext(Dispatchers.IO) {
-
-        //TODO check for internet
 
         val multiPath = "user/${JrawUtils.urlEncode(reddit.me().username)}/m/${JrawUtils.urlEncode(title)}"
         val request = HttpRequest.Builder()

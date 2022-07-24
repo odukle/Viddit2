@@ -1,6 +1,7 @@
 package com.odukle.viddit.adapters
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.util.Log
@@ -428,6 +429,18 @@ class VideoAdapter(var vList: MutableList<Any>) :
                 iv_comments.setOnClickListener {
                     (getCurrentFragment(activity) as FragmentHome).showComments(post.permalink)
                 }
+
+                iv_share.setOnClickListener {
+                    iv_share.bounce()
+                    val intent = Intent().apply {
+                        action = Intent.ACTION_SEND
+                        type = "text/plain"
+                        val extra = "\n\nDownload Viddit: https://play.google.com/store/apps/details?id=com.odukle.viddit"
+                        putExtra(Intent.EXTRA_TEXT, "https://www.reddit.com${post.permalink}$extra")
+                    }
+
+                    activity.startActivity(intent)
+                }
             }
         }
 
@@ -528,6 +541,7 @@ class VideoAdapter(var vList: MutableList<Any>) :
             aboutPost: AboutPost? = null,
             bsdView: View? = null
         )
+
         fun onShowSignInDialog()
     }
 

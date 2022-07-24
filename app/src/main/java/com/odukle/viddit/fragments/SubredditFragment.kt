@@ -274,7 +274,8 @@ class SubredditFragment : Fragment(), SubredditAdapter.OnLoadMoreDataSR {
             val reddit = activity.reddit
             if (reddit.authManager.currentUsername() == USER_LESS) return@apply
             ioScope().launch {
-                viewModel.getCustomFeeds(reddit)
+                if (isOnline(activity)) viewModel.getCustomFeeds(reddit)
+                else showNoInternetToast(activity)
             }
 
             layout_sign_in.setOnClickListener {
@@ -290,6 +291,10 @@ class SubredditFragment : Fragment(), SubredditAdapter.OnLoadMoreDataSR {
 
             et_new_feed.filters = arrayOf(filter)
             et_new_feed.setOnEditorActionListener { v, _, _ ->
+                if (!isOnline(activity)) {
+                    showNoInternetToast(activity)
+                    return@setOnEditorActionListener false
+                }
                 if (v.text.isNullOrEmpty()) return@setOnEditorActionListener false
 
                 layout_add_new_feed.hide()
@@ -370,8 +375,11 @@ class SubredditFragment : Fragment(), SubredditAdapter.OnLoadMoreDataSR {
         ll.addView(tv)
 
         ll.setOnClickListener {
-            shortToast(activity, "Adding..")
-            viewModel.addSubRedditToCf(activity.reddit, multiReddit.name, subredditName)
+            if (isOnline(activity)) {
+                shortToast(activity, "Adding..")
+                viewModel.addSubRedditToCf(activity.reddit, multiReddit.name, subredditName)
+            } else showNoInternetToast(activity)
+
         }
 
         bottomSheetView?.apply {

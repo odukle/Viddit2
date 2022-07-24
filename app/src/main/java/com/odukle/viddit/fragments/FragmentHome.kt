@@ -501,7 +501,8 @@ class FragmentHome : Fragment(), VideoAdapter.OnFragmentCallback {
         sheet.setContentView(commentsView)
         sheet.show()
         commentsView.shimmer_rc.show()
-        viewModel.getComments(permalink, activity.client)
+        if (isOnline(activity)) viewModel.getComments(permalink, activity.client)
+        else showNoInternetToast(activity)
     }
 
     private fun Float.toDp(): Int {
