@@ -340,7 +340,9 @@ class MainActivity : AppCompatActivity(),
             browser_layout.hide()
         } else if (supportFragmentManager.backStackEntryCount == 1
             || currentFragment is FragmentDiscover
-            || currentFragment is FragmentCustomFeeds) {
+            || currentFragment is FragmentCustomFeeds
+            || (currentFragment is FragmentHome && currentFragment.calledFor == FOR_MAIN)
+            || currentFragment is UserFragment) {
             moveTaskToBack(false)
         } else super.onBackPressed()
     }
