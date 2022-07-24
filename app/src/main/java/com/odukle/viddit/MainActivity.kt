@@ -36,6 +36,7 @@ import com.odukle.viddit.models.AboutPost
 import com.odukle.viddit.utils.*
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.bottom_sheet_download.view.*
+import kotlinx.android.synthetic.main.bottom_sheet_sign_in.view.*
 import kotlinx.android.synthetic.main.item_view_video.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -57,7 +58,7 @@ class MainActivity : AppCompatActivity(),
     VideoAdapter.OnPlayerAcquired,
     FragmentHome.OnFragmentStateChanged,
     OpenFragment,
-    VideoAdapter.OnCallback,
+    VideoAdapter.OnActivityCallback,
     SubredditAdapter.OnLoadMoreDataSR {
 
     private var downloadedUri: Uri? = null
@@ -361,9 +362,14 @@ class MainActivity : AppCompatActivity(),
         openFragment(fragment)
     }
 
-    override fun onLoadMoreData() {
-        val fh = getCurrentFragment(this) as FragmentHome
-        fh.onLoadMoreData()
+    override fun onShowSignInDialog() {
+        val sheet = BottomSheetDialog(this)
+        val view = LayoutInflater.from(this).inflate(R.layout.bottom_sheet_sign_in, null, false)
+        sheet.setContentView(view)
+        sheet.show()
+        view.layout_sign_in_main.setOnClickListener {
+            startSignIn()
+        }
     }
 
     override fun onStartDownloading(
@@ -464,5 +470,38 @@ class MainActivity : AppCompatActivity(),
         this.supportFragmentManager.beginTransaction()
             .attach(currentFragment)
             .commit()
+    }
+
+    fun openInsta(view: View) {
+        //Get url from tag
+        val url = view.tag as String
+        val intent = Intent()
+        intent.action = Intent.ACTION_VIEW
+        intent.addCategory(Intent.CATEGORY_BROWSABLE)
+
+        //pass the url to intent data
+        intent.data = Uri.parse(url)
+        startActivity(intent)
+    }
+
+    fun openEmail(view: View) {
+        val id = view.tag as String
+
+        val intent = Intent()
+        intent.action = Intent.ACTION_VIEW
+        intent.data = Uri.parse("mailto:$id")
+        startActivity(intent)
+    }
+
+    fun openStore(view: View) {
+        //Get url from tag
+        val url = view.tag as String
+        val intent = Intent()
+        intent.action = Intent.ACTION_VIEW
+        intent.addCategory(Intent.CATEGORY_BROWSABLE)
+
+        //pass the url to intent data
+        intent.data = Uri.parse(url)
+        startActivity(intent)
     }
 }

@@ -80,7 +80,7 @@ class VideoAdapter(var vList: MutableList<Any>) :
 
         val range = (itemCount - 5)..itemCount
         if (position in range) {
-            activity.onLoadMoreData()
+            (getCurrentFragment(activity) as FragmentHome).onLoadMoreData()
         }
     }
 
@@ -463,6 +463,11 @@ class VideoAdapter(var vList: MutableList<Any>) :
         score: Int,
         holder: VideoAdapter.VideoViewHolder
     ) {
+        if (activity.reddit.authManager.currentUsername() == USER_LESS) {
+            activity.onShowSignInDialog()
+            return
+        }
+
         holder.itemView.apply {
             val strVote = if (dir == VoteDirection.UP) "upvote" else "downvote"
             val strVoted = if (dir == VoteDirection.UP) "Upvoted" else "Downvoted"
@@ -493,7 +498,7 @@ class VideoAdapter(var vList: MutableList<Any>) :
                                 ivEx.setImageResource(srcEx)
                                 tvEx?.setTextColor(activity.getColor(R.color.white))
                             }
-                            tv_upvotes.text = if (dir == VoteDirection.DOWN) (score-1).toString() else (score+1).toString()
+                            tv_upvotes.text = if (dir == VoteDirection.DOWN) (score - 1).toString() else (score + 1).toString()
                         }
                         //upvote
                         submission.setVote(dir)
@@ -504,7 +509,7 @@ class VideoAdapter(var vList: MutableList<Any>) :
                             iv.setImageResource(src)
                             iv.bounce(); tv?.bounce()
                             tv?.setTextColor(activity.getColor(R.color.white))
-                            tv_upvotes.text = if (dir == VoteDirection.DOWN) (score+1).toString() else (score-1).toString()
+                            tv_upvotes.text = if (dir == VoteDirection.DOWN) (score + 1).toString() else (score - 1).toString()
                         }
                         //remove vote
                         submission.setVote(VoteDirection.NONE)
@@ -516,17 +521,18 @@ class VideoAdapter(var vList: MutableList<Any>) :
 
     inner class AdViewHolder(view: View) : RecyclerView.ViewHolder(view)
 
-    interface OnCallback {
-        fun onLoadMoreData()
+    interface OnActivityCallback {
         fun onStartDownloading(
             post: Submission?,
             holder: VideoAdapter.VideoViewHolder?,
             aboutPost: AboutPost? = null,
             bsdView: View? = null
         )
+        fun onShowSignInDialog()
     }
 
     interface OnFragmentCallback {
+        fun onLoadMoreData()
         fun onHideChips()
         fun onShowChips()
         fun showComments(permalink: String)

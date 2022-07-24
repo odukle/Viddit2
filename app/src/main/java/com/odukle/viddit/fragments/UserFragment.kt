@@ -102,37 +102,4 @@ class UserFragment : Fragment() {
         super.onResume()
     }
 
-    fun openInsta(view: View) {
-        //Get url from tag
-        val url = view.tag as String
-        val intent = Intent()
-        intent.action = Intent.ACTION_VIEW
-        intent.addCategory(Intent.CATEGORY_BROWSABLE)
-
-        //pass the url to intent data
-        intent.data = Uri.parse(url)
-        startActivity(intent)
-    }
-
-    fun openEmail(view: View) {
-        val id = view.tag as String
-
-        val intent = Intent()
-        intent.action = Intent.ACTION_VIEW
-        intent.data = Uri.parse("mailto:$id")
-        startActivity(intent)
-    }
-
-    fun openStore(view: View) {
-        //Get url from tag
-        val url = view.tag as String
-        val intent = Intent()
-        intent.action = Intent.ACTION_VIEW
-        intent.addCategory(Intent.CATEGORY_BROWSABLE)
-
-        //pass the url to intent data
-        intent.data = Uri.parse(url)
-        startActivity(intent)
-    }
-
 }
