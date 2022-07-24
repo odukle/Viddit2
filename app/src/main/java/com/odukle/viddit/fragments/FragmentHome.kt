@@ -68,7 +68,7 @@ class FragmentHome : Fragment(), VideoAdapter.OnCallback, VideoAdapter.OnFragmen
     private lateinit var viewModel: HomeViewModel
     private lateinit var activityViewModel: ActivityViewModel
     private lateinit var activity: MainActivity
-    private var calledFor by Delegates.notNull<Int>()
+    var calledFor by Delegates.notNull<Int>()
     private lateinit var jsonList: String
     private var adapterPosition by Delegates.notNull<Int>()
     private lateinit var subredditName: String
