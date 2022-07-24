@@ -32,8 +32,6 @@ import com.odukle.viddit.utils.*
 import com.squareup.moshi.Types
 import kotlinx.android.synthetic.main.bottom_sheet_comments.view.*
 import kotlinx.android.synthetic.main.fragment_home.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import net.dean.jraw.JrawUtils
@@ -43,7 +41,7 @@ import kotlin.properties.Delegates
 
 private const val TAG = "FragmentHome"
 
-class FragmentHome : Fragment(), VideoAdapter.OnCallback, VideoAdapter.OnFragmentCallback {
+class FragmentHome : Fragment(), VideoAdapter.OnFragmentCallback {
 
     companion object {
         fun newInstance(
@@ -472,8 +470,6 @@ class FragmentHome : Fragment(), VideoAdapter.OnCallback, VideoAdapter.OnFragmen
             }
         }
     }
-
-    override fun onStartDownloading(post: Submission?, holder: VideoAdapter.VideoViewHolder?, aboutPost: AboutPost?, bsdView: View?) {}
 
     interface OnFragmentStateChanged {
         fun pauseAllPlayers()
