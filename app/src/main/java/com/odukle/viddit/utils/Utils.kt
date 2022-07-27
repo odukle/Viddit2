@@ -270,6 +270,18 @@ fun runAfter(ms: Long, block: () -> Unit) {
     )
 }
 
+fun tryThreeTimes(block: () -> Unit) {
+    for (i in 0..2) {
+        try {
+            run(block)
+            break
+        } catch (e: Exception) {
+            Log.e(TAG, "tryThreeTimes: ${e.stackTrace}", )
+            run(block)
+        }
+    }
+}
+
 fun isOnline(context: Context): Boolean {
     val connectivityManager =
         context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -327,7 +339,7 @@ fun MutableList<Any>.placeAds() {
 }
 
 fun getSubredditSort(sort: String): SubredditSort {
-    val order =  when (sort) {
+    val order = when (sort) {
         HOT -> SubredditSort.HOT
         NEW -> SubredditSort.NEW
         TOP -> SubredditSort.TOP

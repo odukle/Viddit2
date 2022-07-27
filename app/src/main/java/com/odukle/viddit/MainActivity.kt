@@ -28,6 +28,7 @@ import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.gms.ads.MobileAds
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.firebase.analytics.FirebaseAnalytics
 import com.odukle.viddit.adapters.SubredditAdapter
 import com.odukle.viddit.adapters.VideoAdapter
 import com.odukle.viddit.fragments.*
@@ -37,6 +38,7 @@ import com.odukle.viddit.utils.*
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.bottom_sheet_download.view.*
 import kotlinx.android.synthetic.main.bottom_sheet_sign_in.view.*
+import kotlinx.android.synthetic.main.fragment_home.*
 import kotlinx.android.synthetic.main.item_view_video.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -67,6 +69,7 @@ class MainActivity : AppCompatActivity(),
     var playOnMute = false
     private lateinit var networkAdapter: OkHttpNetworkAdapter
     private lateinit var authHelper: StatefulAuthHelper
+    private lateinit var mFirebaseAnalytics: FirebaseAnalytics
     var redditLive = MutableLiveData<RedditClient>()
     lateinit var reddit: RedditClient
     private var currentPlayer: ExoPlayer? = null
@@ -79,6 +82,7 @@ class MainActivity : AppCompatActivity(),
         setContentView(R.layout.activity_main)
         initReddit()
         MobileAds.initialize(this)
+        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this)
         toast = Toast(this)
         setUpBrowser()
 
@@ -108,6 +112,7 @@ class MainActivity : AppCompatActivity(),
             }
             true
         }
+
     }
 
     private fun openFragment(fragment: Fragment) {

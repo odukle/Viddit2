@@ -150,7 +150,9 @@ class FragmentHome : Fragment(), VideoAdapter.OnFragmentCallback {
                 ioScope().launch {
                     viewModel.pages?.forEach {
                         while (!it.toList().contains(lastSubmission)) {
-                            viewModel.pages!!.next()
+                            tryThreeTimes {
+                                viewModel.pages!!.next()
+                            }
                         }
                     }
                 }
@@ -438,6 +440,7 @@ class FragmentHome : Fragment(), VideoAdapter.OnFragmentCallback {
 
     override fun onDestroyView() {
         viewModel.adapterPosition = view_pager_main.currentItem
+        viewModel.adapter.destroyAd()
 
         when (calledFor) {
             FOR_MAIN -> {

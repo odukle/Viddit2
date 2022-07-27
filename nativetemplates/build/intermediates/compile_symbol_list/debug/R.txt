@@ -45,6 +45,5 @@ int id rating_bar 0x0
 int id row_two 0x0
 int id secondary 0x0
 int layout gnt_medium_template_view 0x0
-int layout gnt_small_template_view 0x0
 int[] styleable TemplateView { 0x0 }
 int styleable TemplateView_gnt_template_type 0
