@@ -46,5 +46,4 @@ id rating_bar
 id row_two
 id secondary
 layout gnt_medium_template_view
-layout gnt_small_template_view
 styleable TemplateView gnt_template_type

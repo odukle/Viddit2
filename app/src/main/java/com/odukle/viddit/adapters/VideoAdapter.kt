@@ -5,17 +5,23 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.util.Log
-import android.view.*
-import androidx.appcompat.widget.ThemedSpinnerAdapter
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.google.android.ads.nativetemplates.NativeTemplateStyle
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.util.MimeTypes
-import com.google.android.gms.ads.*
+import com.google.android.gms.ads.AdListener
+import com.google.android.gms.ads.AdLoader
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.nativead.NativeAd
 import com.google.android.material.snackbar.Snackbar
 import com.odukle.viddit.MainActivity
@@ -32,6 +38,7 @@ import kotlinx.coroutines.launch
 import net.dean.jraw.RedditClient
 import net.dean.jraw.models.Submission
 import net.dean.jraw.models.VoteDirection
+
 
 private const val TAG = "VideoAdapter"
 private const val ITEM_VIDEO = 101
@@ -76,7 +83,10 @@ class VideoAdapter(var vList: MutableList<Any>) :
             holder.populateViewHolder(post)
         } else {
             holder as AdViewHolder
-            nativeAd.observe(activity, getAdObserver(holder))
+            try {
+                nativeAd.observe(activity, getAdObserver(holder))
+            } catch (e: Exception) {
+            }
         }
 
         val range = (itemCount - 5)..itemCount
@@ -180,26 +190,29 @@ class VideoAdapter(var vList: MutableList<Any>) :
             player.setMediaItem(mediaItem)
             player.prepare()
         } else {
-            holder.itemView.gif_loader.show()
-            holder.gifJob?.cancel()
-            holder.gifJob = ioScope().launch {
-                holder.gifMp4 = getGifMp4(post.permalink, activity.client).second
-                Log.d(TAG, "setupPlayer: ${holder.gifMp4}")
-                Log.d(TAG, "setupPlayer: ${post.postHint}")
-                if (holder.playerReleased) return@launch
-                mainScope().launch {
-                    val mimeType = MimeTypes.APPLICATION_MP4
-                    val mediaItem = MediaItem.Builder()
-                        .setUri(Uri.parse(holder.gifMp4))
-                        .setMimeType(mimeType)
-                        .build()
-                    player.setMediaItem(mediaItem)
-                    player.prepare()
-                    player.playWhenReady = true
-                    holder.itemView.gif_loader.hide()
-                    holder.gifJob = null
+            if (isOnline(activity)) {
+                holder.itemView.gif_loader.show()
+                holder.gifJob?.cancel()
+                holder.gifJob = ioScope().launch {
+                    holder.gifMp4 = getGifMp4(post.permalink, activity.client).second
+                    Log.d(TAG, "setupPlayer: ${holder.gifMp4}")
+                    Log.d(TAG, "setupPlayer: ${post.postHint}")
+                    if (holder.playerReleased) return@launch
+                    mainScope().launch {
+                        val mimeType = MimeTypes.APPLICATION_MP4
+                        val mediaItem = MediaItem.Builder()
+                            .setUri(Uri.parse(holder.gifMp4))
+                            .setMimeType(mimeType)
+                            .build()
+                        player.setMediaItem(mediaItem)
+                        player.prepare()
+                        player.playWhenReady = true
+                        holder.itemView.gif_loader.hide()
+                        holder.gifJob = null
+                    }
                 }
-            }
+            } else showNoInternetToast(activity)
+
         }
 
         playerView.setControllerVisibilityListener {
@@ -224,25 +237,29 @@ class VideoAdapter(var vList: MutableList<Any>) :
     }
 
     private fun setVote(post: Submission, holder: VideoAdapter.VideoViewHolder) {
-        ioScope().launch {
-            holder.itemView.apply {
-                try {
-                    val submission = activity.reddit.submission(post.id).inspect()
-                    if (submission.vote == VoteDirection.UP) {
-                        activity.runOnUiThread {
-                            iv_upvotes.setImageResource(R.drawable.ic_upvote_red)
-                            tv_upvotes.setTextColor(activity.getColor(R.color.orange))
+        if (isOnline(activity)) {
+            ioScope().launch {
+                holder.itemView.apply {
+                    try {
+                        val submission = activity.reddit.submission(post.id).inspect()
+                        if (submission.vote == VoteDirection.UP) {
+                            activity.runOnUiThread {
+                                val drawable = ContextCompat.getDrawable(activity, R.drawable.ic_upvote_red)
+                                tv_upvotes.setCompoundDrawablesWithIntrinsicBounds(null, drawable, null, null)
+                                tv_upvotes.setTextColor(activity.getColor(R.color.orange))
+                            }
+                        } else {
+                            activity.runOnUiThread {
+                                val drawable = ContextCompat.getDrawable(activity, R.drawable.ic_upvote)
+                                tv_upvotes.setCompoundDrawablesWithIntrinsicBounds(null, drawable, null, null)
+                                tv_upvotes.setTextColor(activity.getColor(R.color.white))
+                            }
                         }
-                    } else {
-                        activity.runOnUiThread {
-                            iv_upvotes.setImageResource(R.drawable.ic_upvote)
-                            tv_upvotes.setTextColor(activity.getColor(R.color.white))
-                        }
+                    } catch (e: IllegalStateException) {
                     }
-                } catch (e: IllegalStateException) {
                 }
             }
-        }
+        } else showNoInternetToast(activity)
     }
 
     private suspend fun setIconImg(post: Submission, holder: VideoAdapter.VideoViewHolder) {
@@ -277,14 +294,10 @@ class VideoAdapter(var vList: MutableList<Any>) :
     }
 
     private fun setUpAds() {
-
         adLoader = AdLoader.Builder(activity, AD_UNIT_ID)
             .forNativeAd { ad ->
-                nativeAd.value?.destroy()
-                nativeAd.postValue(null)
                 nativeAd.postValue(ad)
                 if (!adLoader.isLoading) {
-
                     if (activity.isDestroyed) {
                         ad.destroy()
                         return@forNativeAd
@@ -303,10 +316,14 @@ class VideoAdapter(var vList: MutableList<Any>) :
 
     private fun getAdObserver(holder: AdViewHolder) = object : Observer<NativeAd?> {
         override fun onChanged(t: NativeAd?) {
-            holder.itemView.my_template.setNativeAd(nativeAd.value)
-            removeObserver()
-            holder.itemView.progress_bar_ad.hide()
-            adLoader.loadAd(AdRequest.Builder().build())
+            if (t != null) {
+                val styles = NativeTemplateStyle.Builder().build()
+                holder.itemView.my_template.setStyles(styles)
+                holder.itemView.my_template.setNativeAd(nativeAd.value)
+                removeObserver()
+                holder.itemView.progress_bar_ad.hide()
+                adLoader.loadAd(AdRequest.Builder().build())
+            }
         }
 
         fun removeObserver() {
@@ -382,11 +399,10 @@ class VideoAdapter(var vList: MutableList<Any>) :
                     } else allowNSFW(activity)
                 }
 
-                arrayOf(iv_upvotes, tv_upvotes).forEach {
-                    it.setOnClickListener {
-                        vote(VoteDirection.UP, activity.reddit, post.id, post.score, this@VideoViewHolder)
-                    }
+                tv_upvotes.setOnClickListener {
+                    vote(VoteDirection.UP, activity.reddit, post.id, post.score, this@VideoViewHolder)
                 }
+
 
                 iv_downvote.setOnClickListener {
                     vote(VoteDirection.DOWN, activity.reddit, post.id, post.score, this@VideoViewHolder)
@@ -426,7 +442,7 @@ class VideoAdapter(var vList: MutableList<Any>) :
                     }
                 }
 
-                iv_comments.setOnClickListener {
+                tv_comments.setOnClickListener {
                     (getCurrentFragment(activity) as FragmentHome).showComments(post.permalink)
                 }
 
@@ -468,6 +484,7 @@ class VideoAdapter(var vList: MutableList<Any>) :
         }
     }
 
+    fun destroyAd() = nativeAd.value?.destroy()
 
     private fun vote(
         dir: VoteDirection,
@@ -485,9 +502,8 @@ class VideoAdapter(var vList: MutableList<Any>) :
             val strVote = if (dir == VoteDirection.UP) "upvote" else "downvote"
             val strVoted = if (dir == VoteDirection.UP) "Upvoted" else "Downvoted"
             val tv = if (dir == VoteDirection.UP) tv_upvotes else null
-            val iv = if (dir == VoteDirection.UP) iv_upvotes else iv_downvote
+            val iv = if (dir == VoteDirection.DOWN) iv_downvote else null
             val tvEx = if (dir == VoteDirection.UP) null else tv_upvotes
-            val ivEx = if (dir == VoteDirection.UP) iv_downvote else iv_upvotes
             val src = if (dir == VoteDirection.UP) R.drawable.ic_upvote else R.drawable.ic_downvote
             val srcEx = if (dir == VoteDirection.UP) R.drawable.ic_downvote else R.drawable.ic_upvote
             val srcRed = if (dir == VoteDirection.UP) R.drawable.ic_upvote_red else R.drawable.ic_downvote_red
@@ -504,14 +520,18 @@ class VideoAdapter(var vList: MutableList<Any>) :
                         //change vote image color
                         mainScope().launch {
                             shortToast(activity, strVoted)
-                            iv.setImageResource(srcRed)
+                            val drawable = ContextCompat.getDrawable(activity, srcRed)
+                            iv?.setImageDrawable(drawable)
+                            tv?.setCompoundDrawablesWithIntrinsicBounds(null, drawable, null, null)
                             tv?.setTextColor(activity.getColor(R.color.orange))
-                            iv.bounce(); tv?.bounce()
+                            tv?.bounce(); iv?.bounce()
                             if (voteDir != VoteDirection.NONE) {
-                                ivEx.setImageResource(srcEx)
+                                val drawableEx = ContextCompat.getDrawable(activity, srcEx)
+                                tvEx?.setCompoundDrawablesWithIntrinsicBounds(null, drawableEx, null, null)
                                 tvEx?.setTextColor(activity.getColor(R.color.white))
                             }
-                            tv_upvotes.text = if (dir == VoteDirection.DOWN) (score - 1).toString() else (score + 1).toString()
+
+                            tv_upvotes.text = truncateNumber(if (dir == VoteDirection.DOWN) (score - 1).toFloat() else (score + 1).toFloat())
                         }
                         //upvote
                         submission.setVote(dir)
@@ -519,10 +539,12 @@ class VideoAdapter(var vList: MutableList<Any>) :
                         //change vote image color
                         mainScope().launch {
                             shortToast(activity, "Removed $strVote")
-                            iv.setImageResource(src)
-                            iv.bounce(); tv?.bounce()
+                            val drawable = ContextCompat.getDrawable(activity, src)
+                            iv?.setImageDrawable(drawable)
+                            tv?.setCompoundDrawablesWithIntrinsicBounds(null, drawable, null, null)
                             tv?.setTextColor(activity.getColor(R.color.white))
-                            tv_upvotes.text = if (dir == VoteDirection.DOWN) (score + 1).toString() else (score - 1).toString()
+                            tv?.bounce(); iv?.bounce()
+                            tv_upvotes.text = truncateNumber(if (dir == VoteDirection.DOWN) (score + 1).toFloat() else (score - 1).toFloat())
                         }
                         //remove vote
                         submission.setVote(VoteDirection.NONE)

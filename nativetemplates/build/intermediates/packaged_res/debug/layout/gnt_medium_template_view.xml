@@ -41,7 +41,6 @@
                 app:layout_constraintTop_toBottomOf="@id/media_view">
 
                 <androidx.constraintlayout.widget.ConstraintLayout
-
                     android:layout_width="@dimen/gnt_no_size"
                     android:layout_height="@dimen/gnt_no_size"
                     android:orientation="horizontal"
@@ -60,6 +59,7 @@
                         android:layout_marginBottom="@dimen/gnt_no_margin"
                         android:layout_weight="0"
                         android:scaleType="fitCenter"
+                        tools:src="@color/gnt_orange"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintDimensionRatio="H,1:1"
                         app:layout_constraintEnd_toStartOf="@id/content"
@@ -70,7 +70,7 @@
                         android:id="@+id/content"
                         android:layout_width="@dimen/gnt_no_size"
                         android:layout_height="@dimen/gnt_no_size"
-                        android:layout_marginLeft="@dimen/gnt_default_margin"
+                        android:layout_marginStart="@dimen/gnt_default_margin"
                         android:orientation="vertical"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
@@ -101,6 +101,7 @@
                                 android:layout_marginBottom="@dimen/gnt_no_margin"
                                 android:background="@color/gnt_bg_dark"
                                 android:lines="1"
+                                tools:text="Headline Goes here"
                                 android:textColor="@color/gnt_gray"
                                 android:textSize="@dimen/gnt_text_size_large"
                                 android:textStyle="bold"
@@ -136,7 +137,7 @@
                                 android:textStyle="bold"
                                 app:layout_constraintBottom_toBottomOf="parent"
                                 app:layout_constraintStart_toStartOf="parent"
-                                app:layout_constraintTop_toTopOf="parent"></TextView>
+                                app:layout_constraintTop_toTopOf="parent" />
 
                             <RatingBar
                                 android:id="@+id/rating_bar"
@@ -194,8 +195,9 @@
                 android:layout_margin="@dimen/gnt_no_size"
                 android:layout_marginBottom="@dimen/gnt_default_margin"
                 android:background="@color/gnt_bg_dark"
-                android:paddingLeft="@dimen/gnt_default_margin"
-                android:paddingBottom="@dimen/gnt_default_margin"
+                android:padding="@dimen/gnt_default_margin"
+                android:textColor="@color/gnt_gray"
+                tools:text="Ad body goes here"
                 app:layout_constraintBottom_toTopOf="@+id/cta"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -207,6 +209,7 @@
                 android:layout_height="50dp"
                 android:layout_marginLeft="5dp"
                 android:layout_marginRight="5dp"
+                android:layout_marginVertical="@dimen/gnt_default_margin"
                 android:background="@drawable/gnt_button_round"
                 android:gravity="center"
                 android:lines="1"
