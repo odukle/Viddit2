@@ -4,9 +4,9 @@
     <item android:drawable="@color/window_bg_dark" />
 
     <item
-        android:drawable="@drawable/ic_icon__1"
-        android:gravity="center"
         android:width="100dp"
-        android:height="100dp"/>
+        android:height="100dp"
+        android:drawable="@drawable/ic_icon__1"
+        android:gravity="center" />
 
 </layer-list>

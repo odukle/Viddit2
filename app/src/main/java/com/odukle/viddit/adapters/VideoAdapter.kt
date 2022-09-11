@@ -38,6 +38,7 @@ import kotlinx.coroutines.launch
 import net.dean.jraw.RedditClient
 import net.dean.jraw.models.Submission
 import net.dean.jraw.models.VoteDirection
+import java.net.SocketTimeoutException
 
 
 private const val TAG = "VideoAdapter"
@@ -255,7 +256,10 @@ class VideoAdapter(var vList: MutableList<Any>) :
                                 tv_upvotes.setTextColor(activity.getColor(R.color.white))
                             }
                         }
-                    } catch (e: IllegalStateException) {
+                    } catch (e: Exception) {
+                        if (e is SocketTimeoutException) shortToast(activity, "Network timeout!")
+                        else shortToast(activity, "Something went wrong \uD83D\uDE25 : \n" +
+                                " ${e.message}")
                     }
                 }
             }
