@@ -244,10 +244,12 @@ class FragmentHome : Fragment(), VideoAdapter.OnFragmentCallback {
                         viewModel.pages = viewModel.tempPagesPop
                         view_pager_main.setCurrentItem(viewModel.tempPositionPop, true)
                     } else {
-                        job?.cancel()
-                        job = ioScope().launch {
-                            viewModel.pages = viewModel.getPages(FOR_SUBREDDIT, activity.reddit, "popular")
-                            viewModel.loadMoreData(viewModel.pages!!)
+                        if (activity.redditInitialized()) {
+                            job?.cancel()
+                            job = ioScope().launch {
+                                viewModel.pages = viewModel.getPages(FOR_SUBREDDIT, activity.reddit, "popular")
+                                viewModel.loadMoreData(viewModel.pages!!)
+                            }
                         }
                     }
                     viewModel.adapter.content = POPULAR

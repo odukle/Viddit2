@@ -57,6 +57,7 @@ class UserFragment : Fragment() {
                     ioScope().launch {
                         val postKarma: Int? = rc.me().query().account?.linkKarma
                         val commentKarma: Int? = rc.me().query().account?.commentKarma
+                        if (tv_post_karma == null) return@launch
                         mainScope().launch {
                             tv_post_karma.text = "Post karma: " + postKarma.toString()
                             tv_comment_karma.text = "Comment karma: " + commentKarma.toString()
@@ -107,7 +108,10 @@ class UserFragment : Fragment() {
     }
 
     override fun onResume() {
-        activity.window.setLayout(ConstraintLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT)
+        activity.window.setLayout(
+            ConstraintLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.MATCH_PARENT
+        )
         super.onResume()
     }
 

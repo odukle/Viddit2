@@ -140,7 +140,11 @@ suspend fun getUserIcon(user: String, client: OkHttpClient) = withContext(Dispat
     }
 }
 
-suspend fun getSubredditInfo(subreddit: String, client: OkHttpClient, isUser: Boolean = false): SubReddit = withContext(Dispatchers.IO) {
+suspend fun getSubredditInfo(
+    subreddit: String,
+    client: OkHttpClient,
+    isUser: Boolean = false
+): SubReddit = withContext(Dispatchers.IO) {
 
     try {
         val request = Request.Builder()
@@ -151,7 +155,8 @@ suspend fun getSubredditInfo(subreddit: String, client: OkHttpClient, isUser: Bo
         val response = client.newCall(request).execute()
         val json = response.body?.string()
         val jsonObject = JsonParser.parseString(json).asJsonObject
-        val data = if (!isUser) jsonObject["data"].asJsonObject else jsonObject["data"].asJsonObject["subreddit"].asJsonObject
+        val data =
+            if (!isUser) jsonObject["data"].asJsonObject else jsonObject["data"].asJsonObject["subreddit"].asJsonObject
         val title = try {
             data["title"].asString
         } catch (e: Exception) {
@@ -204,7 +209,16 @@ suspend fun getSubredditInfo(subreddit: String, client: OkHttpClient, isUser: Bo
             "null"
         }
 
-        return@withContext SubReddit(title, titlePrefixed, desc, headerImage, icon, banner, subscribers, fullDesc)
+        return@withContext SubReddit(
+            title,
+            titlePrefixed,
+            desc,
+            headerImage,
+            icon,
+            banner,
+            subscribers,
+            fullDesc
+        )
     } catch (e: Exception) {
         if (e !is SocketTimeoutException) {
             Log.e(TAG, "getSubredditInfo: ${e.stackTraceToString()}")
@@ -225,7 +239,8 @@ suspend fun getGifMp4(permalink: String, client: OkHttpClient) = withContext(Dis
         val response = client.newCall(request).execute()
         val json = response.body?.string()
         val jsonObject = JsonParser.parseString(json).asJsonArray[0].asJsonObject
-        val post = jsonObject["data"].asJsonObject["children"].asJsonArray[0].asJsonObject["data"].asJsonObject
+        val post =
+            jsonObject["data"].asJsonObject["children"].asJsonArray[0].asJsonObject["data"].asJsonObject
         val gif = try {
             post["preview"]
                 .asJsonObject["images"]
@@ -271,13 +286,13 @@ fun runAfter(ms: Long, block: () -> Unit) {
 }
 
 fun tryThreeTimes(block: () -> Unit) {
-    for (i in 0..2) {
+    for (i in 0..3) {
         try {
             run(block)
             break
         } catch (e: Exception) {
-            Log.e(TAG, "tryThreeTimes: ${e.stackTrace}", )
-            run(block)
+            Log.e(TAG, "tryThreeTimes: ${e.message}")
+            if (i < 3) run(block)
         }
     }
 }
@@ -378,7 +393,8 @@ val filter = InputFilter { source, _, _, _, _, _ ->
     } else null
 }
 
-fun getCurrentFragment(mainActivity: MainActivity): Fragment? = mainActivity.supportFragmentManager.findFragmentById(R.id.fragment_container)
+fun getCurrentFragment(mainActivity: MainActivity): Fragment? =
+    mainActivity.supportFragmentManager.findFragmentById(R.id.fragment_container)
 
 fun MutableList<Submission>.getIndexAdjustedForAds(position: Int): Int {
     val video = this[position]
