@@ -4,13 +4,13 @@
 4
 5    <uses-sdk
 6        android:minSdkVersion="23"
-6-->C:\Users\91942\Desktop\Flutter\Viddit2\nativetemplates\src\main\AndroidManifest.xml
+6-->/media/SaurabhOdukle/OS/Users/91942/Desktop/Flutter/Viddit2/nativetemplates/src/main/AndroidManifest.xml
 7        android:targetSdkVersion="32" />
-7-->C:\Users\91942\Desktop\Flutter\Viddit2\nativetemplates\src\main\AndroidManifest.xml
+7-->/media/SaurabhOdukle/OS/Users/91942/Desktop/Flutter/Viddit2/nativetemplates/src/main/AndroidManifest.xml
 8
 9    <application android:supportsRtl="true" >
-9-->C:\Users\91942\Desktop\Flutter\Viddit2\nativetemplates\src\main\AndroidManifest.xml:3:3-5:17
-9-->C:\Users\91942\Desktop\Flutter\Viddit2\nativetemplates\src\main\AndroidManifest.xml:3:16-42
+9-->/media/SaurabhOdukle/OS/Users/91942/Desktop/Flutter/Viddit2/nativetemplates/src/main/AndroidManifest.xml:3:3-5:17
+9-->/media/SaurabhOdukle/OS/Users/91942/Desktop/Flutter/Viddit2/nativetemplates/src/main/AndroidManifest.xml:3:16-42
 10    </application>
 11
 12</manifest>
