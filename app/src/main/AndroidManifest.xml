@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="com.odukle.viddit">
+    package="com.odukle.vidred">
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
@@ -9,7 +9,7 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
-        android:name=".App"
+        android:name="com.odukle.vidred.App"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -20,15 +20,21 @@
         android:theme="@style/Theme.Viddit"
         tools:targetApi="31">
         <activity
-            android:name=".MainActivity"
+            android:name="com.odukle.vidred.SplashActivity"
             android:exported="true"
-            android:hardwareAccelerated="true"
-            android:screenOrientation="portrait">
+            android:theme="@style/SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity
+            android:name="com.odukle.vidred.MainActivity"
+            android:exported="true"
+            android:hardwareAccelerated="true"
+            android:screenOrientation="portrait"
+            android:launchMode="singleTop"
+            tools:ignore="LockedOrientationActivity">
 
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
@@ -39,7 +45,7 @@
 
         <provider
             android:name="androidx.core.content.FileProvider"
-            android:authorities="com.odukle.viddit.FileProvider"
+            android:authorities="com.odukle.vidred.FileProvider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data
@@ -59,7 +65,7 @@
 
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-9193191601772541~4450504370"/>
+            android:value="ca-app-pub-9193191601772541~4450504370" />
     </application>
 
 </manifest>
