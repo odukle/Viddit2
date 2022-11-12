@@ -23,8 +23,8 @@
             android:layout_height="wrap_content"
             android:layout_alignParentTop="true"
             android:layout_centerHorizontal="true"
-            android:layout_marginTop="20dp"
-            android:visibility="gone"
+            android:layout_marginTop="10dp"
+            android:visibility="visible"
             app:selectionRequired="true"
             app:singleSelection="true">
 
