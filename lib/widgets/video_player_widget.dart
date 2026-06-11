@@ -438,7 +438,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text('Post reported. Thank you for making RedVid safe!')),
+            content: Text('Post reported. Thank you for making Scroller safe!')),
       );
       if (widget.onPostReported != null) {
         widget.onPostReported!();
@@ -1062,7 +1062,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                     onTap: () {
                       final url =
                           'https://www.reddit.com${widget.post.permalink}';
-                      const extra = '\n\nShared via RedVid';
+                      const extra = '\n\nShared via Scroller';
                       Share.share('$url$extra');
                     },
                   ),

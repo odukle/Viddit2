@@ -499,7 +499,7 @@ class RedditApi {
       body: {
         'model': jsonEncode({
           'display_name': displayName,
-          'description_md': 'Custom feed created in RedVid',
+          'description_md': 'Custom feed created in Scroller',
           'icon_name': 'png',
           'visibility': 'private',
         }),

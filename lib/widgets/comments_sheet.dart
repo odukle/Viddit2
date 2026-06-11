@@ -438,7 +438,7 @@ class _CommentNodeWidgetState extends State<CommentNodeWidget> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
             content:
-                Text('Comment reported. Thank you for making RedVid safe!')),
+                Text('Comment reported. Thank you for making Scroller safe!')),
       );
       if (widget.onUserBlocked != null) {
         widget.onUserBlocked!();

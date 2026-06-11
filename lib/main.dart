@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'RedVid',
+      title: 'Scroller',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
       home: const NavigationContainer(),
@@ -80,7 +80,7 @@ class _NavigationContainerState extends State<NavigationContainer> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Welcome to RedVid. By using this app, you agree to the following terms regarding User Generated Content (UGC):',
+                    'Welcome to Scroller. By using this app, you agree to the following terms regarding User Generated Content (UGC):',
                     style: TextStyle(
                         color: AppTheme.textSecondary,
                         fontWeight: FontWeight.bold,
@@ -94,7 +94,7 @@ class _NavigationContainerState extends State<NavigationContainer> {
                   ),
                   SizedBox(height: 8),
                   Text(
-                    '2. Reporting & Blocking:\nRedVid provides tools for all users to instantly report objectionable content and block abusive creators. Reported content and posts from blocked users will be hidden from your feed immediately.',
+                    '2. Reporting & Blocking:\nScroller provides tools for all users to instantly report objectionable content and block abusive creators. Reported content and posts from blocked users will be hidden from your feed immediately.',
                     style:
                         TextStyle(color: AppTheme.textSecondary, fontSize: 12),
                   ),
