@@ -849,7 +849,7 @@ class VerticalFeedWidgetState extends State<VerticalFeedWidget>
     required String? audioPath,
     required String outputPath,
   }) async {
-    const platform = MethodChannel('com.odukle.vidred/media');
+    const platform = MethodChannel('com.odukle.scroller/media');
     try {
       final result = await platform.invokeMethod<String>('muxVideoAudio', {
         'videoPath': videoPath,

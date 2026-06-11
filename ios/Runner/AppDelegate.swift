@@ -16,7 +16,7 @@ import AVFoundation
 
     let controller = engineBridge as! FlutterViewController
     let channel = FlutterMethodChannel(
-      name: "com.odukle.vidred/media",
+      name: "com.odukle.scroller/media",
       binaryMessenger: controller.binaryMessenger
     )
 

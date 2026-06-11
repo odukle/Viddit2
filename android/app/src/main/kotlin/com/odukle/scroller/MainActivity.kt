@@ -1,4 +1,4 @@
-package com.odukle.vidred
+package com.odukle.scroller
 
 import android.media.MediaExtractor
 import android.media.MediaFormat
@@ -11,7 +11,7 @@ import java.nio.ByteBuffer
 
 class MainActivity : FlutterActivity() {
 
-    private val CHANNEL = "com.odukle.vidred/media"
+    private val CHANNEL = "com.odukle.scroller/media"
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)

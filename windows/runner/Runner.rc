@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "viddit" "\0"
+            VALUE "CompanyName", "com.odukle" "\0"
+            VALUE "FileDescription", "Scroller" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "viddit" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "viddit.exe" "\0"
-            VALUE "ProductName", "viddit" "\0"
+            VALUE "InternalName", "scroller" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 com.odukle. All rights reserved." "\0"
+            VALUE "OriginalFilename", "scroller.exe" "\0"
+            VALUE "ProductName", "Scroller" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

@@ -11,7 +11,7 @@ import '../models/subreddit_model.dart';
 class RedditApi {
   static const String clientId = 'dpM8BKY1nsPNYYwhwpeYIg';
   static const String redirectUri = 'https://odukle.github.io/';
-  static const String userAgent = 'Android:com.odukle.vidred:3.2 (by u/odukle)';
+  static const String userAgent = 'Android:com.odukle.scroller:3.2 (by u/odukle)';
 
   static const String _oauthHost = 'oauth.reddit.com';
   static const String _curatedVideoFeed =
