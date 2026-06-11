@@ -204,10 +204,12 @@ class _NavigationContainerState extends State<NavigationContainer> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        _buildNavItem(0, Icons.play_circle_fill_rounded, 'Home'),
+                        _buildNavItem(
+                            0, Icons.play_circle_fill_rounded, 'Home'),
                         _buildNavItem(1, Icons.explore_rounded, 'Discover'),
                         _buildNavItem(2, Icons.star_rounded, 'Feeds'),
-                        _buildNavItem(3, Icons.account_circle_rounded, 'Profile'),
+                        _buildNavItem(
+                            3, Icons.account_circle_rounded, 'Profile'),
                       ],
                     ),
                   ),

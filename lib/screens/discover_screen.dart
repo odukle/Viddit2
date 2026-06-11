@@ -687,8 +687,8 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                                             duration: const Duration(
                                                 milliseconds: 200),
                                             padding: const EdgeInsets.all(6),
-                                            margin: const EdgeInsets.only(
-                                                right: 2),
+                                            margin:
+                                                const EdgeInsets.only(right: 2),
                                             decoration: BoxDecoration(
                                               color: _nsfwAllowed
                                                   ? AppTheme.accentOrange
@@ -736,8 +736,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
 
                           // ─── Search Action Button ───
                           PressableScale(
-                            onTap: () =>
-                                _performSearch(_searchController.text),
+                            onTap: () => _performSearch(_searchController.text),
                             child: Container(
                               padding: const EdgeInsets.all(14),
                               decoration: BoxDecoration(
@@ -769,12 +768,9 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                           itemCount: _categories.length,
                           itemBuilder: (context, index) {
                             final cat = _categories[index];
-                            final bool isSelected =
-                                _selectedCategory == cat &&
-                                    _searchController.text
-                                            .trim()
-                                            .toLowerCase() ==
-                                        cat.toLowerCase();
+                            final bool isSelected = _selectedCategory == cat &&
+                                _searchController.text.trim().toLowerCase() ==
+                                    cat.toLowerCase();
                             return Padding(
                               padding: const EdgeInsets.only(
                                   right: AppTheme.spacingSm),
@@ -917,8 +913,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                                       ),
                                       const SizedBox(width: 6),
                                       GestureDetector(
-                                        onTap: () =>
-                                            _removeFromHistory(query),
+                                        onTap: () => _removeFromHistory(query),
                                         child: const Icon(
                                           Icons.close_rounded,
                                           size: 14,
@@ -943,15 +938,13 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
             // ─── Section Header ───
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: AppTheme.spacingLg),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: AppTheme.spacingLg),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      showingResults
-                          ? 'Search Results'
-                          : 'Trending Subreddits',
+                      showingResults ? 'Search Results' : 'Trending Subreddits',
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: AppTheme.spacingMd),
@@ -962,8 +955,8 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
 
             // ─── Results List ───
             SliverPadding(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: AppTheme.spacingLg),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: AppTheme.spacingLg),
               sliver: _isSearching || _isLoadingTrending
                   ? _buildShimmerSliver()
                   : showingResults
@@ -980,8 +973,6 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
       ),
     );
   }
-
-
 
   Widget _buildShimmerSliver() {
     return SliverList(
@@ -1117,8 +1108,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                                 : AppTheme.textSecondary,
                             size: 24,
                           ),
-                          onPressed: () =>
-                              _showAddCustomFeedSheetForSub(name),
+                          onPressed: () => _showAddCustomFeedSheetForSub(name),
                         )
                       : const Icon(
                           Icons.chevron_right_rounded,

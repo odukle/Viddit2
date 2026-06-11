@@ -890,10 +890,14 @@ class VerticalFeedWidgetState extends State<VerticalFeedWidget>
   }
 
   void _checkRateLimitPrompt() {
-    if (!_api.isLoggedIn &&
-        _feedError != null &&
-        _feedError!.toLowerCase().contains('rate-limited')) {
-      _showRateLimitSignInPrompt();
+    if (!_api.isLoggedIn && _feedError != null) {
+      final err = _feedError!.toLowerCase();
+      if (err.contains('rate-limited') ||
+          err.contains('rate limit') ||
+          err.contains('429') ||
+          err.contains('too many requests')) {
+        _showRateLimitSignInPrompt();
+      }
     }
   }
 

@@ -9,7 +9,7 @@ import '../models/post_model.dart';
 import '../models/subreddit_model.dart';
 
 class RedditApi {
-  static const String clientId = 'REDACTED_CLIENT_ID';
+  static const String clientId = 'dpM8BKY1nsPNYYwhwpeYIg';
   static const String redirectUri = 'https://odukle.github.io/';
   static const String userAgent = 'Android:com.odukle.vidred:3.2 (by u/odukle)';
 

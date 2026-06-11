@@ -966,7 +966,8 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                         });
                       },
                       child: Padding(
-                        padding: const EdgeInsets.only(left: 4, right: 60), // Leave space for side buttons
+                        padding: const EdgeInsets.only(
+                            left: 4, right: 60), // Leave space for side buttons
                         child: AnimatedCrossFade(
                           firstChild: Text(
                             widget.post.title,
