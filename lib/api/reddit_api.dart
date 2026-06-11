@@ -182,6 +182,64 @@ class RedditApi {
   }) async {
     _clearRequestState();
 
+    if (feedType == 'front_page' && isLoggedIn) {
+      String subAfter = '';
+      String popAfter = '';
+      if (after.isNotEmpty && after.contains('|')) {
+        final parts = after.split('|');
+        if (parts.length >= 2) {
+          subAfter = parts[0];
+          popAfter = parts[1];
+        }
+      } else if (after.isNotEmpty) {
+        subAfter = after;
+      }
+
+      final subs = await getSubscribedSubreddits();
+      List<PostModel> subPosts = [];
+      String nextSubAfter = '';
+
+      if (subs.isNotEmpty) {
+        final subListing = await _fetchListing(
+          _buildListingUri(
+            feedType: 'front_page',
+            query: subs.join('+'),
+            sort: sort,
+            params: {
+              'limit': '50',
+              'raw_json': '1',
+              if (subAfter.isNotEmpty) 'after': subAfter,
+              if (sort == 'top') 't': time,
+            },
+          ),
+          requiresAuth: true,
+        );
+        subPosts = _parsePostsFromListing(subListing);
+        nextSubAfter = _lastListingAfter ?? '';
+      }
+
+      final popListing = await _fetchListing(
+        _buildListingUri(
+          feedType: 'popular',
+          query: '',
+          sort: sort,
+          params: {
+            'limit': '25',
+            'raw_json': '1',
+            if (popAfter.isNotEmpty) 'after': popAfter,
+            if (sort == 'top') 't': time,
+          },
+        ),
+        requiresAuth: true,
+      );
+      final popPosts = _parsePostsFromListing(popListing);
+      final nextPopAfter = _lastListingAfter ?? '';
+
+      _lastListingAfter = '$nextSubAfter|$nextPopAfter';
+
+      return _blendFeeds(subPosts, popPosts, 3, 1);
+    }
+
     final params = <String, String>{
       'limit': '50',
       'raw_json': '1',
@@ -225,6 +283,27 @@ class RedditApi {
     }
 
     return posts;
+  }
+
+  List<PostModel> _blendFeeds(
+    List<PostModel> primary,
+    List<PostModel> secondary,
+    int primaryRatio,
+    int secondaryRatio,
+  ) {
+    final result = <PostModel>[];
+    int pIdx = 0;
+    int sIdx = 0;
+
+    while (pIdx < primary.length || sIdx < secondary.length) {
+      for (int i = 0; i < primaryRatio && pIdx < primary.length; i++) {
+        result.add(primary[pIdx++]);
+      }
+      for (int i = 0; i < secondaryRatio && sIdx < secondary.length; i++) {
+        result.add(secondary[sIdx++]);
+      }
+    }
+    return result;
   }
 
   Future<SubredditModel> fetchSubredditAbout(String subredditName) async {
