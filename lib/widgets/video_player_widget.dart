@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
+import 'package:better_player_plus/better_player_plus.dart';
+// ignore: implementation_imports
+import 'package:better_player_plus/src/video_player/video_player.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:share_plus/share_plus.dart';
@@ -45,7 +47,7 @@ class VideoPlayerWidget extends StatefulWidget {
 }
 
 class _VideoPlayerWidgetState extends State<VideoPlayerWidget> with WidgetsBindingObserver {
-  VideoPlayerController? _controller;
+  BetterPlayerController? _controller;
   bool _isInitialized = false;
   bool _hasError = false;
   bool _showPlayPauseIcon = false;
@@ -190,23 +192,34 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> with WidgetsBindi
         final oldController = _controller;
         _controller = null;
         if (oldController != null) {
-          await oldController.dispose();
+          oldController.dispose();
         }
 
         final api = RedditApi();
         final headers = await api.getDownloadHeaders();
 
-        final controller = VideoPlayerController.networkUrl(
-          Uri.parse(cachedProxyUrl),
-          httpHeaders: headers,
+        final controller = BetterPlayerController(
+          const BetterPlayerConfiguration(
+            autoPlay: false,
+            looping: true,
+            fit: BoxFit.contain,
+            controlsConfiguration: BetterPlayerControlsConfiguration(
+              showControls: false,
+            ),
+          ),
         );
         _controller = controller;
 
-        await controller.initialize();
+        await controller.setupDataSource(
+          BetterPlayerDataSource(
+            BetterPlayerDataSourceType.network,
+            cachedProxyUrl,
+            headers: headers,
+          ),
+        );
         _cleanupProgressListener();
         if (!mounted) return;
 
-        await controller.setLooping(true);
         await controller.setVolume(widget.isGlobalMuted ? 0.0 : 1.0);
 
         setState(() {
@@ -251,17 +264,28 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> with WidgetsBindi
       final api = RedditApi();
       final headers = await api.getDownloadHeaders();
 
-      final controller = VideoPlayerController.networkUrl(
-        Uri.parse(playUrl),
-        httpHeaders: headers,
+      final controller = BetterPlayerController(
+        const BetterPlayerConfiguration(
+          autoPlay: false,
+          looping: true,
+          fit: BoxFit.contain,
+          controlsConfiguration: BetterPlayerControlsConfiguration(
+            showControls: false,
+          ),
+        ),
       );
       _controller = controller;
 
-      await controller.initialize();
+      await controller.setupDataSource(
+        BetterPlayerDataSource(
+          BetterPlayerDataSourceType.network,
+          playUrl,
+          headers: headers,
+        ),
+      );
       _cleanupProgressListener();
       if (!mounted) return;
 
-      await controller.setLooping(true);
       await controller.setVolume(widget.isGlobalMuted ? 0.0 : 1.0);
 
       setState(() {
@@ -687,8 +711,8 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> with WidgetsBindi
             child: _isInitialized && _controller != null
                 ? Center(
                     child: AspectRatio(
-                      aspectRatio: _controller!.value.aspectRatio,
-                      child: VideoPlayer(_controller!),
+                      aspectRatio: _controller!.videoPlayerController?.value.aspectRatio ?? 16 / 9,
+                      child: BetterPlayer(controller: _controller!),
                     ),
                   )
                 : _hasError
@@ -1237,7 +1261,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> with WidgetsBindi
               left: 0,
               right: 0,
               child: VideoProgressIndicator(
-                _controller!,
+                _controller!.videoPlayerController!,
                 allowScrubbing: true,
                 colors: VideoProgressColors(
                   playedColor: AppTheme.accentOrange,
