@@ -360,10 +360,7 @@ class RedditApi {
       for (final child in children) {
         if (child['kind'] == 't1') {
           final comment = CommentModel.fromJson(child);
-          if (!isUserBlocked(comment.author) &&
-              !isCommentReported(comment.id)) {
-            comments.add(comment);
-          }
+          comments.add(comment);
         }
       }
       return comments;
@@ -1427,13 +1424,7 @@ class RedditApi {
         continue;
       }
 
-      // Filter out reported posts, posts by blocked users, and blocked subreddits
-      if (_reportedPostIds.contains(post.id) ||
-          _blockedUsers.contains(post.author.toLowerCase()) ||
-          _blockedSubreddits.contains(
-              post.subreddit.replaceAll('r/', '').trim().toLowerCase())) {
-        continue;
-      }
+      // Handled in UI: Filter out reported posts, posts by blocked users, and blocked subreddits at the widget layer
 
       seenIds.add(post.id);
       posts.add(post);

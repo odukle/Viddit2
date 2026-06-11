@@ -17,6 +17,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final RedditApi _api = RedditApi();
   bool _nsfwAllowed = false;
   String _selectedGeo = 'AUTO';
+  bool _dataSaverEnabled = false;
 
   static const Map<String, String> _allCountries = {
     'AF': 'Afghanistan',
@@ -327,6 +328,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
       setState(() {
         _nsfwAllowed = prefs.getBool('NSFW') ?? false;
         _selectedGeo = prefs.getString('geolocation') ?? 'AUTO';
+        _dataSaverEnabled = prefs.getBool('viddit_data_saver') ?? false;
+      });
+    }
+  }
+
+  Future<void> _saveDataSaverPreference(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('viddit_data_saver', value);
+    if (mounted) {
+      setState(() {
+        _dataSaverEnabled = value;
       });
     }
   }
@@ -665,6 +677,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   value: _nsfwAllowed,
                   activeThumbColor: AppTheme.accentOrange,
                   onChanged: _saveNsfwPreference,
+                ),
+              ),
+            ),
+            const SizedBox(height: 28),
+
+            // ─── NETWORK & DATA SECTION ───
+            _buildSectionHeader(context, 'NETWORK & DATA'),
+            const SizedBox(height: 12),
+            Container(
+              decoration: AppTheme.cardDecoration(),
+              child: ListTile(
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppTheme.accentCyan.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                  ),
+                  child: const Icon(Icons.data_usage_rounded,
+                      color: AppTheme.accentCyan, size: 20),
+                ),
+                title: Text('Data Saver (Low Quality)',
+                    style: Theme.of(context).textTheme.titleSmall),
+                subtitle: Text('Load low-resolution HLS videos on slow connections',
+                    style: Theme.of(context).textTheme.bodySmall),
+                trailing: Switch(
+                  value: _dataSaverEnabled,
+                  activeThumbColor: AppTheme.accentOrange,
+                  onChanged: _saveDataSaverPreference,
                 ),
               ),
             ),

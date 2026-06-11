@@ -61,6 +61,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> with WidgetsBindi
   bool _isListeningToProgress = false;
   bool _isSwitchingToCache = false;
   bool _isAppInForeground = true;
+  bool _isRevealed = false;
 
   @override
   void initState() {
@@ -70,9 +71,48 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> with WidgetsBindi
         WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
     _isNsfwBlocked = widget.post.isNsfw;
     _loadIcons();
+    RedditApi().addSafetyListener(_onSafetyChanged);
     if (widget.isActive) {
       _initializePlayer();
     }
+  }
+
+  void _onSafetyChanged() {
+    if (mounted) {
+      setState(() {
+        if (_isSafetyBlocked && !_isRevealed) {
+          _pausePlayer();
+        }
+      });
+    }
+  }
+
+  bool get _isSafetyBlocked {
+    final api = RedditApi();
+    return api.isPostReported(widget.post.id) ||
+        api.isUserBlocked(widget.post.author) ||
+        api.isSubredditBlocked(widget.post.subreddit);
+  }
+
+  String _getSafetyBlockedReason() {
+    final api = RedditApi();
+    if (api.isPostReported(widget.post.id)) {
+      return 'You reported this post.';
+    }
+    if (api.isUserBlocked(widget.post.author)) {
+      return 'You blocked u/${widget.post.author}.';
+    }
+    if (api.isSubredditBlocked(widget.post.subreddit)) {
+      return 'You blocked ${widget.post.subreddit}.';
+    }
+    return 'This content is blocked or reported.';
+  }
+
+  void _revealSafetyBlocked() {
+    setState(() {
+      _isRevealed = true;
+    });
+    _initializePlayer();
   }
 
   @override
@@ -246,6 +286,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> with WidgetsBindi
 
   void _playPlayer() {
     if (_controller != null && !_isPlaying) {
+      if (_isSafetyBlocked && !_isRevealed) return;
       _controller!.play();
       setState(() {
         _isPlaying = true;
@@ -606,6 +647,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> with WidgetsBindi
 
   @override
   void dispose() {
+    RedditApi().removeSafetyListener(_onSafetyChanged);
     WidgetsBinding.instance.removeObserver(this);
     _cleanupProgressListener();
     _controller?.dispose();
@@ -862,8 +904,82 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> with WidgetsBindi
               ),
             ),
 
+          // 5.5 Safety Block Filter
+          if (_isSafetyBlocked && !_isRevealed)
+            Positioned.fill(
+              child: ClipRRect(
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+                  child: Container(
+                    color: Colors.black.withValues(alpha: 0.65),
+                    padding: const EdgeInsets.all(32),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: AppTheme.accentOrange.withValues(alpha: 0.12),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                                color: AppTheme.accentOrange.withValues(alpha: 0.5),
+                                width: 1.5),
+                          ),
+                          child: const Icon(Icons.shield_rounded,
+                              color: AppTheme.accentOrange, size: 48),
+                        ),
+                        const SizedBox(height: 24),
+                        const Text(
+                          'CONTENT HIDDEN',
+                          style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.5,
+                              color: Colors.white),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          _getSafetyBlockedReason(),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                              color: Colors.white70, fontSize: 13, height: 1.4),
+                        ),
+                        const SizedBox(height: 36),
+                        PressableScale(
+                          onTap: _revealSafetyBlocked,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 36, vertical: 14),
+                            decoration: BoxDecoration(
+                              gradient: AppTheme.brandGradient,
+                              borderRadius: BorderRadius.circular(30),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppTheme.accentOrange
+                                      .withValues(alpha: 0.3),
+                                  blurRadius: 15,
+                                  offset: const Offset(0, 5),
+                                ),
+                              ],
+                            ),
+                            child: const Text(
+                              'Show Post',
+                              style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
           // 6. Left side Details overlay (Title, Subreddit, user)
-          if (!_isNsfwBlocked)
+          if (!_isNsfwBlocked && !(_isSafetyBlocked && !_isRevealed))
             Positioned(
               left: 0,
               bottom: actualBottomPadding,
@@ -1022,7 +1138,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> with WidgetsBindi
             ),
 
           // 7. Right side controls tray (Upvote, comment, download, share, mute)
-          if (!_isNsfwBlocked)
+          if (!_isNsfwBlocked && !(_isSafetyBlocked && !_isRevealed))
             Positioned(
               right: 12,
               bottom: 8 + actualBottomPadding,
@@ -1115,7 +1231,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> with WidgetsBindi
             ),
 
           // 8. Progress Seeking Bar overlay at the bottom
-          if (_isInitialized && _controller != null && !_isNsfwBlocked)
+          if (_isInitialized && _controller != null && !_isNsfwBlocked && !(_isSafetyBlocked && !_isRevealed))
             Positioned(
               bottom: actualBottomPadding,
               left: 0,

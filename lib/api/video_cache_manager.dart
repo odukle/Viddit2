@@ -5,6 +5,21 @@ import 'package:dio/dio.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class HlsVariant {
+  final String streamInfLine;
+  final String url;
+  final int bandwidth;
+  final int height;
+
+  HlsVariant({
+    required this.streamInfLine,
+    required this.url,
+    required this.bandwidth,
+    required this.height,
+  });
+}
 
 /// Lightweight in-memory HTTP server that serves cached HLS segments
 /// from the local filesystem, falling back to the network for anything
@@ -32,6 +47,85 @@ class _HlsProxyServer {
   Future<void> stop() async {
     await _server?.close(force: true);
     _server = null;
+  }
+
+  Future<bool> _isDataSaverEnabled() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getBool('viddit_data_saver') ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<String> _rewriteMasterPlaylist(String content, String originalUrl) async {
+    final lines = const LineSplitter().convert(content);
+    final newLines = <String>[];
+
+    // Check if it's a master playlist
+    if (!content.contains('#EXT-X-STREAM-INF')) {
+      return content;
+    }
+
+    final isSaver = await _isDataSaverEnabled();
+    final targetHeight = isSaver ? 360 : 720;
+
+    final variants = <HlsVariant>[];
+    for (int i = 0; i < lines.length; i++) {
+      final line = lines[i].trim();
+      if (line.startsWith('#EXT-X-STREAM-INF')) {
+        int bandwidth = 0;
+        int height = 0;
+
+        final bwMatch = RegExp(r'BANDWIDTH=(\d+)').firstMatch(line);
+        if (bwMatch != null) {
+          bandwidth = int.tryParse(bwMatch.group(1) ?? '') ?? 0;
+        }
+
+        final resMatch = RegExp(r'RESOLUTION=\d+x(\d+)').firstMatch(line);
+        if (resMatch != null) {
+          height = int.tryParse(resMatch.group(1) ?? '') ?? 0;
+        }
+
+        if (i + 1 < lines.length) {
+          final url = lines[i + 1].trim();
+          variants.add(HlsVariant(
+            streamInfLine: line,
+            url: url,
+            bandwidth: bandwidth,
+            height: height,
+          ));
+        }
+      }
+    }
+
+    if (variants.isEmpty) return content;
+
+    // Sort variants by height ascending
+    variants.sort((a, b) => a.height.compareTo(b.height));
+
+    HlsVariant selected;
+    final matching = variants.where((v) => v.height <= targetHeight).toList();
+    if (matching.isNotEmpty) {
+      selected = matching.last;
+    } else {
+      selected = variants.first;
+    }
+
+    newLines.add('#EXTM3U');
+
+    // Copy headers and other lines like #EXT-X-MEDIA (audio track)
+    for (final line in lines) {
+      final trimmed = line.trim();
+      if (trimmed.startsWith('#EXT-X-MEDIA:')) {
+        newLines.add(line);
+      }
+    }
+
+    newLines.add(selected.streamInfLine);
+    newLines.add(selected.url);
+
+    return newLines.join('\n');
   }
 
   Future<void> _handleRequest(HttpRequest request) async {
@@ -72,22 +166,41 @@ class _HlsProxyServer {
       final networkUrl =
           '${originUri.scheme}://${originUri.host}$originDir$relativePath';
 
-      try {
-        final response = await http
-            .get(Uri.parse(networkUrl))
-            .timeout(const Duration(seconds: 30));
-        if (response.statusCode == 200) {
-          await localFile.parent.create(recursive: true);
-          await localFile.writeAsBytes(response.bodyBytes);
-          _setContentType(request.response, relativePath);
-          request.response.contentLength = response.bodyBytes.length;
-          request.response.add(response.bodyBytes);
-        } else {
-          request.response.statusCode = response.statusCode;
+      if (relativePath.endsWith('.m3u8')) {
+        // Playlists: download, rewrite, and serve locally
+        try {
+          final response = await http
+              .get(Uri.parse(networkUrl))
+              .timeout(const Duration(seconds: 15));
+          if (response.statusCode == 200) {
+            await localFile.parent.create(recursive: true);
+            var content = response.body;
+
+            if (relativePath == 'playlist.m3u8') {
+              content = await _rewriteMasterPlaylist(content, originalUrl);
+            }
+
+            final tempFile = File('${localFile.path}.tmp');
+            await tempFile.writeAsString(content);
+            await tempFile.rename(localFile.path);
+
+            _setContentType(request.response, relativePath);
+            final bytes = utf8.encode(content);
+            request.response.contentLength = bytes.length;
+            request.response.add(bytes);
+          } else {
+            request.response.statusCode = response.statusCode;
+          }
+        } catch (_) {
+          request.response.statusCode = HttpStatus.badGateway;
         }
-      } catch (_) {
-        request.response.statusCode = HttpStatus.badGateway;
+        await request.response.close();
+        return;
       }
+
+      // For segment files (.ts, .mp4) not yet cached: Redirect to CDN directly!
+      request.response.statusCode = HttpStatus.movedTemporarily;
+      request.response.headers.set(HttpHeaders.locationHeader, networkUrl);
       await request.response.close();
     } catch (e) {
       debugPrint('HLS proxy error: $e');
@@ -202,20 +315,11 @@ class VideoCacheManager {
       _activeVideoKey = key;
       final hlsCacheDir = Directory('${cacheDir.path}/$key');
 
-      // Check if fully cached
-      final playlistFile = File('${hlsCacheDir.path}/playlist.m3u8');
-      if (await playlistFile.exists()) {
-        final content = await playlistFile.readAsString();
-        final isCached = await _isHlsFullyCached(hlsCacheDir, content);
-        if (isCached) {
-          final port = await _ensureProxy();
-          _proxy.register(hlsUrl, hlsCacheDir.path);
-          final encoded = base64Url.encode(utf8.encode(hlsUrl));
-          return 'http://127.0.0.1:$port/proxy/$encoded/playlist.m3u8';
-        }
-      }
+      // Ensure proxy server is running
+      final port = await _ensureProxy();
+      _proxy.register(hlsUrl, hlsCacheDir.path);
 
-      // Not fully cached — start background download
+      // Start background download/caching if not already active
       if (!_activeDownloads.contains(key)) {
         // Cancel one running preload if at limit to prioritize this active video download
         if (_cancelTokens.length >= _maxConcurrentDownloads) {
@@ -238,6 +342,9 @@ class VideoCacheManager {
         _downloadHlsInBackground(hlsUrl, hlsCacheDir, key,
             cancelToken: cancelToken);
       }
+
+      final encoded = base64Url.encode(utf8.encode(hlsUrl));
+      return 'http://127.0.0.1:$port/proxy/$encoded/playlist.m3u8';
     } catch (e) {
       debugPrint('Error checking HLS cache: $e');
     }
@@ -338,7 +445,9 @@ class VideoCacheManager {
         return;
       }
 
-      final masterPlaylistContent = playlistResponse.data!;
+      var masterPlaylistContent = playlistResponse.data!;
+      masterPlaylistContent = await _proxy._rewriteMasterPlaylist(masterPlaylistContent, hlsUrl);
+
       final playlistUri = Uri.parse(hlsUrl);
       final basePath =
           '${playlistUri.scheme}://${playlistUri.host}${playlistUri.path}';
@@ -349,7 +458,9 @@ class VideoCacheManager {
       if (!await localPlaylist.parent.exists()) {
         await localPlaylist.parent.create(recursive: true);
       }
-      await localPlaylist.writeAsString(masterPlaylistContent);
+      final tempPlaylist = File('${localPlaylist.path}.tmp');
+      await tempPlaylist.writeAsString(masterPlaylistContent);
+      await tempPlaylist.rename(localPlaylist.path);
 
       if (masterPlaylistContent.contains('#EXT-X-STREAM-INF')) {
         // It is a master playlist — download first video variant and audio variant
@@ -379,7 +490,9 @@ class VideoCacheManager {
 
             final localVideoPlaylist =
                 File('${hlsCacheDir.path}/$videoVariantFilename');
-            await localVideoPlaylist.writeAsString(rewrittenVideoPlaylist);
+            final tempVideoPlaylist = File('${localVideoPlaylist.path}.tmp');
+            await tempVideoPlaylist.writeAsString(rewrittenVideoPlaylist);
+            await tempVideoPlaylist.rename(localVideoPlaylist.path);
           }
         }
 
@@ -407,7 +520,9 @@ class VideoCacheManager {
 
             final localAudioPlaylist =
                 File('${hlsCacheDir.path}/$audioVariantFilename');
-            await localAudioPlaylist.writeAsString(rewrittenAudioPlaylist);
+            final tempAudioPlaylist = File('${localAudioPlaylist.path}.tmp');
+            await tempAudioPlaylist.writeAsString(rewrittenAudioPlaylist);
+            await tempAudioPlaylist.rename(localAudioPlaylist.path);
           }
         }
       } else {
@@ -416,7 +531,9 @@ class VideoCacheManager {
             dio, masterPlaylistContent, baseDir, hlsCacheDir,
             cancelToken: cancelToken,
             onProgress: (p) => _notifyProgress(key, p));
-        await localPlaylist.writeAsString(rewrittenPlaylist);
+        final tempPlaylist = File('${localPlaylist.path}.tmp');
+        await tempPlaylist.writeAsString(rewrittenPlaylist);
+        await tempPlaylist.rename(localPlaylist.path);
       }
 
       // Register with proxy so future calls return the local URL
@@ -523,7 +640,9 @@ class VideoCacheManager {
             if (!await localFile.parent.exists()) {
               await localFile.parent.create(recursive: true);
             }
-            await localFile.writeAsBytes(response.data!);
+            final tempSegment = File('${localFile.path}.tmp');
+            await tempSegment.writeAsBytes(response.data!);
+            await tempSegment.rename(localFile.path);
           }
         } catch (e) {
           if (cancelToken?.isCancelled == true) {

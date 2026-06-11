@@ -287,6 +287,7 @@ class _CommentNodeWidgetState extends State<CommentNodeWidget> {
   final TextEditingController _replyController = TextEditingController();
   bool _isReplying = false;
   bool _isSubmittingReply = false;
+  bool _isSafetyRevealed = false;
 
   // 4 cycling colors for thread depth
   static const List<Color> _threadColors = [
@@ -300,12 +301,20 @@ class _CommentNodeWidgetState extends State<CommentNodeWidget> {
   void initState() {
     super.initState();
     _loadUserIcon();
+    _api.addSafetyListener(_onSafetyChanged);
   }
 
   @override
   void dispose() {
+    _api.removeSafetyListener(_onSafetyChanged);
     _replyController.dispose();
     super.dispose();
+  }
+
+  void _onSafetyChanged() {
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   Future<void> _loadUserIcon() async {
@@ -762,9 +771,60 @@ class _CommentNodeWidgetState extends State<CommentNodeWidget> {
   @override
   Widget build(BuildContext context) {
     final comment = widget.comment;
-    if (_api.isUserBlocked(comment.author) ||
-        _api.isCommentReported(comment.id)) {
-      return const SizedBox.shrink();
+    final isBlockedOrReported = _api.isUserBlocked(comment.author) ||
+        _api.isCommentReported(comment.id);
+
+    if (isBlockedOrReported && !_isSafetyRevealed) {
+      final String hiddenReason = _api.isCommentReported(comment.id)
+          ? 'reported comment'
+          : 'blocked user u/${comment.author}';
+
+      return Container(
+        margin: EdgeInsets.only(left: widget.depth > 0 ? 10 : 0, top: 4, bottom: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.03),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.05),
+            width: 0.5,
+          ),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.shield_outlined, color: AppTheme.textSecondary, size: 14),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Comment hidden ($hiddenReason)',
+                style: const TextStyle(
+                  color: AppTheme.textSecondary,
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ),
+            PressableScale(
+              onTap: () {
+                setState(() {
+                  _isSafetyRevealed = true;
+                });
+              },
+              child: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: Text(
+                  'Show',
+                  style: TextStyle(
+                    color: AppTheme.accentOrange,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
     }
 
     final isBot = comment.author.toLowerCase() == 'automoderator' ||
