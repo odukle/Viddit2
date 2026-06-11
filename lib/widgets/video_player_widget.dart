@@ -44,7 +44,7 @@ class VideoPlayerWidget extends StatefulWidget {
   State<VideoPlayerWidget> createState() => _VideoPlayerWidgetState();
 }
 
-class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
+class _VideoPlayerWidgetState extends State<VideoPlayerWidget> with WidgetsBindingObserver {
   VideoPlayerController? _controller;
   bool _isInitialized = false;
   bool _hasError = false;
@@ -60,10 +60,14 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
   double _loadingProgress = 0.0;
   bool _isListeningToProgress = false;
   bool _isSwitchingToCache = false;
+  bool _isAppInForeground = true;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _isAppInForeground = WidgetsBinding.instance.lifecycleState == null ||
+        WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
     _isNsfwBlocked = widget.post.isNsfw;
     _loadIcons();
     if (widget.isActive) {
@@ -225,7 +229,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
         _hasError = false;
       });
 
-      if (widget.isActive && !_isNsfwBlocked) {
+      if (widget.isActive && !_isNsfwBlocked && _isAppInForeground) {
         _playPlayer();
       }
     } catch (e) {
@@ -602,9 +606,25 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _cleanupProgressListener();
     _controller?.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.detached) {
+      _isAppInForeground = false;
+      _pausePlayer();
+    } else if (state == AppLifecycleState.resumed) {
+      _isAppInForeground = true;
+      if (widget.isActive && _isInitialized && !_isNsfwBlocked) {
+        _playPlayer();
+      }
+    }
   }
 
   @override
