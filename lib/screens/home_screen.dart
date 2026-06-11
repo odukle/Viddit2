@@ -42,6 +42,7 @@ class HomeScreenState extends State<HomeScreen> {
   late PageController _horizontalPageController;
   int _horizontalIndex = 0;
   double _pageOffset = 0.0;
+  String _currentFrontPageSort = 'hot';
 
   final GlobalKey<VerticalFeedWidgetState> _frontPageKey =
       GlobalKey<VerticalFeedWidgetState>();
@@ -140,7 +141,7 @@ class HomeScreenState extends State<HomeScreen> {
             right: 0,
             child: Center(
               child: Container(
-                width: 220,
+                width: 240,
                 height: 40,
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
@@ -154,11 +155,11 @@ class HomeScreenState extends State<HomeScreen> {
                   children: [
                     // Sliding background indicator
                     Positioned(
-                      left: 1 + _pageOffset.clamp(0.0, 1.0) * (212 - 104 - 2),
+                      left: 1 + _pageOffset.clamp(0.0, 1.0) * (232 - 114 - 2),
                       top: 0,
                       bottom: 0,
                       child: Container(
-                        width: 104,
+                        width: 114,
                         decoration: BoxDecoration(
                           gradient: AppTheme.brandGradient,
                           borderRadius: BorderRadius.circular(20),
@@ -190,6 +191,74 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _showSortMenu(BuildContext context) async {
+    final RenderBox? overlay = Overlay.of(context).context.findRenderObject() as RenderBox?;
+    if (overlay == null) return;
+
+    final width = MediaQuery.of(context).size.width;
+    final position = RelativeRect.fromRect(
+      Rect.fromLTWH(width / 2 - 110, 90, 110, 40),
+      Offset.zero & overlay.size,
+    );
+
+    final selected = await showMenu<String>(
+      context: context,
+      position: position,
+      initialValue: _currentFrontPageSort,
+      color: AppTheme.surfaceElevated,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      items: [
+        PopupMenuItem(
+          value: 'best',
+          child: Text(
+            'Best',
+            style: TextStyle(
+              color: _currentFrontPageSort == 'best' ? AppTheme.accentOrange : Colors.white,
+              fontWeight: _currentFrontPageSort == 'best' ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'hot',
+          child: Text(
+            'Hot',
+            style: TextStyle(
+              color: _currentFrontPageSort == 'hot' ? AppTheme.accentOrange : Colors.white,
+              fontWeight: _currentFrontPageSort == 'hot' ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'new',
+          child: Text(
+            'New',
+            style: TextStyle(
+              color: _currentFrontPageSort == 'new' ? AppTheme.accentOrange : Colors.white,
+              fontWeight: _currentFrontPageSort == 'new' ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'top',
+          child: Text(
+            'Top',
+            style: TextStyle(
+              color: _currentFrontPageSort == 'top' ? AppTheme.accentOrange : Colors.white,
+              fontWeight: _currentFrontPageSort == 'top' ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+        ),
+      ],
+    );
+
+    if (selected != null && mounted) {
+      _frontPageKey.currentState?.changeSort(selected);
+      setState(() {
+        _currentFrontPageSort = selected;
+      });
+    }
+  }
+
   Widget _buildFeedTab(String label, int index) {
     final double distance = (_pageOffset.clamp(0.0, 1.0) - index).abs();
     final double textOpacity = (1.0 - distance).clamp(0.0, 1.0);
@@ -200,21 +269,44 @@ class HomeScreenState extends State<HomeScreen> {
     return Expanded(
       child: PressableScale(
         onTap: () {
-          _horizontalPageController.animateToPage(
-            index,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOutCubic,
-          );
+          if (index == _horizontalIndex) {
+            if (index == 0) {
+              _showSortMenu(context);
+            }
+          } else {
+            _horizontalPageController.animateToPage(
+              index,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOutCubic,
+            );
+          }
         },
         child: Container(
           color: Colors.transparent, // make entire area tappable
           alignment: Alignment.center,
-          child: Text(
-            label,
-            style: TextStyle(
-              color: textColor,
-              fontWeight: FontWeight.bold,
-              fontSize: 12.5,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: textColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12.5,
+                  ),
+                ),
+                if (index == 0) ...[
+                  const SizedBox(width: 2),
+                  Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    size: 14,
+                    color: textColor.withValues(alpha: 0.8),
+                  ),
+                ],
+              ],
             ),
           ),
         ),
@@ -258,6 +350,15 @@ class VerticalFeedWidgetState extends State<VerticalFeedWidget>
   bool _allLoaded = false;
   static bool _isGlobalMuted = true;
   late String _activeFeedType;
+  String _activeSort = 'hot';
+
+  void changeSort(String newSort) {
+    if (_activeSort == newSort) return;
+    setState(() {
+      _activeSort = newSort;
+    });
+    refresh();
+  }
   String? _feedError;
   final Set<String> _seenPostIds = {};
   final Set<String> _seenVideoUrls = {};
@@ -453,6 +554,7 @@ class VerticalFeedWidgetState extends State<VerticalFeedWidget>
           feedType: _activeFeedType,
           query: widget.query,
           after: nextAfter,
+          sort: _activeSort,
         );
 
         errorMessage = _api.lastErrorMessage;
