@@ -44,6 +44,59 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     'sports'
   ];
 
+  final List<Map<String, dynamic>> _curatedCategories = [
+    {
+      'title': 'Memes',
+      'subreddits': 'memes+dankmemes+funny',
+      'icon': Icons.emoji_emotions_rounded,
+      'gradient': const LinearGradient(
+        colors: [Color(0xFFF59E0B), Color(0xFFEF4444)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+    },
+    {
+      'title': 'Satisfying',
+      'subreddits': 'oddlysatisfying+satisfying+satisfyingvideos',
+      'icon': Icons.auto_awesome_rounded,
+      'gradient': const LinearGradient(
+        colors: [Color(0xFF10B981), Color(0xFF06B6D4)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+    },
+    {
+      'title': 'Gaming',
+      'subreddits': 'gaming+gamingclips+clips',
+      'icon': Icons.sports_esports_rounded,
+      'gradient': const LinearGradient(
+        colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+    },
+    {
+      'title': 'Nature & Aww',
+      'subreddits': 'natureisfuckinglit+aww+animalsbeingderps',
+      'icon': Icons.forest_rounded,
+      'gradient': const LinearGradient(
+        colors: [Color(0xFF22C55E), Color(0xFF10B981)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+    },
+    {
+      'title': 'Interesting',
+      'subreddits': 'interestingasfuck+mildlyinteresting+todayilearned',
+      'icon': Icons.lightbulb_rounded,
+      'gradient': const LinearGradient(
+        colors: [Color(0xFFEC4899), Color(0xFFF43F5E)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+    },
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -242,23 +295,23 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                         TextField(
                           controller: newFeedController,
                           autofocus: true,
-                          style: const TextStyle(color: AppTheme.textPrimary),
+                          style:  TextStyle(color: AppTheme.textPrimary),
                           decoration: InputDecoration(
                             hintText: 'Feed Name (e.g. My Gifs)',
                             hintStyle:
-                                const TextStyle(color: AppTheme.textMuted),
+                                 TextStyle(color: AppTheme.textMuted),
                             filled: true,
                             fillColor: AppTheme.surfaceLight,
                             border: OutlineInputBorder(
                               borderRadius:
                                   BorderRadius.circular(AppTheme.radiusMd),
                               borderSide:
-                                  const BorderSide(color: AppTheme.glassBorder),
+                                   BorderSide(color: AppTheme.glassBorder),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius:
                                   BorderRadius.circular(AppTheme.radiusMd),
-                              borderSide: const BorderSide(
+                              borderSide:  BorderSide(
                                   color: AppTheme.accentOrange),
                             ),
                           ),
@@ -373,7 +426,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                           style: Theme.of(context).textTheme.titleLarge,
                         ),
                         const SizedBox(height: 8),
-                        const Text(
+                         Text(
                           'You do not have any custom feeds yet. Create one inline to add this subreddit.',
                           style: TextStyle(
                               color: AppTheme.textSecondary, fontSize: 12.5),
@@ -417,24 +470,24 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                                     content: TextField(
                                       controller: newFeedController,
                                       autofocus: true,
-                                      style: const TextStyle(
+                                      style:  TextStyle(
                                           color: AppTheme.textPrimary),
                                       decoration: InputDecoration(
                                         hintText: 'Feed Name (e.g. My Gifs)',
-                                        hintStyle: const TextStyle(
+                                        hintStyle:  TextStyle(
                                             color: AppTheme.textMuted),
                                         filled: true,
                                         fillColor: AppTheme.surfaceLight,
                                         border: OutlineInputBorder(
                                           borderRadius: BorderRadius.circular(
                                               AppTheme.radiusMd),
-                                          borderSide: const BorderSide(
+                                          borderSide:  BorderSide(
                                               color: AppTheme.glassBorder),
                                         ),
                                         focusedBorder: OutlineInputBorder(
                                           borderRadius: BorderRadius.circular(
                                               AppTheme.radiusMd),
-                                          borderSide: const BorderSide(
+                                          borderSide:  BorderSide(
                                               color: AppTheme.accentOrange),
                                         ),
                                       ),
@@ -445,7 +498,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                                           newFeedController.clear();
                                           Navigator.pop(ctx);
                                         },
-                                        child: const Text('Cancel',
+                                        child:  Text('Cancel',
                                             style: TextStyle(
                                                 color: AppTheme.textSecondary)),
                                       ),
@@ -504,9 +557,9 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                                   ),
                                 );
                               },
-                              icon: const Icon(Icons.add_rounded,
+                              icon:  Icon(Icons.add_rounded,
                                   size: 16, color: AppTheme.accentOrange),
-                              label: const Text(
+                              label:  Text(
                                 'Create New',
                                 style: TextStyle(
                                     color: AppTheme.accentOrange,
@@ -555,7 +608,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                                               .titleSmall),
                                       leading: const Icon(Icons.star_rounded,
                                           color: Colors.amber, size: 22),
-                                      trailing: const Icon(
+                                      trailing:  Icon(
                                           Icons.add_circle_outline_rounded,
                                           color: AppTheme.accentOrange,
                                           size: 22),
@@ -666,7 +719,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                                         color: AppTheme.textMuted,
                                         fontSize: 14,
                                       ),
-                                  prefixIcon: const Icon(Icons.search_rounded,
+                                  prefixIcon:  Icon(Icons.search_rounded,
                                       color: AppTheme.textSecondary, size: 20),
                                   suffixIcon: Row(
                                     mainAxisSize: MainAxisSize.min,
@@ -709,7 +762,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                                         ),
                                       if (_searchController.text.isNotEmpty)
                                         IconButton(
-                                          icon: const Icon(Icons.clear_rounded,
+                                          icon:  Icon(Icons.clear_rounded,
                                               color: AppTheme.textSecondary,
                                               size: 18),
                                           onPressed: () {
@@ -839,6 +892,105 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
               ),
             ),
 
+            // ─── Curated Categories (part of scroll view) ───
+            if (!showingResults) ...[
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.only(
+                    left: AppTheme.spacingLg,
+                    right: AppTheme.spacingLg,
+                    top: AppTheme.spacingLg,
+                    bottom: AppTheme.spacingMd,
+                  ),
+                  child: Text(
+                    'Curated Categories',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: SizedBox(
+                  height: 120,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingLg),
+                    itemCount: _curatedCategories.length,
+                    itemBuilder: (context, index) {
+                      final category = _curatedCategories[index];
+                      return Padding(
+                        padding: const EdgeInsets.only(right: AppTheme.spacingMd),
+                        child: PressableScale(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => SubredditScreen(
+                                  subredditName: category['subreddits']!,
+                                  customTitle: category['title']!,
+                                ),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            width: 150,
+                            decoration: BoxDecoration(
+                              gradient: category['gradient'] as Gradient,
+                              borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+                              border: Border.all(color: AppTheme.glassBorder, width: 0.8),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.15),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Stack(
+                              children: [
+                                Positioned(
+                                  right: -10,
+                                  bottom: -10,
+                                  child: Icon(
+                                    category['icon'] as IconData,
+                                    size: 80,
+                                    color: Colors.white.withValues(alpha: 0.12),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.all(AppTheme.spacingLg),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Icon(
+                                        category['icon'] as IconData,
+                                        size: 24,
+                                        color: Colors.white,
+                                      ),
+                                      Text(
+                                        category['title']!,
+                                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+              const SliverToBoxAdapter(
+                child: SizedBox(height: AppTheme.spacingLg),
+              ),
+            ],
+
             // ─── Recent Searches (part of scroll view) ───
             if (_searchController.text.isEmpty &&
                 _searchHistory.isNotEmpty) ...[
@@ -858,7 +1010,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                           ),
                           TextButton(
                             onPressed: _clearSearchHistory,
-                            child: const Text(
+                            child:  Text(
                               'Clear All',
                               style: TextStyle(
                                 color: AppTheme.accentOrange,
@@ -899,13 +1051,13 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      const Icon(Icons.history_rounded,
+                                       Icon(Icons.history_rounded,
                                           size: 14,
                                           color: AppTheme.textSecondary),
                                       const SizedBox(width: 6),
                                       Text(
                                         query,
-                                        style: const TextStyle(
+                                        style:  TextStyle(
                                           color: AppTheme.textPrimary,
                                           fontSize: 12.5,
                                           fontWeight: FontWeight.w500,
@@ -914,7 +1066,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                                       const SizedBox(width: 6),
                                       GestureDetector(
                                         onTap: () => _removeFromHistory(query),
-                                        child: const Icon(
+                                        child:  Icon(
                                           Icons.close_rounded,
                                           size: 14,
                                           color: AppTheme.textMuted,
@@ -1006,11 +1158,11 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
             children: [
               Container(
                 padding: const EdgeInsets.all(20),
-                decoration: const BoxDecoration(
+                decoration:  BoxDecoration(
                   color: AppTheme.surfaceElevated,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.search_off_rounded,
+                child:  Icon(Icons.search_off_rounded,
                     color: AppTheme.textMuted, size: 40),
               ),
               const SizedBox(height: AppTheme.spacingLg),
@@ -1080,7 +1232,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                           ? CachedNetworkImageProvider(icon)
                           : null,
                       child: icon.isEmpty
-                          ? const Icon(Icons.reddit,
+                          ?  Icon(Icons.reddit,
                               color: AppTheme.accentOrange, size: 24)
                           : null,
                     ),
@@ -1110,7 +1262,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                           ),
                           onPressed: () => _showAddCustomFeedSheetForSub(name),
                         )
-                      : const Icon(
+                      :  Icon(
                           Icons.chevron_right_rounded,
                           color: AppTheme.accentWarm,
                           size: 22,

@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -119,19 +118,19 @@ class _CustomFeedsScreenState extends State<CustomFeedsScreen> {
         content: TextField(
           controller: _feedNameController,
           autofocus: true,
-          style: const TextStyle(color: AppTheme.textPrimary),
+          style:  TextStyle(color: AppTheme.textPrimary),
           decoration: InputDecoration(
             hintText: 'Feed Name (e.g. My Gifs)',
-            hintStyle: const TextStyle(color: AppTheme.textMuted),
+            hintStyle:  TextStyle(color: AppTheme.textMuted),
             filled: true,
             fillColor: AppTheme.surfaceLight,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              borderSide: const BorderSide(color: AppTheme.glassBorder),
+              borderSide:  BorderSide(color: AppTheme.glassBorder),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              borderSide: const BorderSide(color: AppTheme.accentOrange),
+              borderSide:  BorderSide(color: AppTheme.accentOrange),
             ),
           ),
           onSubmitted: (_) => _createNewFeed(),
@@ -142,7 +141,7 @@ class _CustomFeedsScreenState extends State<CustomFeedsScreen> {
               _feedNameController.clear();
               Navigator.pop(context);
             },
-            child: const Text('Cancel',
+            child:  Text('Cancel',
                 style: TextStyle(color: AppTheme.textSecondary)),
           ),
           ElevatedButton(
@@ -190,12 +189,12 @@ class _CustomFeedsScreenState extends State<CustomFeedsScreen> {
             style: TextStyle(color: Colors.white)),
         content: Text(
           'Are you sure you want to delete "${feed.displayName}"? This action cannot be undone.',
-          style: const TextStyle(color: AppTheme.textSecondary),
+          style:  TextStyle(color: AppTheme.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel',
+            child:  Text('Cancel',
                 style: TextStyle(color: AppTheme.textSecondary)),
           ),
           ElevatedButton(
@@ -235,25 +234,18 @@ class _CustomFeedsScreenState extends State<CustomFeedsScreen> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
-            return ClipRRect(
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(28),
-                topRight: Radius.circular(28),
+            return Container(
+              height: MediaQuery.of(context).size.height * 0.7,
+              decoration:  BoxDecoration(
+                color: AppTheme.surfaceElevated,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(28),
+                  topRight: Radius.circular(28),
+                ),
+                border: Border(
+                  top: BorderSide(color: AppTheme.glassBorder, width: 0.5),
+                ),
               ),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                child: Container(
-                  height: MediaQuery.of(context).size.height * 0.7,
-                  decoration: BoxDecoration(
-                    color: AppTheme.surfaceElevated.withValues(alpha: 0.92),
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(28),
-                      topRight: Radius.circular(28),
-                    ),
-                    border: const Border(
-                      top: BorderSide(color: AppTheme.glassBorder, width: 0.5),
-                    ),
-                  ),
                   child: Column(
                     children: [
                       // Handle
@@ -316,7 +308,7 @@ class _CustomFeedsScreenState extends State<CustomFeedsScreen> {
                           ],
                         ),
                       ),
-                      const Divider(color: AppTheme.glassBorder),
+                       Divider(color: AppTheme.glassBorder),
 
                       // Subreddits list
                       Expanded(
@@ -357,7 +349,7 @@ class _CustomFeedsScreenState extends State<CustomFeedsScreen> {
                                                 .withValues(alpha: 0.06),
                                             shape: BoxShape.circle,
                                           ),
-                                          child: const Icon(
+                                          child:  Icon(
                                               Icons
                                                   .remove_circle_outline_rounded,
                                               color: AppTheme.textSecondary,
@@ -431,9 +423,7 @@ class _CustomFeedsScreenState extends State<CustomFeedsScreen> {
                       ),
                     ],
                   ),
-                ),
-              ),
-            );
+                );
           },
         );
       },
@@ -619,7 +609,7 @@ class _CustomFeedsScreenState extends State<CustomFeedsScreen> {
                                           // Gradient accent strip
                                           Container(
                                             width: 3,
-                                            decoration: const BoxDecoration(
+                                            decoration:  BoxDecoration(
                                               gradient: AppTheme.warmGradient,
                                               borderRadius: BorderRadius.only(
                                                 topLeft: Radius.circular(
@@ -695,7 +685,7 @@ class _CustomFeedsScreenState extends State<CustomFeedsScreen> {
                                                       ],
                                                     ),
                                                   ),
-                                                  const Icon(
+                                                   Icon(
                                                       Icons
                                                           .arrow_forward_ios_rounded,
                                                       size: 14,
@@ -728,11 +718,11 @@ class _CustomFeedsScreenState extends State<CustomFeedsScreen> {
         children: [
           Container(
             padding: const EdgeInsets.all(20),
-            decoration: const BoxDecoration(
+            decoration:  BoxDecoration(
               color: AppTheme.surfaceElevated,
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.star_border_rounded,
+            child:  Icon(Icons.star_border_rounded,
                 color: AppTheme.textMuted, size: 48),
           ),
           const SizedBox(height: 16),

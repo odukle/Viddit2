@@ -11,7 +11,8 @@ import '../models/subreddit_model.dart';
 class RedditApi {
   static const String clientId = 'dpM8BKY1nsPNYYwhwpeYIg';
   static const String redirectUri = 'https://odukle.github.io/';
-  static const String userAgent = 'Android:com.odukle.scroller:3.2 (by u/odukle)';
+  static const String userAgent =
+      'Android:com.odukle.scroller:3.2 (by u/odukle)';
 
   static const String _oauthHost = 'oauth.reddit.com';
   static const String _curatedVideoFeed =
@@ -20,6 +21,8 @@ class RedditApi {
   static final RedditApi _instance = RedditApi._internal();
   factory RedditApi() => _instance;
   RedditApi._internal();
+
+  static bool isTesting = false;
 
   String? _accessToken;
   String? _refreshToken;
@@ -43,6 +46,8 @@ class RedditApi {
   bool _nsfwAllowed = false;
   String _geolocation = 'AUTO';
   String? _detectedCountryCode;
+  String? _detectedRegionName;
+  String? _regionOverride;
 
   final List<VoidCallback> _safetyListeners = [];
 
@@ -63,6 +68,8 @@ class RedditApi {
   bool get isNsfwAllowed => _nsfwAllowed;
   String get geolocation => _geolocation;
   String? get detectedCountryCode => _detectedCountryCode;
+  String? get detectedRegionName => _detectedRegionName;
+  String? get regionOverride => _regionOverride;
 
   bool get isLoggedIn =>
       _accessToken != null && _username != null && _username != '<userless>';
@@ -89,6 +96,19 @@ class RedditApi {
     _geolocation = value;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('geolocation', value);
+    _notifySafetyListeners();
+  }
+
+  Future<void> setRegionOverride(String? value) async {
+    _regionOverride = value;
+    _discoveredRegionalSubreddits.clear();
+    _inFlightDiscoveries.clear();
+    final prefs = await SharedPreferences.getInstance();
+    if (value == null || value.isEmpty) {
+      await prefs.remove('geolocation_region_override');
+    } else {
+      await prefs.setString('geolocation_region_override', value);
+    }
     _notifySafetyListeners();
   }
 
@@ -125,6 +145,7 @@ class RedditApi {
 
     _nsfwAllowed = prefs.getBool('NSFW') ?? false;
     _geolocation = prefs.getString('geolocation') ?? 'AUTO';
+    _regionOverride = prefs.getString('geolocation_region_override');
     _detectedCountryCode = await _detectUserCountry();
 
     if (isLoggedIn) {
@@ -181,6 +202,13 @@ class RedditApi {
     String after = '',
   }) async {
     _clearRequestState();
+
+    if (feedType == 'front_page' || feedType == 'popular') {
+      final countryCode = _getEffectiveCountryCode();
+      if (countryCode != null && countryCode != 'GLOBAL') {
+        await _getOrDiscoverCountrySubreddits(countryCode);
+      }
+    }
 
     if (feedType == 'front_page' && isLoggedIn) {
       String subAfter = '';
@@ -385,6 +413,23 @@ class RedditApi {
     return response?.statusCode == 200;
   }
 
+  Future<bool> savePost(String postFullName, bool save) async {
+    if (!isLoggedIn) return false;
+    _clearRequestState();
+
+    final endpoint = save ? 'save' : 'unsave';
+    final response = await _sendRequest(
+      'POST',
+      Uri.parse('https://$_oauthHost/api/$endpoint'),
+      requiresAuth: true,
+      body: {
+        'id': postFullName,
+      },
+    );
+
+    return response?.statusCode == 200;
+  }
+
   Future<List<Map<String, String>>> searchSubreddits(
       String query, bool nsfw) async {
     _clearRequestState();
@@ -453,54 +498,56 @@ class RedditApi {
 
   Future<List<Map<String, String>>> fetchTrendingSubreddits() async {
     final countryCode = _getEffectiveCountryCode();
-    if (countryCode != null &&
-        countryCode != 'GLOBAL' &&
-        _curatedRegionalSubreddits.containsKey(countryCode)) {
+    if (countryCode != null && countryCode != 'GLOBAL') {
       try {
-        final subredditsStr = _curatedRegionalSubreddits[countryCode]!;
-        final srNames = subredditsStr.replaceAll('+', ',');
+        final subredditsStr =
+            await _getOrDiscoverCountrySubreddits(countryCode);
+        if (subredditsStr != null && subredditsStr.isNotEmpty) {
+          final srNames = subredditsStr.replaceAll('+', ',');
 
-        final uri = Uri.https(
-          _oauthHost,
-          '/api/info.json',
-          {'sr_name': srNames, 'raw_json': '1'},
-        );
+          final uri = Uri.https(
+            _oauthHost,
+            '/api/info.json',
+            {'sr_name': srNames, 'raw_json': '1'},
+          );
 
-        final data = await _sendJsonRequest(uri, requiresAuth: false);
-        if (data is Map<String, dynamic>) {
-          final children = data['data']?['children'] as List? ?? [];
-          final list = <Map<String, String>>[];
-          for (final child in children) {
-            final sub = child['data'] as Map<String, dynamic>? ?? {};
-            var icon = (sub['icon_img'] ?? '').toString();
-            if (icon.isEmpty || icon == 'null') {
-              icon = (sub['community_icon'] ?? '').toString();
-            }
-            icon = icon.replaceAll('amp;', '');
-            final name = (sub['display_name_prefixed'] ?? '').toString();
+          final data = await _sendJsonRequest(uri, requiresAuth: isLoggedIn);
+          if (data is Map<String, dynamic>) {
+            final children = data['data']?['children'] as List? ?? [];
+            final list = <Map<String, String>>[];
+            for (final child in children) {
+              final sub = child['data'] as Map<String, dynamic>? ?? {};
+              var icon = (sub['icon_img'] ?? '').toString();
+              if (icon.isEmpty || icon == 'null') {
+                icon = (sub['community_icon'] ?? '').toString();
+              }
+              icon = icon.replaceAll('amp;', '');
+              final name = (sub['display_name_prefixed'] ?? '').toString();
 
-            var subscribersStr = '';
-            final subscribers = sub['subscribers'];
-            if (subscribers is num) {
-              if (subscribers >= 1000000) {
-                subscribersStr =
-                    '${(subscribers / 1000000).toStringAsFixed(1)}M';
-              } else if (subscribers >= 1000) {
-                subscribersStr = '${(subscribers / 1000).toStringAsFixed(1)}K';
-              } else {
-                subscribersStr = subscribers.toString();
+              var subscribersStr = '';
+              final subscribers = sub['subscribers'];
+              if (subscribers is num) {
+                if (subscribers >= 1000000) {
+                  subscribersStr =
+                      '${(subscribers / 1000000).toStringAsFixed(1)}M';
+                } else if (subscribers >= 1000) {
+                  subscribersStr =
+                      '${(subscribers / 1000).toStringAsFixed(1)}K';
+                } else {
+                  subscribersStr = subscribers.toString();
+                }
+              }
+
+              if (name.isNotEmpty) {
+                list.add({
+                  'name': name,
+                  'icon': icon,
+                  'subscribers': subscribersStr,
+                });
               }
             }
-
-            if (name.isNotEmpty) {
-              list.add({
-                'name': name,
-                'icon': icon,
-                'subscribers': subscribersStr,
-              });
-            }
+            if (list.isNotEmpty) return list;
           }
-          if (list.isNotEmpty) return list;
         }
       } catch (e) {
         debugPrint('Failed to fetch regional trending subreddits: $e');
@@ -1202,29 +1249,364 @@ class RedditApi {
     return Uri.parse('https://$host$encodedPath?$queryStr');
   }
 
-  static const Map<String, String> _curatedRegionalSubreddits = {
-    'IN':
-        'india+indiasocial+indiadiscussion+delhi+mumbai+bangalore+kerala+tamilnadu+hyderabad+pune+kolkata',
-    'GB': 'unitedkingdom+casualuk+askuk+britishproblems+london+scotland+wales',
-    'CA':
-        'canada+onguardforthee+askacanadian+toronto+vancouver+montreal+alberta',
-    'AU': 'australia+melbourne+sydney+brisbane+perth+casualaustralia',
-    'DE': 'de+ich_iel+fragreddit+berlin+germany',
-    'FR': 'france+rance+askfrance+paris',
-    'BR': 'brasil+brazil+saopaulo+riodejaneiro',
-    'JP': 'japan+japanlife+askjapan+tokyo',
-    'MX': 'mexico+mexico_city+monterrey+guadalajara',
-    'ES': 'spain+espana+barcelona+madrid',
-    'IT': 'italy+italia+roma+milano',
-    'RU': 'russia+pikabu',
-    'NL': 'netherlands+thenetherlands+amsterdam',
-    'SG': 'singapore+asksingapore',
-    'NZ': 'newzealand+auckland+wellington',
-    'PH': 'philippines+filipino',
-    'ZA': 'southafrica+johannesburg+capetown',
-    'IE': 'ireland+dublin',
-    'MY': 'malaysia+kualalumpur',
+  static const Map<String, String> _allCountries = {
+    'AF': 'Afghanistan',
+    'AX': 'Åland Islands',
+    'AL': 'Albania',
+    'DZ': 'Algeria',
+    'AS': 'American Samoa',
+    'AD': 'Andorra',
+    'AO': 'Angola',
+    'AI': 'Anguilla',
+    'AQ': 'Antarctica',
+    'AG': 'Antigua and Barbuda',
+    'AR': 'Argentina',
+    'AM': 'Armenia',
+    'AW': 'Aruba',
+    'AU': 'Australia',
+    'AT': 'Austria',
+    'AZ': 'Azerbaijan',
+    'BS': 'Bahamas',
+    'BH': 'Bahrain',
+    'BD': 'Bangladesh',
+    'BB': 'Barbados',
+    'BY': 'Belarus',
+    'BE': 'Belgium',
+    'BZ': 'Belize',
+    'BJ': 'Benin',
+    'BM': 'Bermuda',
+    'BT': 'Bhutan',
+    'BO': 'Bolivia',
+    'BQ': 'Bonaire, Sint Eustatius and Saba',
+    'BA': 'Bosnia and Herzegovina',
+    'BW': 'Botswana',
+    'BV': 'Bouvet Island',
+    'BR': 'Brazil',
+    'IO': 'British Indian Ocean Territory',
+    'BN': 'Brunei Darussalam',
+    'BG': 'Bulgaria',
+    'BF': 'Burkina Faso',
+    'BI': 'Burundi',
+    'CV': 'Cabo Verde',
+    'KH': 'Cambodia',
+    'CM': 'Cameroon',
+    'CA': 'Canada',
+    'KY': 'Cayman Islands',
+    'CF': 'Central African Republic',
+    'TD': 'Chad',
+    'CL': 'Chile',
+    'CN': 'China',
+    'CX': 'Christmas Island',
+    'CC': 'Cocos (Keeling) Islands',
+    'CO': 'Colombia',
+    'KM': 'Comoros',
+    'CD': 'Congo (Democratic Republic)',
+    'CG': 'Congo (Republic)',
+    'CK': 'Cook Islands',
+    'CR': 'Costa Rica',
+    'CI': 'Côte d\'Tvoire',
+    'HR': 'Croatia',
+    'CU': 'Cuba',
+    'CW': 'Curaçao',
+    'CY': 'Cyprus',
+    'CZ': 'Czechia',
+    'DK': 'Denmark',
+    'DJ': 'Djibouti',
+    'DM': 'Dominica',
+    'DO': 'Dominican Republic',
+    'EC': 'Ecuador',
+    'EG': 'Egypt',
+    'SV': 'El Salvador',
+    'GQ': 'Equatorial Guinea',
+    'ER': 'Eritrea',
+    'EE': 'Estonia',
+    'SZ': 'Eswatini',
+    'ET': 'Ethiopia',
+    'FK': 'Falkland Islands',
+    'FO': 'Faroe Islands',
+    'FJ': 'Fiji',
+    'FI': 'Finland',
+    'FR': 'France',
+    'GF': 'French Guiana',
+    'PF': 'French Polynesia',
+    'TF': 'French Southern Territories',
+    'GA': 'Gabon',
+    'GM': 'Gambia',
+    'GE': 'Georgia',
+    'DE': 'Germany',
+    'GH': 'Ghana',
+    'GI': 'Gibraltar',
+    'GR': 'Greece',
+    'GL': 'Greenland',
+    'GD': 'Grenada',
+    'GP': 'Guadeloupe',
+    'GU': 'Guam',
+    'GT': 'Guatemala',
+    'GG': 'Guernsey',
+    'GN': 'Guinea',
+    'GW': 'Guinea-Bissau',
+    'GY': 'Guyana',
+    'HT': 'Haiti',
+    'HM': 'Heard Island and McDonald Islands',
+    'VA': 'Holy See',
+    'HN': 'Honduras',
+    'HK': 'Hong Kong',
+    'HU': 'Hungary',
+    'IS': 'Iceland',
+    'IN': 'India',
+    'ID': 'Indonesia',
+    'IR': 'Iran',
+    'IQ': 'Iraq',
+    'IE': 'Ireland',
+    'IM': 'Isle of Man',
+    'IL': 'Israel',
+    'IT': 'Italy',
+    'JM': 'Jamaica',
+    'JP': 'Japan',
+    'JE': 'Jersey',
+    'JO': 'Jordan',
+    'KZ': 'Kazakhstan',
+    'KE': 'Kenya',
+    'KI': 'Kiribati',
+    'KP': 'North Korea',
+    'KR': 'South Korea',
+    'KW': 'Kuwait',
+    'KG': 'Kyrgyzstan',
+    'LA': 'Lao People\'s Democratic Republic',
+    'LV': 'Latvia',
+    'LB': 'Lebanon',
+    'LS': 'Lesotho',
+    'LR': 'Liberia',
+    'LY': 'Libya',
+    'LI': 'Liechtenstein',
+    'LT': 'Lithuania',
+    'LU': 'Luxembourg',
+    'MO': 'Macao',
+    'MG': 'Madagascar',
+    'MW': 'Malawi',
+    'MY': 'Malaysia',
+    'MV': 'Maldives',
+    'ML': 'Mali',
+    'MT': 'Malta',
+    'MH': 'Marshall Islands',
+    'MQ': 'Martinique',
+    'MR': 'Mauritania',
+    'MU': 'Mauritius',
+    'YT': 'Mayotte',
+    'MX': 'Mexico',
+    'FM': 'Micronesia',
+    'MD': 'Moldova',
+    'MC': 'Monaco',
+    'MN': 'Mongolia',
+    'ME': 'Montenegro',
+    'MS': 'Montserrat',
+    'MA': 'Morocco',
+    'MZ': 'Mozambique',
+    'MM': 'Myanmar',
+    'NA': 'Namibia',
+    'NR': 'Nauru',
+    'NP': 'Nepal',
+    'NL': 'Netherlands',
+    'NC': 'New Caledonia',
+    'NZ': 'New Zealand',
+    'NI': 'Nicaragua',
+    'NE': 'Niger',
+    'NG': 'Nigeria',
+    'NU': 'Niue',
+    'NF': 'Norfolk Island',
+    'MK': 'North Macedonia',
+    'MP': 'Northern Mariana Islands',
+    'NO': 'Norway',
+    'OM': 'Oman',
+    'PK': 'Pakistan',
+    'PW': 'Palau',
+    'PS': 'Palestine',
+    'PA': 'Panama',
+    'PG': 'Papua New Guinea',
+    'PY': 'Paraguay',
+    'PE': 'Peru',
+    'PH': 'Philippines',
+    'PN': 'Pitcairn',
+    'PL': 'Poland',
+    'PT': 'Portugal',
+    'PR': 'Puerto Rico',
+    'QA': 'Qatar',
+    'RE': 'Réunion',
+    'RO': 'Romania',
+    'RU': 'Russia',
+    'RW': 'Rwanda',
+    'BL': 'Saint Barthélemy',
+    'SH': 'Saint Helena',
+    'KN': 'Saint Kitts and Nevis',
+    'LC': 'Saint Lucia',
+    'MF': 'Saint Martin',
+    'PM': 'Saint Pierre and Miquelon',
+    'VC': 'Saint Vincent and the Grenadines',
+    'WS': 'Samoa',
+    'SM': 'San Marino',
+    'ST': 'Sao Tome and Principe',
+    'SA': 'Saudi Arabia',
+    'SN': 'Senegal',
+    'RS': 'Serbia',
+    'SC': 'Seychelles',
+    'SL': 'Sierra Leone',
+    'SG': 'Singapore',
+    'SX': 'Sint Maarten',
+    'SK': 'Slovakia',
+    'SI': 'Slovenia',
+    'SB': 'Solomon Islands',
+    'SO': 'Somalia',
+    'ZA': 'South Africa',
+    'GS': 'South Georgia and the South Sandwich Islands',
+    'SS': 'South Sudan',
+    'ES': 'Spain',
+    'LK': 'Sri Lanka',
+    'SD': 'Sudan',
+    'SR': 'Suriname',
+    'SJ': 'Svalbard and Jan Mayen',
+    'SE': 'Sweden',
+    'CH': 'Switzerland',
+    'SY': 'Syrian Arab Republic',
+    'TW': 'Taiwan',
+    'TJ': 'Tajikistan',
+    'TZ': 'Tanzania',
+    'TH': 'Thailand',
+    'TL': 'Timor-Leste',
+    'TG': 'Togo',
+    'TK': 'Tokelau',
+    'TO': 'Tonga',
+    'TT': 'Trinidad and Tobago',
+    'TN': 'Tunisia',
+    'TR': 'Turkey',
+    'TM': 'Turkmenistan',
+    'TC': 'Turks and Caicos Islands',
+    'TV': 'Tuvalu',
+    'UG': 'Uganda',
+    'UA': 'Ukraine',
+    'AE': 'United Arab Emirates',
+    'GB': 'United Kingdom',
+    'UM': 'United States Minor Outlying Islands',
+    'US': 'United States',
+    'UY': 'Uruguay',
+    'UZ': 'Uzbekistan',
+    'VU': 'Vanuatu',
+    'VE': 'Venezuela',
+    'VN': 'Vietnam',
+    'VG': 'Virgin Islands (British)',
+    'VI': 'Virgin Islands (U.S.)',
+    'WF': 'Wallis and Futuna',
+    'EH': 'Western Sahara',
+    'YE': 'Yemen',
+    'ZM': 'Zambia',
+    'ZW': 'Zimbabwe',
   };
+
+  static final Map<String, String> _discoveredRegionalSubreddits = {};
+  static final Map<String, Future<String?>> _inFlightDiscoveries = {};
+
+  Future<String?> _getOrDiscoverCountrySubreddits(String countryCode) {
+    if (countryCode == 'US') {
+      return Future.value(null);
+    }
+    if (_discoveredRegionalSubreddits.containsKey(countryCode)) {
+      return Future.value(_discoveredRegionalSubreddits[countryCode]);
+    }
+    if (_inFlightDiscoveries.containsKey(countryCode)) {
+      return _inFlightDiscoveries[countryCode]!;
+    }
+
+    final future = _discoverCountrySubreddits(countryCode);
+    _inFlightDiscoveries[countryCode] = future;
+    return future;
+  }
+
+  Future<String?> _discoverCountrySubreddits(String countryCode) async {
+    // 1. Try to search using manual region override if specified
+    if (_regionOverride != null && _regionOverride!.isNotEmpty) {
+      final overrideQuery = _regionOverride!.toLowerCase();
+      final overrideSubs = await _searchSubredditsByQuery(overrideQuery);
+      if (overrideSubs != null && overrideSubs.isNotEmpty) {
+        _discoveredRegionalSubreddits[countryCode] = overrideSubs;
+        return overrideSubs;
+      }
+    }
+
+    // 2. Try to search using region (state/province) name if geolocation is AUTO and region is available
+    if (_geolocation == 'AUTO' &&
+        _detectedRegionName != null &&
+        _detectedRegionName!.isNotEmpty) {
+      final regionQuery = _detectedRegionName!.toLowerCase();
+      final regionSubs = await _searchSubredditsByQuery(regionQuery);
+      if (regionSubs != null && regionSubs.isNotEmpty) {
+        _discoveredRegionalSubreddits[countryCode] = regionSubs;
+        return regionSubs;
+      }
+    }
+
+    // 2. Fall back to country name search
+    final countryName = _allCountries[countryCode];
+    if (countryName == null) {
+      return null;
+    }
+
+    final countrySubs =
+        await _searchSubredditsByQuery(countryName.toLowerCase());
+    if (countrySubs != null && countrySubs.isNotEmpty) {
+      _discoveredRegionalSubreddits[countryCode] = countrySubs;
+      return countrySubs;
+    }
+
+    return null;
+  }
+
+  Future<String?> _searchSubredditsByQuery(String query) async {
+    try {
+      final params = <String, String>{
+        'q': query,
+        'show_users': 'false',
+        'include_over_18': _nsfwAllowed ? 'on' : 'off',
+        'raw_json': '1',
+        'limit': '15',
+      };
+
+      final uri = Uri.https(
+        _oauthHost,
+        '/subreddits/search.json',
+        params,
+      );
+
+      final data = await _sendJsonRequest(uri, requiresAuth: isLoggedIn);
+      if (data is Map<String, dynamic>) {
+        final children = data['data']?['children'] as List? ?? [];
+        final subNames = <String>[];
+        for (final child in children) {
+          final sub = child['data'] as Map<String, dynamic>? ?? {};
+          final name = (sub['display_name'] ?? '').toString();
+          if (name.isEmpty) continue;
+
+          if (!_nsfwAllowed) {
+            final isNsfw = sub['over18'] == true ||
+                sub['over_18'] == true ||
+                sub['subreddit_type'] == 'nsfw';
+            if (isNsfw) continue;
+          }
+          subNames.add(name.toLowerCase());
+        }
+
+        if (subNames.isNotEmpty) {
+          return subNames.join('+');
+        }
+      }
+    } catch (e) {
+      debugPrint('Failed to search subreddits for query $query: $e');
+    }
+    return null;
+  }
+
+  String? _getCuratedOrDiscoveredSubreddits(String? countryCode) {
+    if (countryCode == null) return null;
+    return _discoveredRegionalSubreddits[countryCode];
+  }
 
   Uri _buildListingUri({
     required String feedType,
@@ -1249,14 +1631,13 @@ class RedditApi {
           return _buildApiUri('/r/$query/search.json', searchParams);
         } else {
           final countryCode = _getEffectiveCountryCode();
-          if (countryCode != null &&
-              _curatedRegionalSubreddits.containsKey(countryCode)) {
+          final regionalSubs = _getCuratedOrDiscoveredSubreddits(countryCode);
+          if (countryCode != null && regionalSubs != null) {
             final searchParams = Map<String, String>.from(params);
             searchParams['q'] = videoSearchQuery;
             searchParams['sort'] = sort;
             searchParams['restrict_sr'] = '1';
-            final subreddits = _curatedRegionalSubreddits[countryCode]!;
-            return _buildApiUri('/r/$subreddits/search.json', searchParams);
+            return _buildApiUri('/r/$regionalSubs/search.json', searchParams);
           } else {
             final listingParams = Map<String, String>.from(params);
             if (countryCode != null) {
@@ -1268,14 +1649,13 @@ class RedditApi {
         }
       case 'popular':
         final countryCode = _getEffectiveCountryCode();
-        if (countryCode != null &&
-            _curatedRegionalSubreddits.containsKey(countryCode)) {
+        final regionalSubs = _getCuratedOrDiscoveredSubreddits(countryCode);
+        if (countryCode != null && regionalSubs != null) {
           final searchParams = Map<String, String>.from(params);
           searchParams['q'] = videoSearchQuery;
           searchParams['sort'] = sort;
           searchParams['restrict_sr'] = '1';
-          final subreddits = _curatedRegionalSubreddits[countryCode]!;
-          return _buildApiUri('/r/$subreddits/search.json', searchParams);
+          return _buildApiUri('/r/$regionalSubs/search.json', searchParams);
         } else {
           final listingParams = Map<String, String>.from(params);
           if (countryCode != null) {
@@ -1321,7 +1701,31 @@ class RedditApi {
   }
 
   Future<String> _detectUserCountry() async {
-    // 1. Try IP-based geolocation via ipapi.co
+    if (isTesting) {
+      _detectedRegionName = 'Karnataka';
+      return 'IN';
+    }
+
+    // 1. Try free IP Geolocation API: ip-api.com
+    try {
+      final response = await http
+          .get(Uri.parse('http://ip-api.com/json/'))
+          .timeout(const Duration(seconds: 3));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data is Map<String, dynamic> && data['status'] == 'success') {
+          final code = data['countryCode']?.toString().toUpperCase();
+          _detectedRegionName = data['regionName']?.toString();
+          if (code != null && code.length == 2) {
+            return code;
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('ip-api.com lookup error: $e');
+    }
+
+    // 2. Try fallback IP-based geolocation via ipapi.co
     try {
       final response = await http
           .get(Uri.parse('https://ipapi.co/json/'))
@@ -1330,13 +1734,14 @@ class RedditApi {
         final data = json.decode(response.body);
         if (data is Map<String, dynamic> && data.containsKey('country_code')) {
           final code = data['country_code']?.toString().toUpperCase();
+          _detectedRegionName = data['region']?.toString();
           if (code != null && code.length == 2) {
             return code;
           }
         }
       }
     } catch (e) {
-      debugPrint('IP geolocation error: $e');
+      debugPrint('ipapi.co lookup error: $e');
     }
 
     // 2. Fallback to timezone offset mapping
@@ -1624,6 +2029,16 @@ class RedditApi {
 
   set detectedCountryCodeForTesting(String? code) {
     _detectedCountryCode = code;
+  }
+
+  set detectedRegionNameForTesting(String? region) {
+    _detectedRegionName = region;
+  }
+
+  @visibleForTesting
+  void setDiscoveredSubredditsForTesting(
+      String countryCode, String subredditsStr) {
+    _discoveredRegionalSubreddits[countryCode] = subredditsStr;
   }
 
   void _setError(String message) {

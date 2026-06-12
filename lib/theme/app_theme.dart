@@ -4,45 +4,151 @@ import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   // ─── Brand Colors ─── Premium Obsidian Dark
-  static const Color background = Color(0xFF030306);
-  static const Color surface = Color(0xFF0C0C14);
-  static const Color surfaceLight = Color(0xFF16162A);
-  static const Color surfaceElevated = Color(0xFF1A1A2E);
+  static Color get background => Color(getColorValue('background'));
+  static Color get surface => Color(getColorValue('surface'));
+  static Color get surfaceLight => Color(getColorValue('surfaceLight'));
+  static Color get surfaceElevated => Color(getColorValue('surfaceElevated'));
 
-  static const Color accentOrange = Color(0xFFFF4500);
-  static const Color accentWarm = Color(0xFFFF6B35);
-  static const Color accentPurple = Color(0xFF7C3AED);
-  static const Color accentCyan = Color(0xFF06B6D4);
+  static Color get accentOrange => Color(getColorValue('accentOrange'));
+  static Color get accentWarm => Color(getColorValue('accentWarm'));
+  static Color get accentPurple => Color(getColorValue('accentPurple'));
+  static Color get accentCyan => Color(getColorValue('accentCyan'));
 
-  static const Color textPrimary = Color(0xFFF9FAFB);
-  static const Color textSecondary = Color(0xFF6B7280);
-  static const Color textMuted = Color(0xFF4B5563);
-  static const Color glassBorder = Color(0x14FFFFFF);
-  static const Color glowColor = Color(0x40FF4500);
+  static Color get textPrimary => Color(getColorValue('textPrimary'));
+  static Color get textSecondary => Color(getColorValue('textSecondary'));
+  static Color get textMuted => Color(getColorValue('textMuted'));
+  static Color get glassBorder => Color(getColorValue('glassBorder'));
+  static Color get glowColor => Color(getColorValue('glowColor'));
+
+  static Color get darkGlassStart => Color(getColorValue('darkGlassStart'));
+  static Color get darkGlassEnd => Color(getColorValue('darkGlassEnd'));
+
+  static String _currentTheme = 'obsidian';
+  static final ValueNotifier<String> themeNotifier = ValueNotifier('obsidian');
+
+  static final Map<String, Map<String, int>> _themeColors = {
+    'obsidian': {
+      'background': 0xFF030306,
+      'surface': 0xFF0C0C14,
+      'surfaceLight': 0xFF16162A,
+      'surfaceElevated': 0xFF1A1A2E,
+      'accentOrange': 0xFFFF4500,
+      'accentWarm': 0xFFFF6B35,
+      'accentPurple': 0xFF7C3AED,
+      'accentCyan': 0xFF06B6D4,
+      'textPrimary': 0xFFF9FAFB,
+      'textSecondary': 0xFF6B7280,
+      'textMuted': 0xFF4B5563,
+      'glassBorder': 0x14FFFFFF,
+      'glowColor': 0x40FF4500,
+      'darkGlassStart': 0x800C0C14,
+      'darkGlassEnd': 0xCC030306,
+    },
+    'amoled': {
+      'background': 0xFF000000,
+      'surface': 0xFF0A0A0A,
+      'surfaceLight': 0xFF121212,
+      'surfaceElevated': 0xFF181818,
+      'accentOrange': 0xFFFF4500,
+      'accentWarm': 0xFFFF6B35,
+      'accentPurple': 0xFF7C3AED,
+      'accentCyan': 0xFF06B6D4,
+      'textPrimary': 0xFFF9FAFB,
+      'textSecondary': 0xFF6B7280,
+      'textMuted': 0xFF4B5563,
+      'glassBorder': 0x14FFFFFF,
+      'glowColor': 0x40FF4500,
+      'darkGlassStart': 0x800A0A0A,
+      'darkGlassEnd': 0xCC000000,
+    },
+    'navy': {
+      'background': 0xFF020617,
+      'surface': 0xFF0B1329,
+      'surfaceLight': 0xFF1E293B,
+      'surfaceElevated': 0xFF334155,
+      'accentOrange': 0xFF3B82F6,
+      'accentWarm': 0xFF60A5FA,
+      'accentPurple': 0xFF8B5CF6,
+      'accentCyan': 0xFF06B6D4,
+      'textPrimary': 0xFFF9FAFB,
+      'textSecondary': 0xFF94A3B8,
+      'textMuted': 0xFF64748B,
+      'glassBorder': 0x14FFFFFF,
+      'glowColor': 0x403B82F6,
+      'darkGlassStart': 0x800B1329,
+      'darkGlassEnd': 0xCC020617,
+    },
+    'forest': {
+      'background': 0xFF020804,
+      'surface': 0xFF052E16,
+      'surfaceLight': 0xFF14532D,
+      'surfaceElevated': 0xFF166534,
+      'accentOrange': 0xFF22C55E,
+      'accentWarm': 0xFF4ADE80,
+      'accentPurple': 0xFF8B5CF6,
+      'accentCyan': 0xFF22D3EE,
+      'textPrimary': 0xFFF0FDF4,
+      'textSecondary': 0xFF86EFAC,
+      'textMuted': 0xFF4ADE80,
+      'glassBorder': 0x14FFFFFF,
+      'glowColor': 0x4022C55E,
+      'darkGlassStart': 0x80052E16,
+      'darkGlassEnd': 0xCC020804,
+    },
+    'crimson': {
+      'background': 0xFF050102,
+      'surface': 0xFF4C0519,
+      'surfaceLight': 0xFF881337,
+      'surfaceElevated': 0xFF9F1239,
+      'accentOrange': 0xFFF43F5E,
+      'accentWarm': 0xFFFB7185,
+      'accentPurple': 0xFFC084FC,
+      'accentCyan': 0xFF38BDF8,
+      'textPrimary': 0xFFFFF1F2,
+      'textSecondary': 0xFFFDA4AF,
+      'textMuted': 0xFFFB7185,
+      'glassBorder': 0x14FFFFFF,
+      'glowColor': 0x40F43F5E,
+      'darkGlassStart': 0x804C0519,
+      'darkGlassEnd': 0xCC050102,
+    },
+  };
+
+  static void selectTheme(String themeName) {
+    if (_themeColors.containsKey(themeName)) {
+      _currentTheme = themeName;
+      themeNotifier.value = themeName;
+    }
+  }
+
+  static int getColorValue(String name) {
+    final themeData = _themeColors[_currentTheme] ?? _themeColors['obsidian']!;
+    return themeData[name] ?? 0xFF000000;
+  }
 
   // ─── Gradients
-  static const Gradient brandGradient = LinearGradient(
-    colors: [accentOrange, Color(0xFFE6007A), accentPurple],
+  static Gradient get brandGradient => LinearGradient(
+    colors: [accentOrange, const Color(0xFFE6007A), accentPurple],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  static const Gradient warmGradient = LinearGradient(
+  static Gradient get warmGradient => LinearGradient(
     colors: [accentOrange, accentWarm],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  static const Gradient purpleGradient = LinearGradient(
-    colors: [accentPurple, Color(0xFF9333EA)],
+  static Gradient get purpleGradient => LinearGradient(
+    colors: [accentPurple, const Color(0xFF9333EA)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  static const Gradient darkGlassGradient = LinearGradient(
+  static Gradient get darkGlassGradient => LinearGradient(
     colors: [
-      Color(0x800C0C14),
-      Color(0xCC030306),
+      darkGlassStart,
+      darkGlassEnd,
     ],
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
@@ -115,7 +221,7 @@ class AppTheme {
       primaryColor: accentOrange,
       scaffoldBackgroundColor: background,
       canvasColor: Colors.transparent,
-      colorScheme: const ColorScheme.dark(
+      colorScheme:  ColorScheme.dark(
         primary: accentOrange,
         secondary: accentPurple,
         tertiary: accentCyan,
@@ -213,7 +319,7 @@ class AppTheme {
           color: textPrimary,
           letterSpacing: -0.2,
         ),
-        iconTheme: const IconThemeData(color: textPrimary, size: 22),
+        iconTheme:  IconThemeData(color: textPrimary, size: 22),
         systemOverlayStyle: SystemUiOverlayStyle.light,
       ),
       cardTheme: CardThemeData(
@@ -222,7 +328,7 @@ class AppTheme {
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radiusLg),
-          side: const BorderSide(color: glassBorder, width: 0.5),
+          side:  BorderSide(color: glassBorder, width: 0.5),
         ),
       ),
       chipTheme: ChipThemeData(
@@ -242,10 +348,10 @@ class AppTheme {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radiusSm),
-          side: const BorderSide(color: glassBorder, width: 0.5),
+          side:  BorderSide(color: glassBorder, width: 0.5),
         ),
       ),
-      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+      bottomNavigationBarTheme:  BottomNavigationBarThemeData(
         backgroundColor: Colors.transparent,
         selectedItemColor: accentOrange,
         unselectedItemColor: textSecondary,
@@ -260,7 +366,7 @@ class AppTheme {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radiusXl),
-          side: const BorderSide(color: glassBorder, width: 0.5),
+          side:  BorderSide(color: glassBorder, width: 0.5),
         ),
         titleTextStyle: outfitTextTheme.titleLarge!.copyWith(
           fontSize: 20,
@@ -313,18 +419,18 @@ class AppTheme {
             const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusMd),
-          borderSide: const BorderSide(color: glassBorder, width: 0.5),
+          borderSide:  BorderSide(color: glassBorder, width: 0.5),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusMd),
-          borderSide: const BorderSide(color: glassBorder, width: 0.5),
+          borderSide:  BorderSide(color: glassBorder, width: 0.5),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusMd),
-          borderSide: const BorderSide(color: accentOrange, width: 1.0),
+          borderSide:  BorderSide(color: accentOrange, width: 1.0),
         ),
       ),
-      dividerTheme: const DividerThemeData(
+      dividerTheme:  DividerThemeData(
         color: glassBorder,
         thickness: 0.5,
         space: 0,

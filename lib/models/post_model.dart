@@ -15,6 +15,7 @@ class PostModel {
   final String fallbackVideoUrl;
   final String? audioUrl;
   int userVote; // 1 = Upvote, -1 = Downvote, 0 = No Vote
+  bool isSaved;
 
   bool get isPlayableVideo {
     final url = videoUrl.split('?').first.toLowerCase();
@@ -43,6 +44,7 @@ class PostModel {
     required this.fallbackVideoUrl,
     this.audioUrl,
     this.userVote = 0,
+    this.isSaved = false,
   });
 
   factory PostModel.fromJson(Map<String, dynamic> json) {
@@ -194,6 +196,8 @@ class PostModel {
       vote = (data['likes'] as bool) ? 1 : -1;
     }
 
+    final isSaved = data['saved'] as bool? ?? false;
+
     if (fallbackVideoUrl.isEmpty) {
       fallbackVideoUrl = videoUrl;
     }
@@ -215,6 +219,7 @@ class PostModel {
       fallbackVideoUrl: fallbackVideoUrl,
       audioUrl: audioUrl,
       userVote: vote,
+      isSaved: isSaved,
     );
   }
 }

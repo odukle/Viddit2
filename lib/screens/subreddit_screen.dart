@@ -14,11 +14,13 @@ import '../widgets/pressable_scale.dart';
 class SubredditScreen extends StatefulWidget {
   final String subredditName;
   final bool isUser;
+  final String? customTitle;
 
   const SubredditScreen({
     super.key,
     required this.subredditName,
     this.isUser = false,
+    this.customTitle,
   });
 
   @override
@@ -281,23 +283,23 @@ class _SubredditScreenState extends State<SubredditScreen> {
                         TextField(
                           controller: newFeedController,
                           autofocus: true,
-                          style: const TextStyle(color: AppTheme.textPrimary),
+                          style:  TextStyle(color: AppTheme.textPrimary),
                           decoration: InputDecoration(
                             hintText: 'Feed Name (e.g. My Gifs)',
                             hintStyle:
-                                const TextStyle(color: AppTheme.textMuted),
+                                 TextStyle(color: AppTheme.textMuted),
                             filled: true,
                             fillColor: AppTheme.surfaceLight,
                             border: OutlineInputBorder(
                               borderRadius:
                                   BorderRadius.circular(AppTheme.radiusMd),
                               borderSide:
-                                  const BorderSide(color: AppTheme.glassBorder),
+                                   BorderSide(color: AppTheme.glassBorder),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius:
                                   BorderRadius.circular(AppTheme.radiusMd),
-                              borderSide: const BorderSide(
+                              borderSide:  BorderSide(
                                   color: AppTheme.accentOrange),
                             ),
                           ),
@@ -412,7 +414,7 @@ class _SubredditScreenState extends State<SubredditScreen> {
                           style: Theme.of(context).textTheme.titleLarge,
                         ),
                         const SizedBox(height: 8),
-                        const Text(
+                         Text(
                           'You do not have any custom feeds yet. Create one inline to add this subreddit.',
                           style: TextStyle(
                               color: AppTheme.textSecondary, fontSize: 12.5),
@@ -456,24 +458,24 @@ class _SubredditScreenState extends State<SubredditScreen> {
                                     content: TextField(
                                       controller: newFeedController,
                                       autofocus: true,
-                                      style: const TextStyle(
+                                      style:  TextStyle(
                                           color: AppTheme.textPrimary),
                                       decoration: InputDecoration(
                                         hintText: 'Feed Name (e.g. My Gifs)',
-                                        hintStyle: const TextStyle(
+                                        hintStyle:  TextStyle(
                                             color: AppTheme.textMuted),
                                         filled: true,
                                         fillColor: AppTheme.surfaceLight,
                                         border: OutlineInputBorder(
                                           borderRadius: BorderRadius.circular(
                                               AppTheme.radiusMd),
-                                          borderSide: const BorderSide(
+                                          borderSide:  BorderSide(
                                               color: AppTheme.glassBorder),
                                         ),
                                         focusedBorder: OutlineInputBorder(
                                           borderRadius: BorderRadius.circular(
                                               AppTheme.radiusMd),
-                                          borderSide: const BorderSide(
+                                          borderSide:  BorderSide(
                                               color: AppTheme.accentOrange),
                                         ),
                                       ),
@@ -484,7 +486,7 @@ class _SubredditScreenState extends State<SubredditScreen> {
                                           newFeedController.clear();
                                           Navigator.pop(ctx);
                                         },
-                                        child: const Text('Cancel',
+                                        child:  Text('Cancel',
                                             style: TextStyle(
                                                 color: AppTheme.textSecondary)),
                                       ),
@@ -544,9 +546,9 @@ class _SubredditScreenState extends State<SubredditScreen> {
                                   ),
                                 );
                               },
-                              icon: const Icon(Icons.add_rounded,
+                              icon:  Icon(Icons.add_rounded,
                                   size: 16, color: AppTheme.accentOrange),
-                              label: const Text(
+                              label:  Text(
                                 'Create New',
                                 style: TextStyle(
                                     color: AppTheme.accentOrange,
@@ -595,7 +597,7 @@ class _SubredditScreenState extends State<SubredditScreen> {
                                               .titleSmall),
                                       leading: const Icon(Icons.star_rounded,
                                           color: Colors.amber, size: 22),
-                                      trailing: const Icon(
+                                      trailing:  Icon(
                                           Icons.add_circle_outline_rounded,
                                           color: AppTheme.accentOrange,
                                           size: 22),
@@ -651,14 +653,14 @@ class _SubredditScreenState extends State<SubredditScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Reddit Rate Limit Exceeded',
             style: TextStyle(color: Colors.white)),
-        content: const Text(
+        content:  Text(
           'You are currently browsing as a guest. Reddit enforces strict rate limits on guest users. Sign in to enjoy unlimited browsing!',
           style: TextStyle(color: AppTheme.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel',
+            child:  Text('Cancel',
                 style: TextStyle(color: AppTheme.textSecondary)),
           ),
           ElevatedButton(
@@ -683,18 +685,20 @@ class _SubredditScreenState extends State<SubredditScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final title = widget.isUser
+    final title = widget.customTitle ?? (widget.isUser
         ? 'u/${widget.subredditName}'
-        : 'r/${widget.subredditName}';
+        : 'r/${widget.subredditName}');
     final String subIcon = widget.isUser
         ? (_userAbout?['icon_img'] ?? '').replaceAll('amp;', '')
         : (_subreddit?.iconImage ?? '');
     final String banner = widget.isUser ? '' : (_subreddit?.bannerImage ?? '');
     final String subscribers =
         widget.isUser ? '' : _formatSubscribers(_subreddit?.subscribers ?? '0');
-    final String description = widget.isUser
-        ? 'User submissions feed'
-        : (_subreddit?.description ?? '');
+    final String description = widget.customTitle != null
+        ? 'Curated category feed for ${widget.customTitle}'
+        : (widget.isUser
+            ? 'User submissions feed'
+            : (_subreddit?.description ?? ''));
 
     return Scaffold(
       body: NestedScrollView(
@@ -789,7 +793,7 @@ class _SubredditScreenState extends State<SubredditScreen> {
                                       ? CachedNetworkImageProvider(subIcon)
                                       : null,
                               child: subIcon.isEmpty || subIcon == 'null'
-                                  ? const Icon(Icons.reddit,
+                                  ?  Icon(Icons.reddit,
                                       color: AppTheme.accentOrange, size: 36)
                                   : null,
                             ),
@@ -909,7 +913,7 @@ class _SubredditScreenState extends State<SubredditScreen> {
                 ),
               ),
               actions: [
-                if (!widget.isUser && _api.isLoggedIn)
+                if (!widget.isUser && _api.isLoggedIn && !widget.subredditName.contains('+'))
                   IconButton(
                     icon: Icon(
                       _api.isSubredditInAnyCustomFeed(widget.subredditName)
@@ -1031,7 +1035,7 @@ class _SubredditScreenState extends State<SubredditScreen> {
                                   errorWidget: (context, url, error) =>
                                       Container(
                                     color: AppTheme.surfaceLight,
-                                    child: const Icon(Icons.image_rounded,
+                                    child:  Icon(Icons.image_rounded,
                                         color: AppTheme.textMuted),
                                   ),
                                 ),
@@ -1057,7 +1061,7 @@ class _SubredditScreenState extends State<SubredditScreen> {
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        const Icon(Icons.arrow_upward_rounded,
+                                         Icon(Icons.arrow_upward_rounded,
                                             size: 10,
                                             color: AppTheme.accentOrange),
                                         const SizedBox(width: 2),
@@ -1247,11 +1251,11 @@ class _SubredditScreenState extends State<SubredditScreen> {
         children: [
           Container(
             padding: const EdgeInsets.all(20),
-            decoration: const BoxDecoration(
+            decoration:  BoxDecoration(
               color: AppTheme.surfaceElevated,
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.movie_creation_outlined,
+            child:  Icon(Icons.movie_creation_outlined,
                 color: AppTheme.textMuted, size: 44),
           ),
           const SizedBox(height: 16),

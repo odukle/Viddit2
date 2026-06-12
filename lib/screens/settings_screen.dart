@@ -19,6 +19,139 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String _selectedGeo = 'AUTO';
   bool _dataSaverEnabled = false;
 
+  static const Map<String, List<String>> _countryStates = {
+    'IN': [
+      'Andhra Pradesh',
+      'Arunachal Pradesh',
+      'Assam',
+      'Bihar',
+      'Chhattisgarh',
+      'Goa',
+      'Gujarat',
+      'Haryana',
+      'Himachal Pradesh',
+      'Jharkhand',
+      'Karnataka',
+      'Kerala',
+      'Madhya Pradesh',
+      'Maharashtra',
+      'Manipur',
+      'Meghalaya',
+      'Mizoram',
+      'Nagaland',
+      'Odisha',
+      'Punjab',
+      'Rajasthan',
+      'Sikkim',
+      'Tamil Nadu',
+      'Telangana',
+      'Tripura',
+      'Uttar Pradesh',
+      'Uttarakhand',
+      'West Bengal',
+      'Delhi',
+      'Jammu and Kashmir',
+      'Ladakh',
+      'Puducherry'
+    ],
+    'US': [
+      'Alabama',
+      'Alaska',
+      'Arizona',
+      'Arkansas',
+      'California',
+      'Colorado',
+      'Connecticut',
+      'Delaware',
+      'Florida',
+      'Georgia',
+      'Hawaii',
+      'Idaho',
+      'Illinois',
+      'Indiana',
+      'Iowa',
+      'Kansas',
+      'Kentucky',
+      'Louisiana',
+      'Maine',
+      'Maryland',
+      'Massachusetts',
+      'Michigan',
+      'Minnesota',
+      'Mississippi',
+      'Missouri',
+      'Montana',
+      'Nebraska',
+      'Nevada',
+      'New Hampshire',
+      'New Jersey',
+      'New Mexico',
+      'New York',
+      'North Carolina',
+      'North Dakota',
+      'Ohio',
+      'Oklahoma',
+      'Oregon',
+      'Pennsylvania',
+      'Rhode Island',
+      'South Carolina',
+      'South Dakota',
+      'Tennessee',
+      'Texas',
+      'Utah',
+      'Vermont',
+      'Virginia',
+      'Washington',
+      'West Virginia',
+      'Wisconsin',
+      'Wyoming'
+    ],
+    'CA': [
+      'Alberta',
+      'British Columbia',
+      'Manitoba',
+      'New Brunswick',
+      'Newfoundland and Labrador',
+      'Nova Scotia',
+      'Ontario',
+      'Prince Edward Island',
+      'Quebec',
+      'Saskatchewan',
+      'Northwest Territories',
+      'Nunavut',
+      'Yukon'
+    ],
+    'GB': ['England', 'Scotland', 'Wales', 'Northern Ireland', 'London'],
+    'AU': [
+      'New South Wales',
+      'Queensland',
+      'South Australia',
+      'Tasmania',
+      'Victoria',
+      'Western Australia',
+      'Australian Capital Territory',
+      'Northern Territory'
+    ],
+    'DE': [
+      'Bavaria',
+      'Berlin',
+      'Hamburg',
+      'North Rhine-Westphalia',
+      'Baden-Württemberg',
+      'Hesse',
+      'Saxony',
+      'Lower Saxony',
+      'Brandenburg',
+      'Thuringia',
+      'Rhineland-Palatinate',
+      'Saxony-Anhalt',
+      'Schleswig-Holstein',
+      'Saarland',
+      'Mecklenburg-Vorpommern',
+      'Bremen'
+    ]
+  };
+
   static const Map<String, String> _allCountries = {
     'AF': 'Afghanistan',
     'AX': 'Åland Islands',
@@ -274,28 +407,190 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String _getAutoDetectLabel() {
     final code = _api.detectedCountryCode ??
         ui.PlatformDispatcher.instance.locale.countryCode;
+    final region = _api.detectedRegionName;
     if (code == null || code.isEmpty) {
       return 'Auto Detect';
     }
     final upperCode = code.toUpperCase();
     final countryName = _allCountries[upperCode] ?? upperCode;
+    if (region != null && region.isNotEmpty) {
+      return 'Auto Detect ($region, $countryName)';
+    }
     return 'Auto Detect ($countryName)';
   }
 
   String _getSelectedGeoLabel() {
+    final override = _api.regionOverride;
+    if (override != null && override.isNotEmpty) {
+      if (_selectedGeo == 'AUTO') {
+        final code = _api.detectedCountryCode ??
+            ui.PlatformDispatcher.instance.locale.countryCode;
+        final countryName = code != null
+            ? (_allCountries[code.toUpperCase()] ?? code.toUpperCase())
+            : '';
+        return 'Override: $override ($countryName)';
+      } else if (_selectedGeo != 'GLOBAL') {
+        final countryName =
+            _allCountries[_selectedGeo.toUpperCase()] ?? _selectedGeo;
+        return 'Override: $override ($countryName)';
+      }
+    }
+
     if (_selectedGeo == 'AUTO') {
       final code = _api.detectedCountryCode ??
           ui.PlatformDispatcher.instance.locale.countryCode;
+      final region = _api.detectedRegionName;
       if (code == null || code.isEmpty) {
         return 'Auto Detect';
       }
       final name = _allCountries[code.toUpperCase()] ?? code.toUpperCase();
+      if (region != null && region.isNotEmpty) {
+        return 'Auto ($region, $name)';
+      }
       return 'Auto ($name)';
     }
     if (_selectedGeo == 'GLOBAL') {
       return 'Global';
     }
     return _allCountries[_selectedGeo.toUpperCase()] ?? _selectedGeo;
+  }
+
+  String _getThemeNameLabel(String themeKey) {
+    switch (themeKey) {
+      case 'amoled':
+        return 'AMOLED Black';
+      case 'navy':
+        return 'Midnight Navy';
+      case 'forest':
+        return 'Forest Green';
+      case 'crimson':
+        return 'Velvet Crimson';
+      case 'obsidian':
+      default:
+        return 'Premium Obsidian';
+    }
+  }
+
+  void _showThemeSelectionBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.5),
+      builder: (context) {
+        return Container(
+          decoration: BoxDecoration(
+            color: AppTheme.surfaceElevated,
+            borderRadius:
+                BorderRadius.vertical(top: Radius.circular(AppTheme.radiusXl)),
+            border: Border(
+                top: BorderSide(color: AppTheme.glassBorder, width: 0.5)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 8),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppTheme.textSecondary.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Select App Theme',
+                style: Theme.of(context)
+                    .textTheme
+                    .titleLarge
+                    ?.copyWith(fontSize: 18),
+              ),
+              const SizedBox(height: 16),
+              _buildThemeOptionTile('obsidian', 'Premium Obsidian',
+                  const Color(0xFFFF4500), const Color(0xFF030306)),
+              _buildThemeOptionTile('amoled', 'AMOLED Black',
+                  const Color(0xFFFF4500), const Color(0xFF000000)),
+              _buildThemeOptionTile('navy', 'Midnight Navy',
+                  const Color(0xFF3B82F6), const Color(0xFF020617)),
+              _buildThemeOptionTile('forest', 'Forest Green',
+                  const Color(0xFF22C55E), const Color(0xFF020804)),
+              _buildThemeOptionTile('crimson', 'Velvet Crimson',
+                  const Color(0xFFF43F5E), const Color(0xFF050102)),
+              const SizedBox(height: 24),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildThemeOptionTile(
+      String themeKey, String label, Color accent, Color bg) {
+    final bool isSelected = AppTheme.themeNotifier.value == themeKey;
+    return PressableScale(
+      onTap: () async {
+        Navigator.pop(context);
+        AppTheme.selectTheme(themeKey);
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('viddit_theme', themeKey);
+        if (mounted) {
+          setState(() {});
+        }
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? AppTheme.surfaceLight : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+          border: Border.all(
+            color: isSelected
+                ? AppTheme.accentPurple.withValues(alpha: 0.4)
+                : Colors.transparent,
+            width: 0.8,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: bg,
+                shape: BoxShape.circle,
+                border: Border.all(color: AppTheme.glassBorder, width: 1.0),
+              ),
+              child: Center(
+                child: Container(
+                  width: 14,
+                  height: 14,
+                  decoration: BoxDecoration(
+                    color: accent,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                label,
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight:
+                          isSelected ? FontWeight.bold : FontWeight.normal,
+                    ),
+              ),
+            ),
+            if (isSelected)
+              Icon(
+                Icons.check_circle_rounded,
+                color: AppTheme.accentPurple,
+                size: 20,
+              ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _showRegionSelectionBottomSheet() {
@@ -310,6 +605,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
           autoDetectLabel: _getAutoDetectLabel(),
           onSelected: (val) {
             _saveGeoPreference(val);
+          },
+        );
+      },
+    );
+  }
+
+  void _showCustomRegionOverrideBottomSheet() {
+    String? currentCountryCode;
+    if (_selectedGeo == 'AUTO') {
+      currentCountryCode = _api.detectedCountryCode;
+    } else if (_selectedGeo != 'GLOBAL') {
+      currentCountryCode = _selectedGeo;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return _CustomRegionSelectorBottomSheet(
+          initialValue: _api.regionOverride,
+          countryCode: currentCountryCode,
+          onSelected: (val) async {
+            await _api.setRegionOverride(val);
+            setState(() {});
           },
         );
       },
@@ -362,15 +682,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: const Text('Sign In Required',
               style: TextStyle(color: Colors.white)),
-          content: const Text(
+          content: Text(
             'Please sign in to your Reddit account to customize feed content settings.',
             style: TextStyle(color: AppTheme.textSecondary),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('OK',
-                  style: TextStyle(color: AppTheme.accentOrange)),
+              child: Text('OK', style: TextStyle(color: AppTheme.accentOrange)),
             ),
           ],
         ),
@@ -387,14 +706,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: const Text('Age Verification Required',
               style: TextStyle(color: Colors.white)),
-          content: const Text(
+          content: Text(
             'You must be 18 years of age or older to view NSFW content. Do you confirm that you are at least 18?',
             style: TextStyle(color: AppTheme.textSecondary),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel',
+              child: Text('Cancel',
                   style: TextStyle(color: AppTheme.textSecondary)),
             ),
             ElevatedButton(
@@ -493,7 +812,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       color: AppTheme.accentOrange.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                     ),
-                    child: const Icon(Icons.public_rounded,
+                    child: Icon(Icons.public_rounded,
                         color: AppTheme.accentOrange, size: 20),
                   ),
                   title: Text('Popular Feed Region',
@@ -511,7 +830,92 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ),
                       ),
                       const SizedBox(width: 4),
-                      const Icon(Icons.chevron_right_rounded,
+                      Icon(Icons.chevron_right_rounded,
+                          color: AppTheme.textSecondary),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            if (_selectedGeo != 'GLOBAL') ...[
+              const SizedBox(height: 12),
+              Container(
+                decoration: AppTheme.cardDecoration(),
+                child: PressableScale(
+                  onTap: _showCustomRegionOverrideBottomSheet,
+                  child: ListTile(
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppTheme.accentPurple.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                      ),
+                      child: Icon(Icons.edit_location_alt_rounded,
+                          color: AppTheme.accentPurple, size: 20),
+                    ),
+                    title: Text('Custom Region Override',
+                        style: Theme.of(context).textTheme.titleSmall),
+                    subtitle: Text('Manually enter state/province name',
+                        style: Theme.of(context).textTheme.bodySmall),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          _api.regionOverride ?? 'None',
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: AppTheme.accentPurple,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(Icons.chevron_right_rounded,
+                            color: AppTheme.textSecondary),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(height: 28),
+
+            // ─── APPEARANCE SECTION ───
+            _buildSectionHeader(context, 'APPEARANCE'),
+            const SizedBox(height: 12),
+            Container(
+              decoration: AppTheme.cardDecoration(),
+              child: PressableScale(
+                onTap: _showThemeSelectionBottomSheet,
+                child: ListTile(
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.accentPurple.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                    ),
+                    child: Icon(Icons.palette_rounded,
+                        color: AppTheme.accentPurple, size: 20),
+                  ),
+                  title: Text('App Theme',
+                      style: Theme.of(context).textTheme.titleSmall),
+                  subtitle: Text('Choose your premium scroller aesthetic',
+                      style: Theme.of(context).textTheme.bodySmall),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _getThemeNameLabel(AppTheme.themeNotifier.value),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: AppTheme.accentPurple,
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(Icons.chevron_right_rounded,
                           color: AppTheme.textSecondary),
                     ],
                   ),
@@ -536,7 +940,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: blockedUsers.length,
-                      separatorBuilder: (context, index) => const Divider(
+                      separatorBuilder: (context, index) => Divider(
                         color: AppTheme.glassBorder,
                         height: 1,
                         indent: 16,
@@ -547,7 +951,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         return ListTile(
                           contentPadding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 4),
-                          leading: const CircleAvatar(
+                          leading: CircleAvatar(
                             backgroundColor: AppTheme.surfaceLight,
                             radius: 16,
                             child: Icon(Icons.person_rounded,
@@ -570,7 +974,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                         .withValues(alpha: 0.3),
                                     width: 0.5),
                               ),
-                              child: const Text(
+                              child: Text(
                                 'Unblock',
                                 style: TextStyle(
                                   color: AppTheme.accentOrange,
@@ -602,7 +1006,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: blockedSubs.length,
-                      separatorBuilder: (context, index) => const Divider(
+                      separatorBuilder: (context, index) => Divider(
                         color: AppTheme.glassBorder,
                         height: 1,
                         indent: 16,
@@ -613,7 +1017,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         return ListTile(
                           contentPadding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 4),
-                          leading: const CircleAvatar(
+                          leading: CircleAvatar(
                             backgroundColor: AppTheme.surfaceLight,
                             radius: 16,
                             child: Icon(Icons.reddit_rounded,
@@ -636,7 +1040,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                         .withValues(alpha: 0.3),
                                     width: 0.5),
                               ),
-                              child: const Text(
+                              child: Text(
                                 'Unblock',
                                 style: TextStyle(
                                   color: AppTheme.accentOrange,
@@ -696,12 +1100,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     color: AppTheme.accentCyan.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                   ),
-                  child: const Icon(Icons.data_usage_rounded,
+                  child: Icon(Icons.data_usage_rounded,
                       color: AppTheme.accentCyan, size: 20),
                 ),
                 title: Text('Data Saver (Low Quality)',
                     style: Theme.of(context).textTheme.titleSmall),
-                subtitle: Text('Load low-resolution HLS videos on slow connections',
+                subtitle: Text(
+                    'Load low-resolution HLS videos on slow connections',
                     style: Theme.of(context).textTheme.bodySmall),
                 trailing: Switch(
                   value: _dataSaverEnabled,
@@ -741,7 +1146,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 12),
             Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppTheme.textSecondary,
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
@@ -751,7 +1156,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Text(
               description,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppTheme.textMuted,
                 fontSize: 12,
               ),
@@ -823,7 +1228,7 @@ class __RegionSelectorBottomSheetState
     return Container(
       height: MediaQuery.of(context).size.height * 0.75,
       margin: EdgeInsets.only(bottom: bottomInset),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppTheme.surface,
         borderRadius:
             BorderRadius.vertical(top: Radius.circular(AppTheme.radiusXl)),
@@ -889,13 +1294,13 @@ class __RegionSelectorBottomSheetState
                 decoration: InputDecoration(
                   contentPadding: const EdgeInsets.symmetric(vertical: 14),
                   hintText: 'Search regions...',
-                  hintStyle: const TextStyle(
-                      color: AppTheme.textSecondary, fontSize: 15),
-                  prefixIcon: const Icon(Icons.search_rounded,
+                  hintStyle:
+                      TextStyle(color: AppTheme.textSecondary, fontSize: 15),
+                  prefixIcon: Icon(Icons.search_rounded,
                       color: AppTheme.textSecondary, size: 20),
                   suffixIcon: _searchQuery.isNotEmpty
                       ? IconButton(
-                          icon: const Icon(Icons.clear_rounded,
+                          icon: Icon(Icons.clear_rounded,
                               color: AppTheme.textSecondary, size: 18),
                           onPressed: () {
                             setState(() {
@@ -927,7 +1332,7 @@ class __RegionSelectorBottomSheetState
                     label: widget.autoDetectLabel,
                     isSelected: widget.initialValue == 'AUTO',
                   ),
-                  const Divider(color: AppTheme.glassBorder, height: 1),
+                  Divider(color: AppTheme.glassBorder, height: 1),
                 ],
                 if (showGlobal) ...[
                   _buildItem(
@@ -936,7 +1341,7 @@ class __RegionSelectorBottomSheetState
                     label: 'Global',
                     isSelected: widget.initialValue == 'GLOBAL',
                   ),
-                  const Divider(color: AppTheme.glassBorder, height: 1),
+                  Divider(color: AppTheme.glassBorder, height: 1),
                 ],
                 ...filteredCountries.map((entry) {
                   return _buildItem(
@@ -957,7 +1362,7 @@ class __RegionSelectorBottomSheetState
                                 AppTheme.textSecondary.withValues(alpha: 0.5),
                             size: 48),
                         const SizedBox(height: 12),
-                        const Text(
+                        Text(
                           'No regions found',
                           style: TextStyle(
                               color: AppTheme.textSecondary,
@@ -965,7 +1370,7 @@ class __RegionSelectorBottomSheetState
                               fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 4),
-                        const Text(
+                        Text(
                           'Try searching for a different country name or code',
                           style: TextStyle(
                               color: AppTheme.textMuted, fontSize: 13),
@@ -1008,9 +1413,287 @@ class __RegionSelectorBottomSheetState
               ),
             ),
             if (isSelected)
-              const Icon(
+              Icon(
                 Icons.check_rounded,
                 color: AppTheme.accentOrange,
+                size: 20,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CustomRegionSelectorBottomSheet extends StatefulWidget {
+  final String? initialValue;
+  final String? countryCode;
+  final ValueChanged<String?> onSelected;
+
+  const _CustomRegionSelectorBottomSheet({
+    required this.initialValue,
+    required this.countryCode,
+    required this.onSelected,
+  });
+
+  @override
+  State<_CustomRegionSelectorBottomSheet> createState() =>
+      __CustomRegionSelectorBottomSheetState();
+}
+
+class __CustomRegionSelectorBottomSheetState
+    extends State<_CustomRegionSelectorBottomSheet> {
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+  List<String> _states = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.text = widget.initialValue ?? '';
+    _searchQuery = widget.initialValue ?? '';
+
+    if (widget.countryCode != null) {
+      _states = _SettingsScreenState
+              ._countryStates[widget.countryCode!.toUpperCase()] ??
+          [];
+    }
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final filteredStates = _states.where((s) {
+      return s.toLowerCase().contains(_searchQuery.toLowerCase());
+    }).toList();
+
+    final showCustomOption = _searchQuery.trim().isNotEmpty &&
+        !_states
+            .any((s) => s.toLowerCase() == _searchQuery.trim().toLowerCase());
+
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.75,
+      margin: EdgeInsets.only(bottom: bottomInset),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(AppTheme.radiusXl)),
+        border: Border(
+          top: BorderSide(color: AppTheme.glassBorder, width: 0.5),
+        ),
+      ),
+      child: Column(
+        children: [
+          const SizedBox(height: 12),
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: AppTheme.textSecondary.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Custom Region Override',
+                  style: GoogleFonts.outfit(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                PressableScale(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: AppTheme.surfaceLight,
+                      shape: BoxShape.circle,
+                      border:
+                          Border.all(color: AppTheme.glassBorder, width: 0.5),
+                    ),
+                    child: const Icon(Icons.close_rounded,
+                        color: Colors.white, size: 18),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppTheme.surfaceLight,
+                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                border: Border.all(color: AppTheme.glassBorder, width: 0.5),
+              ),
+              child: TextField(
+                controller: _searchController,
+                style: const TextStyle(color: Colors.white, fontSize: 15),
+                cursorColor: AppTheme.accentOrange,
+                decoration: InputDecoration(
+                  contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                  hintText: 'Search or enter region name...',
+                  hintStyle:
+                      TextStyle(color: AppTheme.textSecondary, fontSize: 15),
+                  prefixIcon: Icon(Icons.edit_location_alt_rounded,
+                      color: AppTheme.textSecondary, size: 20),
+                  suffixIcon: _searchQuery.isNotEmpty
+                      ? IconButton(
+                          icon: Icon(Icons.clear_rounded,
+                              color: AppTheme.textSecondary, size: 18),
+                          onPressed: () {
+                            setState(() {
+                              _searchController.clear();
+                              _searchQuery = '';
+                            });
+                          },
+                        )
+                      : null,
+                  border: InputBorder.none,
+                ),
+                onChanged: (val) {
+                  setState(() {
+                    _searchQuery = val;
+                  });
+                },
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              children: [
+                // Clear Override option
+                if (widget.initialValue != null) ...[
+                  _buildItem(
+                    context: context,
+                    value: null,
+                    label: 'Clear Custom Override (Use default)',
+                    isSelected: false,
+                    isClearOption: true,
+                  ),
+                  Divider(color: AppTheme.glassBorder, height: 1),
+                ],
+                // Custom typed search query option
+                if (showCustomOption) ...[
+                  _buildItem(
+                    context: context,
+                    value: _searchQuery.trim(),
+                    label: 'Use Custom Name: "${_searchQuery.trim()}"',
+                    isSelected: false,
+                    isCustomOption: true,
+                  ),
+                  Divider(color: AppTheme.glassBorder, height: 1),
+                ],
+                // Suggested states/provinces list
+                ...filteredStates.map((s) {
+                  return _buildItem(
+                    context: context,
+                    value: s,
+                    label: s,
+                    isSelected:
+                        widget.initialValue?.toLowerCase() == s.toLowerCase(),
+                  );
+                }),
+                if (!showCustomOption && filteredStates.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 40),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.map_rounded,
+                            color:
+                                AppTheme.textSecondary.withValues(alpha: 0.5),
+                            size: 48),
+                        const SizedBox(height: 12),
+                        Text(
+                          'No suggested regions',
+                          style: TextStyle(
+                              color: AppTheme.textSecondary,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Type a state name in the search box to use it',
+                          style: TextStyle(
+                              color: AppTheme.textMuted, fontSize: 13),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildItem({
+    required BuildContext context,
+    required String? value,
+    required String label,
+    required bool isSelected,
+    bool isClearOption = false,
+    bool isCustomOption = false,
+  }) {
+    Color labelColor = AppTheme.textPrimary;
+    IconData? icon;
+    if (isSelected) {
+      labelColor = Colors.white;
+      icon = Icons.check_rounded;
+    } else if (isClearOption) {
+      labelColor = AppTheme.accentOrange;
+      icon = Icons.delete_sweep_rounded;
+    } else if (isCustomOption) {
+      labelColor = AppTheme.accentPurple;
+      icon = Icons.add_location_alt_rounded;
+    }
+
+    return PressableScale(
+      onTap: () {
+        widget.onSelected(value);
+        Navigator.pop(context);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+        color: Colors.transparent,
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: labelColor,
+                  fontSize: 16,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
+            ),
+            if (icon != null)
+              Icon(
+                icon,
+                color: isSelected
+                    ? AppTheme.accentOrange
+                    : (isClearOption
+                        ? AppTheme.accentOrange
+                        : AppTheme.accentPurple),
                 size: 20,
               ),
           ],

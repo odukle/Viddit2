@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -62,6 +63,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> with WidgetsBindi
   bool _isSwitchingToCache = false;
   bool _isAppInForeground = true;
   bool _isRevealed = false;
+  bool _isFastForwarding = false;
 
   @override
   void initState() {
@@ -392,11 +394,11 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> with WidgetsBindi
                 ),
               ),
               ListTile(
-                leading: const Icon(Icons.flag_rounded,
+                leading:  Icon(Icons.flag_rounded,
                     color: AppTheme.accentOrange),
                 title: const Text('Report Post',
                     style: TextStyle(color: Colors.white)),
-                subtitle: const Text(
+                subtitle:  Text(
                     'Report this post for UGC violation, spam, or abuse',
                     style:
                         TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
@@ -406,11 +408,11 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> with WidgetsBindi
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.block_rounded,
+                leading:  Icon(Icons.block_rounded,
                     color: AppTheme.accentPurple),
                 title: Text('Block u/${widget.post.author}',
                     style: const TextStyle(color: Colors.white)),
-                subtitle: const Text(
+                subtitle:  Text(
                     'You won\'t see posts or comments from this user again',
                     style:
                         TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
@@ -420,11 +422,11 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> with WidgetsBindi
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.no_accounts_rounded,
+                leading:  Icon(Icons.no_accounts_rounded,
                     color: AppTheme.accentWarm),
                 title: Text('Block ${widget.post.subreddit}',
                     style: const TextStyle(color: Colors.white)),
-                subtitle: const Text(
+                subtitle:  Text(
                     'You won\'t see posts from this subreddit again',
                     style:
                         TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
@@ -499,14 +501,14 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> with WidgetsBindi
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text('Block u/${widget.post.author}?',
             style: const TextStyle(color: Colors.white)),
-        content: const Text(
+        content:  Text(
           'Are you sure you want to block this user? You will not see their posts or comments again.',
           style: TextStyle(color: AppTheme.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel',
+            child:  Text('Cancel',
                 style: TextStyle(color: AppTheme.textSecondary)),
           ),
           ElevatedButton(
@@ -549,14 +551,14 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> with WidgetsBindi
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text('Block ${widget.post.subreddit}?',
             style: const TextStyle(color: Colors.white)),
-        content: const Text(
+        content:  Text(
           'Are you sure you want to block this subreddit? You will not see posts from this subreddit again.',
           style: TextStyle(color: AppTheme.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel',
+            child:  Text('Cancel',
                 style: TextStyle(color: AppTheme.textSecondary)),
           ),
           ElevatedButton(
@@ -645,6 +647,196 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> with WidgetsBindi
     }
   }
 
+  void _onLongPressStart(LongPressStartDetails details) async {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final posX = details.localPosition.dx;
+
+    if (posX < screenWidth * 0.35 || posX > screenWidth * 0.65) {
+      // Fast-forward zone (Left or Right 35%)
+      if (_controller != null && _isInitialized) {
+        HapticFeedback.selectionClick();
+        await _controller!.setPlaybackSpeed(2.0);
+        setState(() {
+          _isFastForwarding = true;
+        });
+      }
+    } else {
+      // Middle 30% -> Quick Actions Menu
+      _showQuickActionsMenu();
+    }
+  }
+
+  void _onLongPressEnd(LongPressEndDetails details) async {
+    if (_isFastForwarding) {
+      if (_controller != null && _isInitialized) {
+        await _controller!.setPlaybackSpeed(1.0);
+      }
+      setState(() {
+        _isFastForwarding = false;
+      });
+    }
+  }
+
+  void _showQuickActionsMenu() {
+    HapticFeedback.mediumImpact();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.5),
+      builder: (context) {
+        final api = RedditApi();
+        return Container(
+          decoration:  BoxDecoration(
+            color: AppTheme.surfaceElevated,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(AppTheme.radiusXl)),
+            border: Border(top: BorderSide(color: AppTheme.glassBorder, width: 0.5)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 8),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppTheme.textSecondary.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Quick Actions',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 18),
+              ),
+              const SizedBox(height: 16),
+              
+              // 1. Save/Unsave Post
+              _buildQuickActionTile(
+                icon: widget.post.isSaved ? Icons.star_rounded : Icons.star_border_rounded,
+                label: widget.post.isSaved ? 'Unsave Post' : 'Save Post',
+                color: widget.post.isSaved ? Colors.amber : Colors.white,
+                onTap: () async {
+                  Navigator.pop(context);
+                  if (!api.isLoggedIn) {
+                    _showSignInRequired();
+                    return;
+                  }
+                  final bool newSavedState = !widget.post.isSaved;
+                  setState(() {
+                    widget.post.isSaved = newSavedState;
+                  });
+                  final success = await api.savePost(widget.post.fullName, newSavedState);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(success 
+                          ? (newSavedState ? 'Saved post successfully! ⭐' : 'Unsaved post! ⭐')
+                          : 'Failed to update save state.'),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                },
+              ),
+
+              // 2. Copy Link
+              _buildQuickActionTile(
+                icon: Icons.link_rounded,
+                label: 'Copy Post Link',
+                color: Colors.white,
+                onTap: () async {
+                  Navigator.pop(context);
+                  await Clipboard.setData(ClipboardData(text: 'https://www.reddit.com${widget.post.permalink}'));
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Copied link to clipboard! 🔗'),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                },
+              ),
+
+              // 3. Download Video
+              _buildQuickActionTile(
+                icon: Icons.download_rounded,
+                label: 'Download Video',
+                color: Colors.white,
+                onTap: () {
+                  Navigator.pop(context);
+                  _startDownload();
+                },
+              ),
+
+              // Divider
+               Divider(color: AppTheme.glassBorder, height: 16),
+
+              // 4. Report Post
+              _buildQuickActionTile(
+                icon: Icons.flag_outlined,
+                label: 'Report Post',
+                color: Colors.redAccent,
+                onTap: () {
+                  Navigator.pop(context);
+                  _showReportReasonDialog();
+                },
+              ),
+
+              // 5. Block User
+              _buildQuickActionTile(
+                icon: Icons.person_off_outlined,
+                label: 'Block u/${widget.post.author}',
+                color: Colors.redAccent,
+                onTap: () {
+                  Navigator.pop(context);
+                  _blockUserConfirm();
+                },
+              ),
+              
+              const SizedBox(height: 24),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildQuickActionTile({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return PressableScale(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.04),
+          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+          border: Border.all(color: AppTheme.glassBorder, width: 0.5),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: color, size: 22),
+            const SizedBox(width: 16),
+            Text(
+              label,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                color: color,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const Spacer(),
+             Icon(Icons.chevron_right_rounded, color: AppTheme.textSecondary, size: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   void dispose() {
     RedditApi().removeSafetyListener(_onSafetyChanged);
@@ -678,6 +870,8 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> with WidgetsBindi
     return GestureDetector(
       onTap: _togglePlayPause,
       onDoubleTap: _onDoubleTap,
+      onLongPressStart: _onLongPressStart,
+      onLongPressEnd: _onLongPressEnd,
       child: Stack(
         alignment: Alignment.center,
         children: [
@@ -785,7 +979,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> with WidgetsBindi
                         ),
                       ],
                     ),
-                    child: const Icon(
+                    child:  Icon(
                       Icons.favorite_rounded,
                       color: AppTheme.accentOrange,
                       size: 120,
@@ -925,7 +1119,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> with WidgetsBindi
                                 color: AppTheme.accentOrange.withValues(alpha: 0.5),
                                 width: 1.5),
                           ),
-                          child: const Icon(Icons.shield_rounded,
+                          child:  Icon(Icons.shield_rounded,
                               color: AppTheme.accentOrange, size: 48),
                         ),
                         const SizedBox(height: 24),
@@ -1035,7 +1229,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> with WidgetsBindi
                                   ? CachedNetworkImageProvider(_subredditIcon)
                                   : null,
                               child: _subredditIcon.isEmpty
-                                  ? const Icon(Icons.reddit,
+                                  ?  Icon(Icons.reddit,
                                       color: AppTheme.accentOrange, size: 14)
                                   : null,
                             ),
@@ -1180,7 +1374,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> with WidgetsBindi
                             child: CircularProgressIndicator(
                               value: _downloadProgress,
                               strokeWidth: 2.5,
-                              valueColor: const AlwaysStoppedAnimation<Color>(
+                              valueColor: AlwaysStoppedAnimation<Color>(
                                   AppTheme.accentOrange),
                               backgroundColor: Colors.white24,
                             ),
@@ -1243,6 +1437,36 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> with WidgetsBindi
                   playedColor: AppTheme.accentOrange,
                   bufferedColor: Colors.white.withValues(alpha: 0.18),
                   backgroundColor: Colors.white.withValues(alpha: 0.08),
+                ),
+              ),
+            ),
+
+          // 9. Fast Forwarding indicator overlay at the top center
+          if (_isFastForwarding)
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 20,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.6),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                  border: Border.all(color: AppTheme.glassBorder, width: 0.8),
+                ),
+                child:  Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.fast_forward_rounded, color: AppTheme.accentOrange, size: 18),
+                    SizedBox(width: 8),
+                    Text(
+                      '2x Speed',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),

@@ -5,8 +5,13 @@ import 'package:viddit/main.dart';
 import 'package:viddit/theme/app_theme.dart';
 import 'package:viddit/api/reddit_api.dart';
 import 'package:viddit/models/post_model.dart';
+import 'package:viddit/widgets/comments_sheet.dart';
 
 void main() {
+  setUpAll(() {
+    RedditApi.isTesting = true;
+  });
+
   testWidgets('navigation shell renders core tabs',
       (WidgetTester tester) async {
     await tester.pumpWidget(
@@ -187,11 +192,13 @@ void main() {
 
     // Navigate to profile tab
     await tester.tap(find.byIcon(Icons.account_circle_rounded));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
 
     // Tap settings
     await tester.tap(find.byIcon(Icons.settings_rounded));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
 
     // Verify Popular Feed Region tile exists and tap it
     expect(find.text('Popular Feed Region'), findsOneWidget);
@@ -235,6 +242,10 @@ void main() {
       SharedPreferences.setMockInitialValues({});
       api = RedditApi();
       await api.init();
+      api.setDiscoveredSubredditsForTesting(
+        'IN',
+        'india+indiasocial+indiadiscussion+delhi+mumbai+bangalore+kerala+tamilnadu+hyderabad+pune+kolkata',
+      );
     });
 
     test(
@@ -334,5 +345,94 @@ void main() {
       expect(uri.queryParameters['g'], equals('IN'));
       expect(uri.queryParameters.containsKey('geo_filter'), isFalse);
     });
+
+    test(
+        'unsupported country with dynamically discovered subreddits uses curated search',
+        () async {
+      await api.setGeolocation('AF');
+      api.setDiscoveredSubredditsForTesting('AF', 'afghanistan+kabul');
+      final uri = api.buildListingUriForTesting(
+        feedType: 'popular',
+        query: '',
+        sort: 'hot',
+        params: {'limit': '50'},
+      );
+
+      expect(uri.path, contains('/r/afghanistan%2Bkabul'));
+      expect(uri.path, contains('/search.json'));
+      expect(uri.queryParameters['restrict_sr'], equals('1'));
+      expect(uri.queryParameters['q'], contains('site:v.redd.it'));
+    });
+
+    test(
+        'AUTO geolocation with detected state/region name uses state/region search',
+        () async {
+      await api.setGeolocation('AUTO');
+      api.detectedCountryCodeForTesting = 'IN';
+      api.detectedRegionNameForTesting = 'Karnataka';
+      api.setDiscoveredSubredditsForTesting('IN', 'karnataka+bangalore');
+
+      final uri = api.buildListingUriForTesting(
+        feedType: 'popular',
+        query: '',
+        sort: 'hot',
+        params: {'limit': '50'},
+      );
+
+      expect(uri.path, contains('/r/karnataka%2Bbangalore'));
+      expect(uri.path, contains('/search.json'));
+      expect(uri.queryParameters['restrict_sr'], equals('1'));
+      expect(uri.queryParameters['q'], contains('site:v.redd.it'));
+    });
+  });
+
+  testWidgets('comments sheet renders search bar and filter chips',
+      (WidgetTester tester) async {
+    SharedPreferences.setMockInitialValues({
+      'viddit_eula_accepted': true,
+    });
+
+    final api = RedditApi();
+    await api.init();
+
+    final post = PostModel(
+      id: 'p_test',
+      fullName: 't3_p_test',
+      title: 'Test Post',
+      author: 'test_user',
+      subreddit: 'r/test',
+      thumbnail: '',
+      isNsfw: false,
+      isGif: false,
+      score: 100,
+      commentCount: 5,
+      createdUtc: DateTime.now().millisecondsSinceEpoch / 1000.0,
+      permalink: '/r/test/comments/p_test/',
+      videoUrl: 'https://example.com/video.mp4',
+      fallbackVideoUrl: '',
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.darkTheme,
+        home: Scaffold(
+          body: CommentsSheet(post: post),
+        ),
+      ),
+    );
+
+    await tester.pump();
+
+    // Verify search bar is visible
+    expect(find.byType(TextField), findsOneWidget);
+    expect(find.text('Search comments...'), findsOneWidget);
+
+    // Verify filter chips exist
+    expect(find.text('All'), findsOneWidget);
+    expect(find.text('Questions'), findsOneWidget);
+    expect(find.text('Links'), findsOneWidget);
+    expect(find.text('Popular'), findsOneWidget);
+    expect(find.text('Positive'), findsOneWidget);
+    expect(find.text('Negative'), findsOneWidget);
   });
 }

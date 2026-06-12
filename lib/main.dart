@@ -17,6 +17,11 @@ void main() async {
   final api = RedditApi();
   await api.init();
 
+  // Load app theme from SharedPreferences
+  final prefs = await SharedPreferences.getInstance();
+  final savedTheme = prefs.getString('viddit_theme') ?? 'obsidian';
+  AppTheme.selectTheme(savedTheme);
+
   runApp(const MyApp());
 }
 
@@ -25,11 +30,16 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Scroller',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
-      home: const NavigationContainer(),
+    return ValueListenableBuilder<String>(
+      valueListenable: AppTheme.themeNotifier,
+      builder: (context, themeName, _) {
+        return MaterialApp(
+          title: 'Scroller',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.darkTheme,
+          home: const NavigationContainer(),
+        );
+      },
     );
   }
 }
@@ -74,7 +84,7 @@ class _NavigationContainerState extends State<NavigationContainer> {
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             title: const Text('End User License Agreement',
                 style: TextStyle(color: Colors.white)),
-            content: const SingleChildScrollView(
+            content:  SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -178,7 +188,7 @@ class _NavigationContainerState extends State<NavigationContainer> {
         ],
       ),
       bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
+        decoration:  BoxDecoration(
           color: Colors.transparent,
           border: Border(
             top: BorderSide(
@@ -224,8 +234,8 @@ class _NavigationContainerState extends State<NavigationContainer> {
 
   Widget _buildNavItem(int index, IconData icon, String label) {
     final isSelected = _selectedTab == index;
-    const activeColor = AppTheme.accentOrange;
-    const inactiveColor = AppTheme.textSecondary;
+    final activeColor = AppTheme.accentOrange;
+    final inactiveColor = AppTheme.textSecondary;
 
     return Expanded(
       child: PressableScale(
@@ -280,10 +290,10 @@ class _NavigationContainerState extends State<NavigationContainer> {
                   opacity: isSelected ? 1.0 : 0.0,
                   child: isSelected
                       ? Padding(
-                          padding: const EdgeInsets.only(top: 3),
+                          padding:  EdgeInsets.only(top: 3),
                           child: Text(
                             label,
-                            style: const TextStyle(
+                            style:  TextStyle(
                               color: AppTheme.textPrimary,
                               fontWeight: FontWeight.w700,
                               fontSize: 10,

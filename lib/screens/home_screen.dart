@@ -1011,14 +1011,14 @@ class VerticalFeedWidgetState extends State<VerticalFeedWidget>
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Reddit Rate Limit Exceeded',
             style: TextStyle(color: Colors.white)),
-        content: const Text(
+        content:  Text(
           'You are currently browsing as a guest. Reddit enforces strict rate limits on guest users. Sign in to enjoy unlimited browsing!',
           style: TextStyle(color: AppTheme.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel',
+            child:  Text('Cancel',
                 style: TextStyle(color: AppTheme.textSecondary)),
           ),
           ElevatedButton(
@@ -1049,7 +1049,7 @@ class VerticalFeedWidgetState extends State<VerticalFeedWidget>
       body: Stack(
         children: [
           _isLoading
-              ? const Center(
+              ?  Center(
                   child: SpinKitRing(
                     color: AppTheme.accentOrange,
                     size: 60.0,
@@ -1173,7 +1173,7 @@ class VerticalFeedWidgetState extends State<VerticalFeedWidget>
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const SpinKitRing(
+                       SpinKitRing(
                         color: AppTheme.accentOrange,
                         size: 16,
                         lineWidth: 2,
