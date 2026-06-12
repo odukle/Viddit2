@@ -110,7 +110,7 @@ class _NavigationContainerState extends State<NavigationContainer> {
                   ),
                   SizedBox(height: 8),
                   Text(
-                    '3. NSFW & Age Restrictions:\nAdult (NSFW) content is filtered and hidden by default. To view NSFW content, you must sign in to an account, confirm you are 18+ years of age, and explicitly toggle on the NSFW setting in settings.',
+                    '3. NSFW & Age Restrictions:\nAdult (NSFW) content is filtered and hidden by default. If sensitive or NSFW content appears, you must confirm you are 18+ years of age and explicitly agree to view it via a two-click confirmation prompt.',
                     style:
                         TextStyle(color: AppTheme.textSecondary, fontSize: 12),
                   ),

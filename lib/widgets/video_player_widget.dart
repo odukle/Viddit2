@@ -118,6 +118,60 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     _initializePlayer();
   }
 
+  void _showNsfwConfirmationDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: AppTheme.surfaceElevated,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Text(
+            'Confirm Age & Content',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          content: const Text(
+            'By tapping Proceed, you confirm that you are at least 18 years of age and consent to view this adult content.',
+            style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: Colors.grey),
+              ),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.accentOrange,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              onPressed: () {
+                Navigator.pop(context);
+                setState(() {
+                  _isNsfwBlocked = false;
+                });
+                _initializePlayer();
+              },
+              child: const Text(
+                'Proceed',
+                style:
+                    TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   void didUpdateWidget(covariant VideoPlayerWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -1127,48 +1181,32 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
                               color: Colors.white70, fontSize: 13, height: 1.4),
                         ),
                         const SizedBox(height: 36),
-                        if (RedditApi.showNsfwSwitch) ...[
-                          PressableScale(
-                            onTap: () {
-                              setState(() {
-                                _isNsfwBlocked = false;
-                              });
-                              _initializePlayer();
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 36, vertical: 14),
-                              decoration: BoxDecoration(
-                                gradient: AppTheme.brandGradient,
-                                borderRadius: BorderRadius.circular(30),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppTheme.accentOrange
-                                        .withValues(alpha: 0.3),
-                                    blurRadius: 15,
-                                    offset: const Offset(0, 5),
-                                  ),
-                                ],
-                              ),
-                              child: const Text(
-                                'Watch Anyway',
-                                style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white),
-                              ),
+                        PressableScale(
+                          onTap: _showNsfwConfirmationDialog,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 36, vertical: 14),
+                            decoration: BoxDecoration(
+                              gradient: AppTheme.brandGradient,
+                              borderRadius: BorderRadius.circular(30),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppTheme.accentOrange
+                                      .withValues(alpha: 0.3),
+                                  blurRadius: 15,
+                                  offset: const Offset(0, 5),
+                                ),
+                              ],
+                            ),
+                            child: const Text(
+                              'Reveal Content',
+                              style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white),
                             ),
                           ),
-                        ] else ...[
-                          const Text(
-                            'NSFW content is restricted on this device.',
-                            style: TextStyle(
-                              color: Colors.white60,
-                              fontSize: 14,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                        ],
+                        ),
                       ],
                     ),
                   ),
