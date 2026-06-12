@@ -1072,37 +1072,48 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
                               color: Colors.white70, fontSize: 13, height: 1.4),
                         ),
                         const SizedBox(height: 36),
-                        PressableScale(
-                          onTap: () {
-                            setState(() {
-                              _isNsfwBlocked = false;
-                            });
-                            _initializePlayer();
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 36, vertical: 14),
-                            decoration: BoxDecoration(
-                              gradient: AppTheme.brandGradient,
-                              borderRadius: BorderRadius.circular(30),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppTheme.accentOrange
-                                      .withValues(alpha: 0.3),
-                                  blurRadius: 15,
-                                  offset: const Offset(0, 5),
-                                ),
-                              ],
-                            ),
-                            child: const Text(
-                              'Watch Anyway',
-                              style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white),
+                        if (RedditApi.showNsfwSwitch) ...[
+                          PressableScale(
+                            onTap: () {
+                              setState(() {
+                                _isNsfwBlocked = false;
+                              });
+                              _initializePlayer();
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 36, vertical: 14),
+                              decoration: BoxDecoration(
+                                gradient: AppTheme.brandGradient,
+                                borderRadius: BorderRadius.circular(30),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppTheme.accentOrange
+                                        .withValues(alpha: 0.3),
+                                    blurRadius: 15,
+                                    offset: const Offset(0, 5),
+                                  ),
+                                ],
+                              ),
+                              child: const Text(
+                                'Watch Anyway',
+                                style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white),
+                              ),
                             ),
                           ),
-                        ),
+                        ] else ...[
+                          const Text(
+                            'NSFW content is restricted on this device.',
+                            style: TextStyle(
+                              color: Colors.white60,
+                              fontSize: 14,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
