@@ -121,10 +121,24 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
   @override
   void didUpdateWidget(covariant VideoPlayerWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.isActive && !oldWidget.isActive) {
-      _initializePlayer();
-    } else if (!widget.isActive && oldWidget.isActive) {
-      _pausePlayer();
+
+    final bool postChanged = widget.post.id != oldWidget.post.id;
+    if (postChanged) {
+      _disposePlayer();
+      _isNsfwBlocked = widget.post.isNsfw;
+      _isRevealed = false;
+      _subredditIcon = '';
+      _authorIcon = '';
+      _loadIcons();
+      if (widget.isActive) {
+        _initializePlayer();
+      }
+    } else {
+      if (widget.isActive && !oldWidget.isActive) {
+        _initializePlayer();
+      } else if (!widget.isActive && oldWidget.isActive) {
+        _disposePlayer();
+      }
     }
 
     if (_isInitialized && _controller != null) {
@@ -175,17 +189,33 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     }
   }
 
+  void _disposePlayer() {
+    _cleanupProgressListener();
+    final oldController = _controller;
+    _controller = null;
+    _isInitialized = false;
+    _isPlaying = false;
+    if (oldController != null) {
+      oldController.dispose();
+    }
+  }
+
   Future<void> _switchToCachedPlayer() async {
     if (_isSwitchingToCache || _isInitialized) {
       return;
     }
     _isSwitchingToCache = true;
+    final targetPostId = widget.post.id;
 
     try {
       final cacheManager = VideoCacheManager();
       final hlsUrl = widget.post.videoUrl;
 
       final cachedProxyUrl = await cacheManager.getCacheOrDownload(hlsUrl);
+      if (!mounted || !widget.isActive || widget.post.id != targetPostId) {
+        return;
+      }
+
       if (cachedProxyUrl != null) {
         debugPrint(
             '[VideoPlayerWidget] Switching to cached URL: $cachedProxyUrl');
@@ -193,11 +223,14 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
         final oldController = _controller;
         _controller = null;
         if (oldController != null) {
-          await oldController.dispose();
+          oldController.dispose();
         }
 
         final api = RedditApi();
         final headers = await api.getDownloadHeaders();
+        if (!mounted || !widget.isActive || widget.post.id != targetPostId) {
+          return;
+        }
 
         final controller = VideoPlayerController.networkUrl(
           Uri.parse(cachedProxyUrl),
@@ -206,9 +239,15 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
         _controller = controller;
 
         await controller.initialize();
-        _cleanupProgressListener();
-        if (!mounted) return;
+        if (!mounted || !widget.isActive || widget.post.id != targetPostId) {
+          controller.dispose();
+          if (identical(_controller, controller)) {
+            _controller = null;
+          }
+          return;
+        }
 
+        _cleanupProgressListener();
         await controller.setLooping(true);
         await controller.setVolume(widget.isGlobalMuted ? 0.0 : 1.0);
 
@@ -234,6 +273,9 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
       return;
     }
 
+    _disposePlayer();
+    final targetPostId = widget.post.id;
+
     try {
       final cacheManager = VideoCacheManager();
       final hlsUrl = widget.post.videoUrl;
@@ -247,12 +289,19 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
         cacheManager.addProgressListener(hlsUrl, _onDownloadProgress);
       }
 
-      // Try to get a cached (local-proxy) URL; falls back to network HLS.
       final cachedProxyUrl = await cacheManager.getCacheOrDownload(hlsUrl);
-      final playUrl = cachedProxyUrl ?? hlsUrl;
+      if (!mounted || !widget.isActive || widget.post.id != targetPostId) {
+        _cleanupProgressListener();
+        return;
+      }
 
+      final playUrl = cachedProxyUrl ?? hlsUrl;
       final api = RedditApi();
       final headers = await api.getDownloadHeaders();
+      if (!mounted || !widget.isActive || widget.post.id != targetPostId) {
+        _cleanupProgressListener();
+        return;
+      }
 
       final controller = VideoPlayerController.networkUrl(
         Uri.parse(playUrl),
@@ -261,9 +310,16 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
       _controller = controller;
 
       await controller.initialize();
-      _cleanupProgressListener();
-      if (!mounted) return;
+      if (!mounted || !widget.isActive || widget.post.id != targetPostId) {
+        _cleanupProgressListener();
+        controller.dispose();
+        if (identical(_controller, controller)) {
+          _controller = null;
+        }
+        return;
+      }
 
+      _cleanupProgressListener();
       await controller.setLooping(true);
       await controller.setVolume(widget.isGlobalMuted ? 0.0 : 1.0);
 
@@ -278,7 +334,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     } catch (e) {
       _cleanupProgressListener();
       debugPrint('Video Initialize Error: $e');
-      if (mounted) {
+      if (mounted && widget.post.id == targetPostId) {
         setState(() {
           _hasError = true;
           _isInitialized = false;
@@ -853,8 +909,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
   void dispose() {
     RedditApi().removeSafetyListener(_onSafetyChanged);
     WidgetsBinding.instance.removeObserver(this);
-    _cleanupProgressListener();
-    _controller?.dispose();
+    _disposePlayer();
     super.dispose();
   }
 
