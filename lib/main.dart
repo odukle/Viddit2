@@ -84,7 +84,7 @@ class _NavigationContainerState extends State<NavigationContainer> {
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             title: const Text('End User License Agreement',
                 style: TextStyle(color: Colors.white)),
-            content:  SingleChildScrollView(
+            content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -188,7 +188,7 @@ class _NavigationContainerState extends State<NavigationContainer> {
         ],
       ),
       bottomNavigationBar: Container(
-        decoration:  BoxDecoration(
+        decoration: BoxDecoration(
           color: Colors.transparent,
           border: Border(
             top: BorderSide(
@@ -290,10 +290,10 @@ class _NavigationContainerState extends State<NavigationContainer> {
                   opacity: isSelected ? 1.0 : 0.0,
                   child: isSelected
                       ? Padding(
-                          padding:  EdgeInsets.only(top: 3),
+                          padding: EdgeInsets.only(top: 3),
                           child: Text(
                             label,
-                            style:  TextStyle(
+                            style: TextStyle(
                               color: AppTheme.textPrimary,
                               fontWeight: FontWeight.w700,
                               fontSize: 10,

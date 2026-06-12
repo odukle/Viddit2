@@ -192,7 +192,8 @@ class HomeScreenState extends State<HomeScreen> {
   }
 
   void _showSortMenu(BuildContext context) async {
-    final RenderBox? overlay = Overlay.of(context).context.findRenderObject() as RenderBox?;
+    final RenderBox? overlay =
+        Overlay.of(context).context.findRenderObject() as RenderBox?;
     if (overlay == null) return;
 
     final width = MediaQuery.of(context).size.width;
@@ -213,8 +214,12 @@ class HomeScreenState extends State<HomeScreen> {
           child: Text(
             'Best',
             style: TextStyle(
-              color: _currentFrontPageSort == 'best' ? AppTheme.accentOrange : Colors.white,
-              fontWeight: _currentFrontPageSort == 'best' ? FontWeight.bold : FontWeight.normal,
+              color: _currentFrontPageSort == 'best'
+                  ? AppTheme.accentOrange
+                  : Colors.white,
+              fontWeight: _currentFrontPageSort == 'best'
+                  ? FontWeight.bold
+                  : FontWeight.normal,
             ),
           ),
         ),
@@ -223,8 +228,12 @@ class HomeScreenState extends State<HomeScreen> {
           child: Text(
             'Hot',
             style: TextStyle(
-              color: _currentFrontPageSort == 'hot' ? AppTheme.accentOrange : Colors.white,
-              fontWeight: _currentFrontPageSort == 'hot' ? FontWeight.bold : FontWeight.normal,
+              color: _currentFrontPageSort == 'hot'
+                  ? AppTheme.accentOrange
+                  : Colors.white,
+              fontWeight: _currentFrontPageSort == 'hot'
+                  ? FontWeight.bold
+                  : FontWeight.normal,
             ),
           ),
         ),
@@ -233,8 +242,12 @@ class HomeScreenState extends State<HomeScreen> {
           child: Text(
             'New',
             style: TextStyle(
-              color: _currentFrontPageSort == 'new' ? AppTheme.accentOrange : Colors.white,
-              fontWeight: _currentFrontPageSort == 'new' ? FontWeight.bold : FontWeight.normal,
+              color: _currentFrontPageSort == 'new'
+                  ? AppTheme.accentOrange
+                  : Colors.white,
+              fontWeight: _currentFrontPageSort == 'new'
+                  ? FontWeight.bold
+                  : FontWeight.normal,
             ),
           ),
         ),
@@ -243,8 +256,12 @@ class HomeScreenState extends State<HomeScreen> {
           child: Text(
             'Top',
             style: TextStyle(
-              color: _currentFrontPageSort == 'top' ? AppTheme.accentOrange : Colors.white,
-              fontWeight: _currentFrontPageSort == 'top' ? FontWeight.bold : FontWeight.normal,
+              color: _currentFrontPageSort == 'top'
+                  ? AppTheme.accentOrange
+                  : Colors.white,
+              fontWeight: _currentFrontPageSort == 'top'
+                  ? FontWeight.bold
+                  : FontWeight.normal,
             ),
           ),
         ),
@@ -359,6 +376,7 @@ class VerticalFeedWidgetState extends State<VerticalFeedWidget>
     });
     refresh();
   }
+
   String? _feedError;
   final Set<String> _seenPostIds = {};
   final Set<String> _seenVideoUrls = {};
@@ -1011,15 +1029,15 @@ class VerticalFeedWidgetState extends State<VerticalFeedWidget>
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Reddit Rate Limit Exceeded',
             style: TextStyle(color: Colors.white)),
-        content:  Text(
+        content: Text(
           'You are currently browsing as a guest. Reddit enforces strict rate limits on guest users. Sign in to enjoy unlimited browsing!',
           style: TextStyle(color: AppTheme.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child:  Text('Cancel',
-                style: TextStyle(color: AppTheme.textSecondary)),
+            child:
+                Text('Cancel', style: TextStyle(color: AppTheme.textSecondary)),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -1049,7 +1067,7 @@ class VerticalFeedWidgetState extends State<VerticalFeedWidget>
       body: Stack(
         children: [
           _isLoading
-              ?  Center(
+              ? Center(
                   child: SpinKitRing(
                     color: AppTheme.accentOrange,
                     size: 60.0,
@@ -1173,7 +1191,7 @@ class VerticalFeedWidgetState extends State<VerticalFeedWidget>
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                       SpinKitRing(
+                      SpinKitRing(
                         color: AppTheme.accentOrange,
                         size: 16,
                         lineWidth: 2,

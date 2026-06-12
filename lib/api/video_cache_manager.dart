@@ -58,7 +58,8 @@ class _HlsProxyServer {
     }
   }
 
-  Future<String> _rewriteMasterPlaylist(String content, String originalUrl) async {
+  Future<String> _rewriteMasterPlaylist(
+      String content, String originalUrl) async {
     final lines = const LineSplitter().convert(content);
     final newLines = <String>[];
 
@@ -446,7 +447,8 @@ class VideoCacheManager {
       }
 
       var masterPlaylistContent = playlistResponse.data!;
-      masterPlaylistContent = await _proxy._rewriteMasterPlaylist(masterPlaylistContent, hlsUrl);
+      masterPlaylistContent =
+          await _proxy._rewriteMasterPlaylist(masterPlaylistContent, hlsUrl);
 
       final playlistUri = Uri.parse(hlsUrl);
       final basePath =

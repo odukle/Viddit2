@@ -128,31 +128,31 @@ class AppTheme {
 
   // ─── Gradients
   static Gradient get brandGradient => LinearGradient(
-    colors: [accentOrange, const Color(0xFFE6007A), accentPurple],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
+        colors: [accentOrange, const Color(0xFFE6007A), accentPurple],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      );
 
   static Gradient get warmGradient => LinearGradient(
-    colors: [accentOrange, accentWarm],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
+        colors: [accentOrange, accentWarm],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      );
 
   static Gradient get purpleGradient => LinearGradient(
-    colors: [accentPurple, const Color(0xFF9333EA)],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
+        colors: [accentPurple, const Color(0xFF9333EA)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      );
 
   static Gradient get darkGlassGradient => LinearGradient(
-    colors: [
-      darkGlassStart,
-      darkGlassEnd,
-    ],
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
-  );
+        colors: [
+          darkGlassStart,
+          darkGlassEnd,
+        ],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      );
 
   static const Gradient cinematicScrim = LinearGradient(
     colors: [
@@ -221,7 +221,7 @@ class AppTheme {
       primaryColor: accentOrange,
       scaffoldBackgroundColor: background,
       canvasColor: Colors.transparent,
-      colorScheme:  ColorScheme.dark(
+      colorScheme: ColorScheme.dark(
         primary: accentOrange,
         secondary: accentPurple,
         tertiary: accentCyan,
@@ -319,7 +319,7 @@ class AppTheme {
           color: textPrimary,
           letterSpacing: -0.2,
         ),
-        iconTheme:  IconThemeData(color: textPrimary, size: 22),
+        iconTheme: IconThemeData(color: textPrimary, size: 22),
         systemOverlayStyle: SystemUiOverlayStyle.light,
       ),
       cardTheme: CardThemeData(
@@ -328,7 +328,7 @@ class AppTheme {
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radiusLg),
-          side:  BorderSide(color: glassBorder, width: 0.5),
+          side: BorderSide(color: glassBorder, width: 0.5),
         ),
       ),
       chipTheme: ChipThemeData(
@@ -348,10 +348,10 @@ class AppTheme {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radiusSm),
-          side:  BorderSide(color: glassBorder, width: 0.5),
+          side: BorderSide(color: glassBorder, width: 0.5),
         ),
       ),
-      bottomNavigationBarTheme:  BottomNavigationBarThemeData(
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: Colors.transparent,
         selectedItemColor: accentOrange,
         unselectedItemColor: textSecondary,
@@ -366,7 +366,7 @@ class AppTheme {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radiusXl),
-          side:  BorderSide(color: glassBorder, width: 0.5),
+          side: BorderSide(color: glassBorder, width: 0.5),
         ),
         titleTextStyle: outfitTextTheme.titleLarge!.copyWith(
           fontSize: 20,
@@ -419,18 +419,18 @@ class AppTheme {
             const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusMd),
-          borderSide:  BorderSide(color: glassBorder, width: 0.5),
+          borderSide: BorderSide(color: glassBorder, width: 0.5),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusMd),
-          borderSide:  BorderSide(color: glassBorder, width: 0.5),
+          borderSide: BorderSide(color: glassBorder, width: 0.5),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusMd),
-          borderSide:  BorderSide(color: accentOrange, width: 1.0),
+          borderSide: BorderSide(color: accentOrange, width: 1.0),
         ),
       ),
-      dividerTheme:  DividerThemeData(
+      dividerTheme: DividerThemeData(
         color: glassBorder,
         thickness: 0.5,
         space: 0,

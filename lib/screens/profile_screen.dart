@@ -241,7 +241,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       body: SafeArea(
         child: _isLoading
-            ?  Center(
+            ? Center(
                 child: SpinKitRing(
                   color: AppTheme.accentOrange,
                   size: 44.0,
@@ -285,7 +285,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     ? CachedNetworkImageProvider(_userAvatar)
                                     : null,
                                 child: _userAvatar.isEmpty
-                                    ?  Icon(Icons.person_rounded,
+                                    ? Icon(Icons.person_rounded,
                                         color: AppTheme.accentOrange, size: 36)
                                     : null,
                               ),
@@ -363,7 +363,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   borderRadius:
                                       BorderRadius.circular(AppTheme.radiusSm),
                                 ),
-                                child:  Icon(Icons.settings_rounded,
+                                child: Icon(Icons.settings_rounded,
                                     color: AppTheme.accentOrange, size: 20),
                               ),
                               title: Text('App Settings',
@@ -372,11 +372,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               subtitle: Text(
                                   'NSFW, blocked users, and subreddits',
                                   style: Theme.of(context).textTheme.bodySmall),
-                              trailing:  Icon(Icons.chevron_right_rounded,
+                              trailing: Icon(Icons.chevron_right_rounded,
                                   color: AppTheme.textMuted, size: 20),
                             ),
                           ),
-                           Divider(
+                          Divider(
                               color: AppTheme.glassBorder,
                               height: 1,
                               indent: 16,
@@ -396,17 +396,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   borderRadius:
                                       BorderRadius.circular(AppTheme.radiusSm),
                                 ),
-                                child:  Icon(Icons.help_outline_rounded,
+                                child: Icon(Icons.help_outline_rounded,
                                     color: AppTheme.accentCyan, size: 20),
                               ),
                               title: Text('Help & Support',
                                   style:
                                       Theme.of(context).textTheme.titleSmall),
-                              trailing:  Icon(Icons.chevron_right_rounded,
+                              trailing: Icon(Icons.chevron_right_rounded,
                                   color: AppTheme.textMuted, size: 20),
                             ),
                           ),
-                           Divider(
+                          Divider(
                               color: AppTheme.glassBorder,
                               height: 1,
                               indent: 16,

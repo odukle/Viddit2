@@ -1056,35 +1056,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: 28),
 
-            // ─── CONTENT SAFETY SECTION ───
-            _buildSectionHeader(context, 'CONTENT SAFETY'),
-            const SizedBox(height: 12),
-            Container(
-              decoration: AppTheme.cardDecoration(),
-              child: ListTile(
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.amber.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+            if (RedditApi.showNsfwSwitch) ...[
+              // ─── CONTENT SAFETY SECTION ───
+              _buildSectionHeader(context, 'CONTENT SAFETY'),
+              const SizedBox(height: 12),
+              Container(
+                decoration: AppTheme.cardDecoration(),
+                child: ListTile(
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                    ),
+                    child: const Icon(Icons.warning_amber_rounded,
+                        color: Colors.amber, size: 20),
                   ),
-                  child: const Icon(Icons.warning_amber_rounded,
-                      color: Colors.amber, size: 20),
-                ),
-                title: Text('NSFW Content',
-                    style: Theme.of(context).textTheme.titleSmall),
-                subtitle: Text('Allow adult content in feeds',
-                    style: Theme.of(context).textTheme.bodySmall),
-                trailing: Switch(
-                  value: _nsfwAllowed,
-                  activeThumbColor: AppTheme.accentOrange,
-                  onChanged: _saveNsfwPreference,
+                  title: Text('NSFW Content',
+                      style: Theme.of(context).textTheme.titleSmall),
+                  subtitle: Text('Allow adult content in feeds',
+                      style: Theme.of(context).textTheme.bodySmall),
+                  trailing: Switch(
+                    value: _nsfwAllowed,
+                    activeThumbColor: AppTheme.accentOrange,
+                    onChanged: _saveNsfwPreference,
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 28),
+              const SizedBox(height: 28),
+            ],
 
             // ─── NETWORK & DATA SECTION ───
             _buildSectionHeader(context, 'NETWORK & DATA'),

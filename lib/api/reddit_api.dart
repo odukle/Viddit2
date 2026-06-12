@@ -23,6 +23,7 @@ class RedditApi {
   RedditApi._internal();
 
   static bool isTesting = false;
+  static bool showNsfwSwitch = false;
 
   String? _accessToken;
   String? _refreshToken;

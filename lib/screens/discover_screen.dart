@@ -295,24 +295,23 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                         TextField(
                           controller: newFeedController,
                           autofocus: true,
-                          style:  TextStyle(color: AppTheme.textPrimary),
+                          style: TextStyle(color: AppTheme.textPrimary),
                           decoration: InputDecoration(
                             hintText: 'Feed Name (e.g. My Gifs)',
-                            hintStyle:
-                                 TextStyle(color: AppTheme.textMuted),
+                            hintStyle: TextStyle(color: AppTheme.textMuted),
                             filled: true,
                             fillColor: AppTheme.surfaceLight,
                             border: OutlineInputBorder(
                               borderRadius:
                                   BorderRadius.circular(AppTheme.radiusMd),
                               borderSide:
-                                   BorderSide(color: AppTheme.glassBorder),
+                                  BorderSide(color: AppTheme.glassBorder),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius:
                                   BorderRadius.circular(AppTheme.radiusMd),
-                              borderSide:  BorderSide(
-                                  color: AppTheme.accentOrange),
+                              borderSide:
+                                  BorderSide(color: AppTheme.accentOrange),
                             ),
                           ),
                         ),
@@ -426,7 +425,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                           style: Theme.of(context).textTheme.titleLarge,
                         ),
                         const SizedBox(height: 8),
-                         Text(
+                        Text(
                           'You do not have any custom feeds yet. Create one inline to add this subreddit.',
                           style: TextStyle(
                               color: AppTheme.textSecondary, fontSize: 12.5),
@@ -470,24 +469,24 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                                     content: TextField(
                                       controller: newFeedController,
                                       autofocus: true,
-                                      style:  TextStyle(
+                                      style: TextStyle(
                                           color: AppTheme.textPrimary),
                                       decoration: InputDecoration(
                                         hintText: 'Feed Name (e.g. My Gifs)',
-                                        hintStyle:  TextStyle(
+                                        hintStyle: TextStyle(
                                             color: AppTheme.textMuted),
                                         filled: true,
                                         fillColor: AppTheme.surfaceLight,
                                         border: OutlineInputBorder(
                                           borderRadius: BorderRadius.circular(
                                               AppTheme.radiusMd),
-                                          borderSide:  BorderSide(
+                                          borderSide: BorderSide(
                                               color: AppTheme.glassBorder),
                                         ),
                                         focusedBorder: OutlineInputBorder(
                                           borderRadius: BorderRadius.circular(
                                               AppTheme.radiusMd),
-                                          borderSide:  BorderSide(
+                                          borderSide: BorderSide(
                                               color: AppTheme.accentOrange),
                                         ),
                                       ),
@@ -498,7 +497,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                                           newFeedController.clear();
                                           Navigator.pop(ctx);
                                         },
-                                        child:  Text('Cancel',
+                                        child: Text('Cancel',
                                             style: TextStyle(
                                                 color: AppTheme.textSecondary)),
                                       ),
@@ -557,9 +556,9 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                                   ),
                                 );
                               },
-                              icon:  Icon(Icons.add_rounded,
+                              icon: Icon(Icons.add_rounded,
                                   size: 16, color: AppTheme.accentOrange),
-                              label:  Text(
+                              label: Text(
                                 'Create New',
                                 style: TextStyle(
                                     color: AppTheme.accentOrange,
@@ -608,7 +607,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                                               .titleSmall),
                                       leading: const Icon(Icons.star_rounded,
                                           color: Colors.amber, size: 22),
-                                      trailing:  Icon(
+                                      trailing: Icon(
                                           Icons.add_circle_outline_rounded,
                                           color: AppTheme.accentOrange,
                                           size: 22),
@@ -719,7 +718,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                                         color: AppTheme.textMuted,
                                         fontSize: 14,
                                       ),
-                                  prefixIcon:  Icon(Icons.search_rounded,
+                                  prefixIcon: Icon(Icons.search_rounded,
                                       color: AppTheme.textSecondary, size: 20),
                                   suffixIcon: Row(
                                     mainAxisSize: MainAxisSize.min,
@@ -762,7 +761,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                                         ),
                                       if (_searchController.text.isNotEmpty)
                                         IconButton(
-                                          icon:  Icon(Icons.clear_rounded,
+                                          icon: Icon(Icons.clear_rounded,
                                               color: AppTheme.textSecondary,
                                               size: 18),
                                           onPressed: () {
@@ -913,12 +912,14 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                   height: 120,
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingLg),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.spacingLg),
                     itemCount: _curatedCategories.length,
                     itemBuilder: (context, index) {
                       final category = _curatedCategories[index];
                       return Padding(
-                        padding: const EdgeInsets.only(right: AppTheme.spacingMd),
+                        padding:
+                            const EdgeInsets.only(right: AppTheme.spacingMd),
                         child: PressableScale(
                           onTap: () {
                             Navigator.push(
@@ -935,8 +936,10 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                             width: 150,
                             decoration: BoxDecoration(
                               gradient: category['gradient'] as Gradient,
-                              borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-                              border: Border.all(color: AppTheme.glassBorder, width: 0.8),
+                              borderRadius:
+                                  BorderRadius.circular(AppTheme.radiusLg),
+                              border: Border.all(
+                                  color: AppTheme.glassBorder, width: 0.8),
                               boxShadow: [
                                 BoxShadow(
                                   color: Colors.black.withValues(alpha: 0.15),
@@ -957,10 +960,13 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                                   ),
                                 ),
                                 Padding(
-                                  padding: const EdgeInsets.all(AppTheme.spacingLg),
+                                  padding:
+                                      const EdgeInsets.all(AppTheme.spacingLg),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       Icon(
                                         category['icon'] as IconData,
@@ -969,10 +975,13 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                                       ),
                                       Text(
                                         category['title']!,
-                                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleSmall
+                                            ?.copyWith(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                       ),
                                     ],
                                   ),
@@ -1010,7 +1019,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                           ),
                           TextButton(
                             onPressed: _clearSearchHistory,
-                            child:  Text(
+                            child: Text(
                               'Clear All',
                               style: TextStyle(
                                 color: AppTheme.accentOrange,
@@ -1051,13 +1060,13 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                       Icon(Icons.history_rounded,
+                                      Icon(Icons.history_rounded,
                                           size: 14,
                                           color: AppTheme.textSecondary),
                                       const SizedBox(width: 6),
                                       Text(
                                         query,
-                                        style:  TextStyle(
+                                        style: TextStyle(
                                           color: AppTheme.textPrimary,
                                           fontSize: 12.5,
                                           fontWeight: FontWeight.w500,
@@ -1066,7 +1075,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                                       const SizedBox(width: 6),
                                       GestureDetector(
                                         onTap: () => _removeFromHistory(query),
-                                        child:  Icon(
+                                        child: Icon(
                                           Icons.close_rounded,
                                           size: 14,
                                           color: AppTheme.textMuted,
@@ -1158,11 +1167,11 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
             children: [
               Container(
                 padding: const EdgeInsets.all(20),
-                decoration:  BoxDecoration(
+                decoration: BoxDecoration(
                   color: AppTheme.surfaceElevated,
                   shape: BoxShape.circle,
                 ),
-                child:  Icon(Icons.search_off_rounded,
+                child: Icon(Icons.search_off_rounded,
                     color: AppTheme.textMuted, size: 40),
               ),
               const SizedBox(height: AppTheme.spacingLg),
@@ -1232,7 +1241,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                           ? CachedNetworkImageProvider(icon)
                           : null,
                       child: icon.isEmpty
-                          ?  Icon(Icons.reddit,
+                          ? Icon(Icons.reddit,
                               color: AppTheme.accentOrange, size: 24)
                           : null,
                     ),
@@ -1262,7 +1271,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                           ),
                           onPressed: () => _showAddCustomFeedSheetForSub(name),
                         )
-                      :  Icon(
+                      : Icon(
                           Icons.chevron_right_rounded,
                           color: AppTheme.accentWarm,
                           size: 22,

@@ -62,15 +62,15 @@ class _CommentsSheetState extends State<CommentsSheet> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Reddit Rate Limit Exceeded',
             style: TextStyle(color: Colors.white)),
-        content:  Text(
+        content: Text(
           'You are currently browsing as a guest. Reddit enforces strict rate limits on guest users. Sign in to enjoy unlimited browsing!',
           style: TextStyle(color: AppTheme.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child:  Text('Cancel',
-                style: TextStyle(color: AppTheme.textSecondary)),
+            child:
+                Text('Cancel', style: TextStyle(color: AppTheme.textSecondary)),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -110,7 +110,7 @@ class _CommentsSheetState extends State<CommentsSheet> {
 
     return Container(
       height: height,
-      decoration:  BoxDecoration(
+      decoration: BoxDecoration(
         color: AppTheme.surface,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(28),
@@ -120,143 +120,159 @@ class _CommentsSheetState extends State<CommentsSheet> {
           top: BorderSide(color: AppTheme.glassBorder, width: 0.5),
         ),
       ),
-          child: Column(
-            children: [
-              // Handle bar with accent color
-              Container(
-                width: 36,
-                height: 4,
-                margin: const EdgeInsets.only(top: 12, bottom: 12),
-                decoration: BoxDecoration(
-                  color: AppTheme.accentOrange.withValues(alpha: 0.6),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Comments (${widget.post.commentCount})',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    PressableScale(
-                      onTap: () => Navigator.pop(context),
-                      child: Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: AppTheme.glassDecoration(
-                          opacity: 0.08,
-                          borderRadius: AppTheme.radiusFull,
-                        ),
-                        child:  Icon(Icons.close_rounded,
-                            color: AppTheme.textSecondary, size: 20),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-               Divider(color: AppTheme.glassBorder, height: 1),
-
-              // Inline Search Bar
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Container(
-                  height: 40,
-                  decoration: AppTheme.glassDecoration(
-                    opacity: 0.08,
-                    borderRadius: AppTheme.radiusMd,
-                  ),
-                  child: TextField(
-                    controller: _searchController,
-                    onChanged: (val) {
-                      setState(() {
-                        _searchQuery = val.trim();
-                      });
-                    },
-                    style: const TextStyle(color: Colors.white, fontSize: 13),
-                    decoration: InputDecoration(
-                      hintText: 'Search comments...',
-                      hintStyle:  TextStyle(color: AppTheme.textMuted, fontSize: 13),
-                      prefixIcon:  Icon(Icons.search_rounded, size: 18, color: AppTheme.textSecondary),
-                      suffixIcon: _searchQuery.isNotEmpty
-                          ? IconButton(
-                              icon:  Icon(Icons.clear_rounded, size: 18, color: AppTheme.textSecondary),
-                              onPressed: () {
-                                _searchController.clear();
-                                setState(() {
-                                  _searchQuery = '';
-                                });
-                              },
-                            )
-                          : null,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      filled: false,
-                    ),
-                  ),
-                ),
-              ),
-
-              // Filter Chips
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                child: Row(
-                  children: [
-                    _buildFilterChip(label: 'All', value: 'all', icon: Icons.forum_rounded),
-                    _buildFilterChip(label: 'Questions', value: 'questions', icon: Icons.help_outline_rounded),
-                    _buildFilterChip(label: 'Links', value: 'links', icon: Icons.link_rounded),
-                    _buildFilterChip(label: 'Popular', value: 'upvoted', icon: Icons.trending_up_rounded),
-                    _buildFilterChip(label: 'Positive', value: 'positive', icon: Icons.sentiment_satisfied_alt_rounded),
-                    _buildFilterChip(label: 'Negative', value: 'negative', icon: Icons.sentiment_very_dissatisfied_rounded),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 4),
-               Divider(color: AppTheme.glassBorder, height: 1),
-
-              // Comments List
-              Expanded(
-                child: _isLoading
-                    ? _buildShimmerLoader()
-                    : (_searchQuery.isNotEmpty || _activeFilter != 'all')
-                        ? (_filteredComments.isEmpty
-                            ? _buildNoResultsState()
-                            : ListView.builder(
-                                padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
-                                itemCount: _filteredComments.length,
-                                itemBuilder: (context, index) {
-                                  return CommentNodeWidget(
-                                    comment: _filteredComments[index],
-                                    forceHideReplies: true,
-                                    onUserBlocked: () {
-                                      setState(() {});
-                                    },
-                                  );
-                                },
-                              ))
-                        : (_comments.isEmpty
-                            ? _buildEmptyState()
-                            : ListView.builder(
-                                padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
-                                itemCount: _comments.length,
-                                itemBuilder: (context, index) {
-                                  return CommentNodeWidget(
-                                    comment: _comments[index],
-                                    onUserBlocked: () {
-                                      setState(() {});
-                                    },
-                                  );
-                                },
-                              )),
-              ),
-            ],
+      child: Column(
+        children: [
+          // Handle bar with accent color
+          Container(
+            width: 36,
+            height: 4,
+            margin: const EdgeInsets.only(top: 12, bottom: 12),
+            decoration: BoxDecoration(
+              color: AppTheme.accentOrange.withValues(alpha: 0.6),
+              borderRadius: BorderRadius.circular(2),
+            ),
           ),
-        );
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Comments (${widget.post.commentCount})',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                PressableScale(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: AppTheme.glassDecoration(
+                      opacity: 0.08,
+                      borderRadius: AppTheme.radiusFull,
+                    ),
+                    child: Icon(Icons.close_rounded,
+                        color: AppTheme.textSecondary, size: 20),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Divider(color: AppTheme.glassBorder, height: 1),
+
+          // Inline Search Bar
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Container(
+              height: 40,
+              decoration: AppTheme.glassDecoration(
+                opacity: 0.08,
+                borderRadius: AppTheme.radiusMd,
+              ),
+              child: TextField(
+                controller: _searchController,
+                onChanged: (val) {
+                  setState(() {
+                    _searchQuery = val.trim();
+                  });
+                },
+                style: const TextStyle(color: Colors.white, fontSize: 13),
+                decoration: InputDecoration(
+                  hintText: 'Search comments...',
+                  hintStyle: TextStyle(color: AppTheme.textMuted, fontSize: 13),
+                  prefixIcon: Icon(Icons.search_rounded,
+                      size: 18, color: AppTheme.textSecondary),
+                  suffixIcon: _searchQuery.isNotEmpty
+                      ? IconButton(
+                          icon: Icon(Icons.clear_rounded,
+                              size: 18, color: AppTheme.textSecondary),
+                          onPressed: () {
+                            _searchController.clear();
+                            setState(() {
+                              _searchQuery = '';
+                            });
+                          },
+                        )
+                      : null,
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  filled: false,
+                ),
+              ),
+            ),
+          ),
+
+          // Filter Chips
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: Row(
+              children: [
+                _buildFilterChip(
+                    label: 'All', value: 'all', icon: Icons.forum_rounded),
+                _buildFilterChip(
+                    label: 'Questions',
+                    value: 'questions',
+                    icon: Icons.help_outline_rounded),
+                _buildFilterChip(
+                    label: 'Links', value: 'links', icon: Icons.link_rounded),
+                _buildFilterChip(
+                    label: 'Popular',
+                    value: 'upvoted',
+                    icon: Icons.trending_up_rounded),
+                _buildFilterChip(
+                    label: 'Positive',
+                    value: 'positive',
+                    icon: Icons.sentiment_satisfied_alt_rounded),
+                _buildFilterChip(
+                    label: 'Negative',
+                    value: 'negative',
+                    icon: Icons.sentiment_very_dissatisfied_rounded),
+              ],
+            ),
+          ),
+          const SizedBox(height: 4),
+          Divider(color: AppTheme.glassBorder, height: 1),
+
+          // Comments List
+          Expanded(
+            child: _isLoading
+                ? _buildShimmerLoader()
+                : (_searchQuery.isNotEmpty || _activeFilter != 'all')
+                    ? (_filteredComments.isEmpty
+                        ? _buildNoResultsState()
+                        : ListView.builder(
+                            padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+                            itemCount: _filteredComments.length,
+                            itemBuilder: (context, index) {
+                              return CommentNodeWidget(
+                                comment: _filteredComments[index],
+                                forceHideReplies: true,
+                                onUserBlocked: () {
+                                  setState(() {});
+                                },
+                              );
+                            },
+                          ))
+                    : (_comments.isEmpty
+                        ? _buildEmptyState()
+                        : ListView.builder(
+                            padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+                            itemCount: _comments.length,
+                            itemBuilder: (context, index) {
+                              return CommentNodeWidget(
+                                comment: _comments[index],
+                                onUserBlocked: () {
+                                  setState(() {});
+                                },
+                              );
+                            },
+                          )),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildShimmerLoader() {
@@ -349,16 +365,39 @@ class _CommentsSheetState extends State<CommentsSheet> {
         case 'positive':
           final bodyLower = comment.body.toLowerCase();
           final positiveWords = [
-            'love', 'great', 'awesome', 'amazing', 'cool', 'best', 'good',
-            'perfect', 'beautiful', 'thank', 'nice', 'funny', 'hilarious', 'wow',
-            ':)', ':-)'
+            'love',
+            'great',
+            'awesome',
+            'amazing',
+            'cool',
+            'best',
+            'good',
+            'perfect',
+            'beautiful',
+            'thank',
+            'nice',
+            'funny',
+            'hilarious',
+            'wow',
+            ':)',
+            ':-)'
           ];
           return positiveWords.any((word) => bodyLower.contains(word));
         case 'negative':
           final bodyLower = comment.body.toLowerCase();
           final negativeWords = [
-            'bad', 'hate', 'worst', 'awful', 'terrible', 'annoying', 'boring',
-            'suck', 'angry', 'sad', ':(', ':-('
+            'bad',
+            'hate',
+            'worst',
+            'awful',
+            'terrible',
+            'annoying',
+            'boring',
+            'suck',
+            'angry',
+            'sad',
+            ':(',
+            ':-('
           ];
           return negativeWords.any((word) => bodyLower.contains(word));
         case 'all':
@@ -392,9 +431,7 @@ class _CommentsSheetState extends State<CommentsSheet> {
                 : Colors.white.withValues(alpha: 0.03),
             borderRadius: BorderRadius.circular(AppTheme.radiusSm),
             border: Border.all(
-              color: isSelected
-                  ? AppTheme.accentOrange
-                  : AppTheme.glassBorder,
+              color: isSelected ? AppTheme.accentOrange : AppTheme.glassBorder,
               width: 0.5,
             ),
           ),
@@ -404,7 +441,8 @@ class _CommentsSheetState extends State<CommentsSheet> {
               Icon(
                 icon,
                 size: 14,
-                color: isSelected ? AppTheme.accentOrange : AppTheme.textSecondary,
+                color:
+                    isSelected ? AppTheme.accentOrange : AppTheme.textSecondary,
               ),
               const SizedBox(width: 6),
               Text(
@@ -429,11 +467,11 @@ class _CommentsSheetState extends State<CommentsSheet> {
         children: [
           Container(
             padding: const EdgeInsets.all(20),
-            decoration:  BoxDecoration(
+            decoration: BoxDecoration(
               color: AppTheme.surfaceElevated,
               shape: BoxShape.circle,
             ),
-            child:  Icon(Icons.search_off_rounded,
+            child: Icon(Icons.search_off_rounded,
                 color: AppTheme.textMuted, size: 40),
           ),
           const SizedBox(height: 16),
@@ -464,12 +502,12 @@ class _CommentsSheetState extends State<CommentsSheet> {
         children: [
           Container(
             padding: const EdgeInsets.all(20),
-            decoration:  BoxDecoration(
+            decoration: BoxDecoration(
               color: AppTheme.surfaceElevated,
               shape: BoxShape.circle,
             ),
-            child:  Icon(Icons.forum_outlined,
-                color: AppTheme.textMuted, size: 40),
+            child:
+                Icon(Icons.forum_outlined, color: AppTheme.textMuted, size: 40),
           ),
           const SizedBox(height: 16),
           Text(
@@ -515,7 +553,7 @@ class _CommentNodeWidgetState extends State<CommentNodeWidget> {
   bool _isSafetyRevealed = false;
 
   // 4 cycling colors for thread depth
-  static  List<Color> _threadColors = [
+  static List<Color> _threadColors = [
     AppTheme.accentOrange,
     AppTheme.accentPurple,
     AppTheme.accentCyan,
@@ -552,15 +590,18 @@ class _CommentNodeWidgetState extends State<CommentNodeWidget> {
           backgroundColor: AppTheme.surfaceElevated,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-            side:  BorderSide(color: AppTheme.glassBorder, width: 0.5),
+            side: BorderSide(color: AppTheme.glassBorder, width: 0.5),
           ),
           title: Row(
             children: [
-               Icon(Icons.reply_rounded, color: AppTheme.accentOrange, size: 20),
+              Icon(Icons.reply_rounded, color: AppTheme.accentOrange, size: 20),
               const SizedBox(width: 8),
               Text(
                 'Replying to u/${widget.parentComment!.author}',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                style: Theme.of(context)
+                    .textTheme
+                    .titleSmall
+                    ?.copyWith(fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -574,14 +615,18 @@ class _CommentNodeWidgetState extends State<CommentNodeWidget> {
             child: SingleChildScrollView(
               child: Text(
                 widget.parentComment!.body,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white70),
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.copyWith(color: Colors.white70),
               ),
             ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child:  Text('Close', style: TextStyle(color: AppTheme.accentOrange)),
+              child:
+                  Text('Close', style: TextStyle(color: AppTheme.accentOrange)),
             ),
           ],
         );
@@ -641,12 +686,10 @@ class _CommentNodeWidgetState extends State<CommentNodeWidget> {
                 ),
               ),
               ListTile(
-                leading:  Icon(Icons.flag_rounded,
-                    color: AppTheme.accentOrange),
+                leading: Icon(Icons.flag_rounded, color: AppTheme.accentOrange),
                 title: const Text('Report Comment',
                     style: TextStyle(color: Colors.white)),
-                subtitle:  Text(
-                    'Report this comment for UGC violation or abuse',
+                subtitle: Text('Report this comment for UGC violation or abuse',
                     style:
                         TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
                 onTap: () {
@@ -655,11 +698,11 @@ class _CommentNodeWidgetState extends State<CommentNodeWidget> {
                 },
               ),
               ListTile(
-                leading:  Icon(Icons.block_rounded,
-                    color: AppTheme.accentPurple),
+                leading:
+                    Icon(Icons.block_rounded, color: AppTheme.accentPurple),
                 title: Text('Block u/${widget.comment.author}',
                     style: const TextStyle(color: Colors.white)),
-                subtitle:  Text(
+                subtitle: Text(
                     'You won\'t see posts or comments from this user again',
                     style:
                         TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
@@ -735,15 +778,15 @@ class _CommentNodeWidgetState extends State<CommentNodeWidget> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text('Block u/${widget.comment.author}?',
             style: const TextStyle(color: Colors.white)),
-        content:  Text(
+        content: Text(
           'Are you sure you want to block this user? You will not see their posts or comments again.',
           style: TextStyle(color: AppTheme.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child:  Text('Cancel',
-                style: TextStyle(color: AppTheme.textSecondary)),
+            child:
+                Text('Cancel', style: TextStyle(color: AppTheme.textSecondary)),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -801,11 +844,10 @@ class _CommentNodeWidgetState extends State<CommentNodeWidget> {
                 ),
               ),
               ListTile(
-                leading:  Icon(Icons.edit_rounded,
-                    color: AppTheme.accentOrange),
+                leading: Icon(Icons.edit_rounded, color: AppTheme.accentOrange),
                 title: const Text('Edit Comment',
                     style: TextStyle(color: Colors.white)),
-                subtitle:  Text('Modify the text of your comment',
+                subtitle: Text('Modify the text of your comment',
                     style:
                         TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
                 onTap: () {
@@ -818,7 +860,7 @@ class _CommentNodeWidgetState extends State<CommentNodeWidget> {
                     const Icon(Icons.delete_rounded, color: Colors.redAccent),
                 title: const Text('Delete Comment',
                     style: TextStyle(color: Colors.white)),
-                subtitle:  Text('Permanently delete this comment',
+                subtitle: Text('Permanently delete this comment',
                     style:
                         TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
                 onTap: () {
@@ -850,7 +892,7 @@ class _CommentNodeWidgetState extends State<CommentNodeWidget> {
           style: const TextStyle(color: Colors.white),
           decoration: InputDecoration(
             hintText: 'Edit your comment...',
-            hintStyle:  TextStyle(color: AppTheme.textSecondary),
+            hintStyle: TextStyle(color: AppTheme.textSecondary),
             filled: true,
             fillColor: AppTheme.surfaceLight,
             border: OutlineInputBorder(
@@ -862,8 +904,8 @@ class _CommentNodeWidgetState extends State<CommentNodeWidget> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child:  Text('Cancel',
-                style: TextStyle(color: AppTheme.textSecondary)),
+            child:
+                Text('Cancel', style: TextStyle(color: AppTheme.textSecondary)),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -905,15 +947,15 @@ class _CommentNodeWidgetState extends State<CommentNodeWidget> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Delete Comment?',
             style: TextStyle(color: Colors.white)),
-        content:  Text(
+        content: Text(
           'Are you sure you want to delete this comment? This action cannot be undone.',
           style: TextStyle(color: AppTheme.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child:  Text('Cancel',
-                style: TextStyle(color: AppTheme.textSecondary)),
+            child:
+                Text('Cancel', style: TextStyle(color: AppTheme.textSecondary)),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -951,13 +993,13 @@ class _CommentNodeWidgetState extends State<CommentNodeWidget> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Sign In Required',
             style: TextStyle(color: Colors.white)),
-        content:  Text('Please sign in to vote and reply to comments.',
+        content: Text('Please sign in to vote and reply to comments.',
             style: TextStyle(color: AppTheme.textSecondary)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child:  Text('Cancel',
-                style: TextStyle(color: AppTheme.textSecondary)),
+            child:
+                Text('Cancel', style: TextStyle(color: AppTheme.textSecondary)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -1052,7 +1094,8 @@ class _CommentNodeWidgetState extends State<CommentNodeWidget> {
           : 'blocked user u/${comment.author}';
 
       return Container(
-        margin: EdgeInsets.only(left: widget.depth > 0 ? 10 : 0, top: 4, bottom: 4),
+        margin:
+            EdgeInsets.only(left: widget.depth > 0 ? 10 : 0, top: 4, bottom: 4),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.03),
@@ -1064,12 +1107,13 @@ class _CommentNodeWidgetState extends State<CommentNodeWidget> {
         ),
         child: Row(
           children: [
-             Icon(Icons.shield_outlined, color: AppTheme.textSecondary, size: 14),
+            Icon(Icons.shield_outlined,
+                color: AppTheme.textSecondary, size: 14),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
                 'Comment hidden ($hiddenReason)',
-                style:  TextStyle(
+                style: TextStyle(
                   color: AppTheme.textSecondary,
                   fontSize: 12,
                   fontStyle: FontStyle.italic,
@@ -1082,7 +1126,7 @@ class _CommentNodeWidgetState extends State<CommentNodeWidget> {
                   _isSafetyRevealed = true;
                 });
               },
-              child:  Padding(
+              child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 child: Text(
                   'Show',
@@ -1125,9 +1169,11 @@ class _CommentNodeWidgetState extends State<CommentNodeWidget> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           GestureDetector(
-            onLongPress: isOwnComment 
-                ? _showEditDeleteSheet 
-                : (widget.parentComment != null ? _showParentCommentPreview : null),
+            onLongPress: isOwnComment
+                ? _showEditDeleteSheet
+                : (widget.parentComment != null
+                    ? _showParentCommentPreview
+                    : null),
             behavior: HitTestBehavior.opaque,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1149,7 +1195,7 @@ class _CommentNodeWidgetState extends State<CommentNodeWidget> {
                             ? CachedNetworkImageProvider(_authorIcon)
                             : null,
                         child: _authorIcon.isEmpty
-                            ?  Icon(Icons.person_rounded,
+                            ? Icon(Icons.person_rounded,
                                 color: AppTheme.textMuted, size: 12)
                             : null,
                       ),
@@ -1164,23 +1210,24 @@ class _CommentNodeWidgetState extends State<CommentNodeWidget> {
                     ),
                     if (widget.parentComment != null) ...[
                       const SizedBox(width: 4),
-                       Icon(Icons.reply_rounded, size: 12, color: AppTheme.textSecondary),
+                      Icon(Icons.reply_rounded,
+                          size: 12, color: AppTheme.textSecondary),
                       const SizedBox(width: 4),
                       GestureDetector(
                         onTap: _showParentCommentPreview,
                         child: Text(
                           'u/${widget.parentComment!.author}',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppTheme.textSecondary,
-                            fontWeight: FontWeight.w500,
-                            decoration: TextDecoration.underline,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: AppTheme.textSecondary,
+                                    fontWeight: FontWeight.w500,
+                                    decoration: TextDecoration.underline,
+                                  ),
                         ),
                       ),
                     ],
                     const SizedBox(width: 6),
-                     Icon(Icons.circle,
-                        size: 3, color: AppTheme.textMuted),
+                    Icon(Icons.circle, size: 3, color: AppTheme.textMuted),
                     const SizedBox(width: 6),
                     Text(
                       _formatTimeAgo(comment.createdUtc),
@@ -1190,7 +1237,7 @@ class _CommentNodeWidgetState extends State<CommentNodeWidget> {
                     if (isOwnComment)
                       PressableScale(
                         onTap: _showEditDeleteSheet,
-                        child:  Padding(
+                        child: Padding(
                           padding:
                               EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           child: Icon(
@@ -1281,7 +1328,7 @@ class _CommentNodeWidgetState extends State<CommentNodeWidget> {
                         },
                         child: Row(
                           children: [
-                             Icon(Icons.reply_rounded,
+                            Icon(Icons.reply_rounded,
                                 size: 14, color: AppTheme.textSecondary),
                             const SizedBox(width: 4),
                             Text(
@@ -1302,7 +1349,7 @@ class _CommentNodeWidgetState extends State<CommentNodeWidget> {
                         onTap: _showCommentSafetyOptions,
                         child: Row(
                           children: [
-                             Icon(Icons.shield_outlined,
+                            Icon(Icons.shield_outlined,
                                 size: 14, color: AppTheme.textSecondary),
                             const SizedBox(width: 4),
                             Text(
@@ -1346,7 +1393,7 @@ class _CommentNodeWidgetState extends State<CommentNodeWidget> {
                         style:
                             const TextStyle(color: Colors.white, fontSize: 13),
                         maxLines: null,
-                        decoration:  InputDecoration(
+                        decoration: InputDecoration(
                           hintText: 'Write a reply...',
                           hintStyle: TextStyle(
                               color: AppTheme.textMuted, fontSize: 13),
@@ -1373,7 +1420,7 @@ class _CommentNodeWidgetState extends State<CommentNodeWidget> {
                       onTap: _submitReply,
                       child: Container(
                         padding: const EdgeInsets.all(8),
-                        decoration:  BoxDecoration(
+                        decoration: BoxDecoration(
                           color: AppTheme.accentOrange,
                           shape: BoxShape.circle,
                         ),
@@ -1395,7 +1442,7 @@ class _CommentNodeWidgetState extends State<CommentNodeWidget> {
                           color: Colors.white.withValues(alpha: 0.08),
                           shape: BoxShape.circle,
                         ),
-                        child:  Icon(Icons.close_rounded,
+                        child: Icon(Icons.close_rounded,
                             size: 14, color: AppTheme.textSecondary),
                       ),
                     ),

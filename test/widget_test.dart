@@ -10,6 +10,7 @@ import 'package:viddit/widgets/comments_sheet.dart';
 void main() {
   setUpAll(() {
     RedditApi.isTesting = true;
+    RedditApi.showNsfwSwitch = true;
   });
 
   testWidgets('navigation shell renders core tabs',

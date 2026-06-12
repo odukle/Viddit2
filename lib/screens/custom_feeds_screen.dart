@@ -118,19 +118,19 @@ class _CustomFeedsScreenState extends State<CustomFeedsScreen> {
         content: TextField(
           controller: _feedNameController,
           autofocus: true,
-          style:  TextStyle(color: AppTheme.textPrimary),
+          style: TextStyle(color: AppTheme.textPrimary),
           decoration: InputDecoration(
             hintText: 'Feed Name (e.g. My Gifs)',
-            hintStyle:  TextStyle(color: AppTheme.textMuted),
+            hintStyle: TextStyle(color: AppTheme.textMuted),
             filled: true,
             fillColor: AppTheme.surfaceLight,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              borderSide:  BorderSide(color: AppTheme.glassBorder),
+              borderSide: BorderSide(color: AppTheme.glassBorder),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              borderSide:  BorderSide(color: AppTheme.accentOrange),
+              borderSide: BorderSide(color: AppTheme.accentOrange),
             ),
           ),
           onSubmitted: (_) => _createNewFeed(),
@@ -141,8 +141,8 @@ class _CustomFeedsScreenState extends State<CustomFeedsScreen> {
               _feedNameController.clear();
               Navigator.pop(context);
             },
-            child:  Text('Cancel',
-                style: TextStyle(color: AppTheme.textSecondary)),
+            child:
+                Text('Cancel', style: TextStyle(color: AppTheme.textSecondary)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -189,13 +189,13 @@ class _CustomFeedsScreenState extends State<CustomFeedsScreen> {
             style: TextStyle(color: Colors.white)),
         content: Text(
           'Are you sure you want to delete "${feed.displayName}"? This action cannot be undone.',
-          style:  TextStyle(color: AppTheme.textSecondary),
+          style: TextStyle(color: AppTheme.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child:  Text('Cancel',
-                style: TextStyle(color: AppTheme.textSecondary)),
+            child:
+                Text('Cancel', style: TextStyle(color: AppTheme.textSecondary)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -236,7 +236,7 @@ class _CustomFeedsScreenState extends State<CustomFeedsScreen> {
           builder: (context, setModalState) {
             return Container(
               height: MediaQuery.of(context).size.height * 0.7,
-              decoration:  BoxDecoration(
+              decoration: BoxDecoration(
                 color: AppTheme.surfaceElevated,
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(28),
@@ -246,184 +246,182 @@ class _CustomFeedsScreenState extends State<CustomFeedsScreen> {
                   top: BorderSide(color: AppTheme.glassBorder, width: 0.5),
                 ),
               ),
-                  child: Column(
-                    children: [
-                      // Handle
-                      Container(
-                        width: 36,
-                        height: 4,
-                        margin: const EdgeInsets.only(top: 12, bottom: 12),
-                        decoration: BoxDecoration(
-                          color: AppTheme.accentOrange.withValues(alpha: 0.6),
-                          borderRadius: BorderRadius.circular(2),
+              child: Column(
+                children: [
+                  // Handle
+                  Container(
+                    width: 36,
+                    height: 4,
+                    margin: const EdgeInsets.only(top: 12, bottom: 12),
+                    decoration: BoxDecoration(
+                      color: AppTheme.accentOrange.withValues(alpha: 0.6),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                    child: Row(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                                color: AppTheme.accentOrange
+                                    .withValues(alpha: 0.2),
+                                width: 1.5),
+                          ),
+                          child: CircleAvatar(
+                            radius: 20,
+                            backgroundColor: AppTheme.surfaceLight,
+                            backgroundImage: feed.iconUrl.isNotEmpty
+                                ? CachedNetworkImageProvider(feed.iconUrl)
+                                : null,
+                            child: feed.iconUrl.isEmpty
+                                ? const Icon(Icons.star_rounded,
+                                    color: Colors.amber, size: 20)
+                                : null,
+                          ),
                         ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 8),
-                        child: Row(
-                          children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                    color: AppTheme.accentOrange
-                                        .withValues(alpha: 0.2),
-                                    width: 1.5),
-                              ),
-                              child: CircleAvatar(
-                                radius: 20,
-                                backgroundColor: AppTheme.surfaceLight,
-                                backgroundImage: feed.iconUrl.isNotEmpty
-                                    ? CachedNetworkImageProvider(feed.iconUrl)
-                                    : null,
-                                child: feed.iconUrl.isEmpty
-                                    ? const Icon(Icons.star_rounded,
-                                        color: Colors.amber, size: 20)
-                                    : null,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              feed.displayName,
-                              style: Theme.of(context).textTheme.titleLarge,
-                            ),
-                            const Spacer(),
-                            PressableScale(
-                              onTap: () {
-                                Navigator.pop(context);
-                                _confirmDeleteFeed(feed);
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color:
-                                      Colors.redAccent.withValues(alpha: 0.12),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(Icons.delete_outline_rounded,
-                                    color: Colors.redAccent, size: 20),
-                              ),
-                            ),
-                          ],
+                        const SizedBox(width: 12),
+                        Text(
+                          feed.displayName,
+                          style: Theme.of(context).textTheme.titleLarge,
                         ),
-                      ),
-                       Divider(color: AppTheme.glassBorder),
+                        const Spacer(),
+                        PressableScale(
+                          onTap: () {
+                            Navigator.pop(context);
+                            _confirmDeleteFeed(feed);
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.redAccent.withValues(alpha: 0.12),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.delete_outline_rounded,
+                                color: Colors.redAccent, size: 20),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Divider(color: AppTheme.glassBorder),
 
-                      // Subreddits list
-                      Expanded(
-                        child: feed.subreddits.isEmpty
-                            ? Center(
-                                child: Text(
-                                  'No subreddits added yet.\nGo to Discover to add subreddits.',
-                                  textAlign: TextAlign.center,
-                                  style: Theme.of(context).textTheme.bodyMedium,
-                                ),
-                              )
-                            : ListView.builder(
-                                itemCount: feed.subreddits.length,
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 12),
-                                itemBuilder: (context, index) {
-                                  final sub = feed.subreddits[index];
-                                  return Container(
-                                    margin: const EdgeInsets.only(bottom: 8),
-                                    decoration:
-                                        AppTheme.glassDecoration(opacity: 0.04),
-                                    child: ListTile(
-                                      title: Text('r/$sub',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .titleSmall),
-                                      trailing: PressableScale(
-                                        onTap: () {
-                                          setModalState(() {
-                                            feed.subreddits.removeAt(index);
-                                          });
-                                          _removeSubreddit(feed, sub);
-                                        },
-                                        child: Container(
-                                          padding: const EdgeInsets.all(6),
-                                          decoration: BoxDecoration(
-                                            color: Colors.white
-                                                .withValues(alpha: 0.06),
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child:  Icon(
-                                              Icons
-                                                  .remove_circle_outline_rounded,
-                                              color: AppTheme.textSecondary,
-                                              size: 18),
-                                        ),
+                  // Subreddits list
+                  Expanded(
+                    child: feed.subreddits.isEmpty
+                        ? Center(
+                            child: Text(
+                              'No subreddits added yet.\nGo to Discover to add subreddits.',
+                              textAlign: TextAlign.center,
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                          )
+                        : ListView.builder(
+                            itemCount: feed.subreddits.length,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 12),
+                            itemBuilder: (context, index) {
+                              final sub = feed.subreddits[index];
+                              return Container(
+                                margin: const EdgeInsets.only(bottom: 8),
+                                decoration:
+                                    AppTheme.glassDecoration(opacity: 0.04),
+                                child: ListTile(
+                                  title: Text('r/$sub',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleSmall),
+                                  trailing: PressableScale(
+                                    onTap: () {
+                                      setModalState(() {
+                                        feed.subreddits.removeAt(index);
+                                      });
+                                      _removeSubreddit(feed, sub);
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.all(6),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white
+                                            .withValues(alpha: 0.06),
+                                        shape: BoxShape.circle,
                                       ),
+                                      child: Icon(
+                                          Icons.remove_circle_outline_rounded,
+                                          color: AppTheme.textSecondary,
+                                          size: 18),
                                     ),
-                                  );
-                                },
-                              ),
-                      ),
-
-                      // Browse Videos button
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
-                        child: SizedBox(
-                          width: double.infinity,
-                          child: PressableScale(
-                            onTap: feed.subreddits.isEmpty
-                                ? () {}
-                                : () {
-                                    Navigator.pop(context);
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => HomeScreen(
-                                          feedType: 'custom_feed',
-                                          query:
-                                              'user/${_api.currentUsername}/m/${feed.name}',
-                                        ),
-                                      ),
-                                    );
-                                  },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              decoration: BoxDecoration(
-                                gradient: feed.subreddits.isEmpty
-                                    ? null
-                                    : AppTheme.warmGradient,
-                                color: feed.subreddits.isEmpty
-                                    ? AppTheme.surfaceLight
-                                    : null,
-                                borderRadius:
-                                    BorderRadius.circular(AppTheme.radiusMd),
-                                boxShadow: feed.subreddits.isEmpty
-                                    ? null
-                                    : [
-                                        BoxShadow(
-                                          color: AppTheme.accentOrange
-                                              .withValues(alpha: 0.3),
-                                          blurRadius: 15,
-                                          offset: const Offset(0, 5),
-                                        ),
-                                      ],
-                              ),
-                              child: Center(
-                                child: Text(
-                                  'Browse Videos',
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w700,
-                                    color: feed.subreddits.isEmpty
-                                        ? AppTheme.textMuted
-                                        : Colors.white,
                                   ),
                                 ),
+                              );
+                            },
+                          ),
+                  ),
+
+                  // Browse Videos button
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: PressableScale(
+                        onTap: feed.subreddits.isEmpty
+                            ? () {}
+                            : () {
+                                Navigator.pop(context);
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => HomeScreen(
+                                      feedType: 'custom_feed',
+                                      query:
+                                          'user/${_api.currentUsername}/m/${feed.name}',
+                                    ),
+                                  ),
+                                );
+                              },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          decoration: BoxDecoration(
+                            gradient: feed.subreddits.isEmpty
+                                ? null
+                                : AppTheme.warmGradient,
+                            color: feed.subreddits.isEmpty
+                                ? AppTheme.surfaceLight
+                                : null,
+                            borderRadius:
+                                BorderRadius.circular(AppTheme.radiusMd),
+                            boxShadow: feed.subreddits.isEmpty
+                                ? null
+                                : [
+                                    BoxShadow(
+                                      color: AppTheme.accentOrange
+                                          .withValues(alpha: 0.3),
+                                      blurRadius: 15,
+                                      offset: const Offset(0, 5),
+                                    ),
+                                  ],
+                          ),
+                          child: Center(
+                            child: Text(
+                              'Browse Videos',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: feed.subreddits.isEmpty
+                                    ? AppTheme.textMuted
+                                    : Colors.white,
                               ),
                             ),
                           ),
                         ),
                       ),
-                    ],
+                    ),
                   ),
-                );
+                ],
+              ),
+            );
           },
         );
       },
@@ -609,7 +607,7 @@ class _CustomFeedsScreenState extends State<CustomFeedsScreen> {
                                           // Gradient accent strip
                                           Container(
                                             width: 3,
-                                            decoration:  BoxDecoration(
+                                            decoration: BoxDecoration(
                                               gradient: AppTheme.warmGradient,
                                               borderRadius: BorderRadius.only(
                                                 topLeft: Radius.circular(
@@ -685,7 +683,7 @@ class _CustomFeedsScreenState extends State<CustomFeedsScreen> {
                                                       ],
                                                     ),
                                                   ),
-                                                   Icon(
+                                                  Icon(
                                                       Icons
                                                           .arrow_forward_ios_rounded,
                                                       size: 14,
@@ -718,11 +716,11 @@ class _CustomFeedsScreenState extends State<CustomFeedsScreen> {
         children: [
           Container(
             padding: const EdgeInsets.all(20),
-            decoration:  BoxDecoration(
+            decoration: BoxDecoration(
               color: AppTheme.surfaceElevated,
               shape: BoxShape.circle,
             ),
-            child:  Icon(Icons.star_border_rounded,
+            child: Icon(Icons.star_border_rounded,
                 color: AppTheme.textMuted, size: 48),
           ),
           const SizedBox(height: 16),
