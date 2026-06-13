@@ -40,6 +40,8 @@ workflows:
     name: iOS Release Build
     max_build_duration: 45
     instance_type: mac_mini_m1
+    integrations:
+      app_store_connect: apple_developer_portal # REPLACE with your actual integration name from Codemagic (Team Settings > Shared Integrations)
     environment:
       ios_signing:
         distribution_type: app_store
