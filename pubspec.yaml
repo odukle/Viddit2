@@ -25,6 +25,7 @@ dependencies:
   media_kit: ^1.2.6
   media_kit_video: ^2.0.1
   media_kit_libs_video: ^1.0.7
+  flutter_native_splash: ^2.4.0
 
 dev_dependencies:
   flutter_test:
@@ -38,6 +39,13 @@ flutter_launcher_icons:
   image_path: "assets/images/app_icon.png"
   adaptive_icon_background: "assets/images/app_icon_background.png"
   adaptive_icon_foreground: "assets/images/app_icon_foreground.png"
+
+flutter_native_splash:
+  color: "#0a0a0a"
+  image: "assets/images/app_icon_foreground.png"
+  android_12:
+    image: "assets/images/app_icon_foreground.png"
+    color: "#0a0a0a"
 
 flutter:
   uses-material-design: true

@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'api/reddit_api.dart';
 import 'theme/app_theme.dart';
@@ -11,7 +12,8 @@ import 'screens/profile_screen.dart';
 import 'widgets/pressable_scale.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
   // Initialize Reddit API client and tokens
   final api = RedditApi();
@@ -23,6 +25,7 @@ void main() async {
   AppTheme.selectTheme(savedTheme);
 
   runApp(const MyApp());
+  FlutterNativeSplash.remove();
 }
 
 class MyApp extends StatelessWidget {
