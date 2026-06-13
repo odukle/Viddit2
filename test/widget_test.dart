@@ -172,7 +172,7 @@ void main() {
     expect(api.geolocation, 'IN');
   });
 
-  testWidgets('popular feed region bottom sheet and search',
+  testWidgets('Region bottom sheet and search',
       (WidgetTester tester) async {
     SharedPreferences.setMockInitialValues({
       'viddit_eula_accepted': true,
@@ -201,9 +201,9 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
 
-    // Verify Popular Feed Region tile exists and tap it
-    expect(find.text('Popular Feed Region'), findsOneWidget);
-    await tester.tap(find.text('Popular Feed Region'));
+    // Verify Region tile exists and tap it
+    expect(find.text('Region'), findsOneWidget);
+    await tester.tap(find.text('Region'));
     await tester.pumpAndSettle();
 
     // Bottom sheet is now open

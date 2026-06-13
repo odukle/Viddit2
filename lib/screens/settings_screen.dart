@@ -815,7 +815,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     child: Icon(Icons.public_rounded,
                         color: AppTheme.accentOrange, size: 20),
                   ),
-                  title: Text('Popular Feed Region',
+                  title: Text('Region',
                       style: Theme.of(context).textTheme.titleSmall),
                   subtitle: Text('Customize trending content location',
                       style: Theme.of(context).textTheme.bodySmall),

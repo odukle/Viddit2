@@ -387,6 +387,7 @@ class VerticalFeedWidgetState extends State<VerticalFeedWidget>
   Set<String> _viewedPostIds = {};
   Timer? _viewTimer;
   Set<String> _lastSubscribedSubreddits = {};
+  int _loadSession = 0;
 
   static const String _viewedHistoryKey = 'viddit_viewed_post_ids';
   static const int _maxViewedHistory = 500;
@@ -559,6 +560,7 @@ class VerticalFeedWidgetState extends State<VerticalFeedWidget>
 
   Future<void> _loadFeed({bool refresh = false}) async {
     if (refresh) {
+      _isLoadingMore = false;
       if (mounted) {
         setState(() {
           _isLoading = true;
@@ -570,7 +572,7 @@ class VerticalFeedWidgetState extends State<VerticalFeedWidget>
           _seenVideoUrls.clear();
           _lastSubscribedSubreddits.clear();
           _currentIndex = 0;
-          _loadingStatus = 'Connecting to Reddit...';
+          _loadingStatus = 'Scanning ${_getFeedDisplayName()} (page 1) — 0%...';
         });
         if (_pageController.hasClients) {
           _pageController.jumpToPage(0);
@@ -585,6 +587,7 @@ class VerticalFeedWidgetState extends State<VerticalFeedWidget>
 
     if (_allLoaded || _isLoadingMore) return;
     _isLoadingMore = true;
+    final currentSession = ++_loadSession;
 
     final freshPosts = <PostModel>[];
     String nextAfter = _afterToken;
@@ -617,6 +620,8 @@ class VerticalFeedWidgetState extends State<VerticalFeedWidget>
           after: nextAfter,
           sort: _activeSort,
         );
+
+        if (currentSession != _loadSession) return;
 
         errorMessage = _api.lastErrorMessage;
         nextAfter = _api.lastListingAfter ?? '';
@@ -680,6 +685,7 @@ class VerticalFeedWidgetState extends State<VerticalFeedWidget>
         emptyBatches++;
         if (!exhausted && emptyBatches < maxEmptyBatches) {
           await Future.delayed(const Duration(milliseconds: 300));
+          if (currentSession != _loadSession) return;
         }
       }
     }
@@ -687,6 +693,8 @@ class VerticalFeedWidgetState extends State<VerticalFeedWidget>
     if (refresh && freshPosts.isNotEmpty) {
       freshPosts.shuffle();
     }
+
+    if (currentSession != _loadSession) return;
 
     if (mounted) {
       setState(() {
