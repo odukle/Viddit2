@@ -1,0 +1,98 @@
+# Codemagic Configuration for Scroller (RedVid)
+# Reference: https://docs.codemagic.io/yaml-quick-start/
+
+workflows:
+  android-release:
+    name: Android Release Build
+    max_build_duration: 30
+    instance_type: mac_mini_m1 # Mac or Linux can be used, Mac mini is versatile
+    environment:
+      groups:
+        - keystore_credentials # You can also specify keys here if using env variables later
+      flutter: stable
+      java: 17
+    scripts:
+      - name: Set up local properties
+        script: |
+          echo "flutter.sdk=$FLUTTER_ROOT" > android/local.properties
+      - name: Get Flutter packages
+        script: |
+          flutter pub get
+      - name: Build Android App Bundle (AAB)
+        script: |
+          # The signing configs in build.gradle.kts will automatically load key.properties
+          flutter build appbundle --release --build-name=1.0.0 --build-number=$BUILD_NUMBER
+      - name: Build Android APK (for testing)
+        script: |
+          flutter build apk --release --build-name=1.0.0 --build-number=$BUILD_NUMBER
+    artifacts:
+      - build/app/outputs/bundle/release/*.aab
+      - build/app/outputs/flutter-apk/*.apk
+    publishing:
+      email:
+        recipients:
+          - sodukle@gmail.com
+        notify:
+          success: true
+          failure: true
+
+  ios-release:
+    name: iOS Release Build
+    max_build_duration: 45
+    instance_type: mac_mini_m1
+    environment:
+      groups:
+        # Define these environment variables in your Codemagic application settings:
+        # - APP_STORE_CONNECT_ISSUER_ID
+        # - APP_STORE_CONNECT_KEY_IDENTIFIER
+        # - APP_STORE_CONNECT_PRIVATE_KEY (Entire contents of the .p8 key file)
+        - apple_credentials
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Set up App Store Connect API credentials
+        script: |
+          # Write the private key contents to a local .p8 file for the CLI
+          mkdir -p ~/.appstoreconnect
+          echo "$APP_STORE_CONNECT_PRIVATE_KEY" > ~/.appstoreconnect/private_key.p8
+      - name: Initialize keychain
+        script: |
+          keychain initialize
+      - name: Fetch iOS Signing Files
+        script: |
+          # Automatically fetch or create certificates and provisioning profiles
+          app-store-connect fetch-signing-files "com.odukle.scroller" \
+            --type IOS_APP_STORE \
+            --create
+      - name: Add certificates to keychain
+        script: |
+          keychain add-certificates
+      - name: Set up code signing settings on Xcode project
+        script: |
+          xcode-project use-profiles
+      - name: Get Flutter packages
+        script: |
+          flutter pub get
+      - name: Install CocoaPods dependencies
+        script: |
+          find ios -name "Podfile" -execdir pod install \;
+      - name: Build iOS IPA
+        script: |
+          flutter build ipa --release \
+            --build-name=1.0.0 \
+            --build-number=$BUILD_NUMBER \
+            --export-options-plist=$HOME/export_options.plist
+    artifacts:
+      - build/ios/ipa/*.ipa
+    publishing:
+      email:
+        recipients:
+          - sodukle@gmail.com
+        notify:
+          success: true
+          failure: true
+      # Optional: Enable automatic upload to App Store Connect / TestFlight
+      # app_store_connect:
+      #   auth: integration
+      #   submit_to_testflight: true
