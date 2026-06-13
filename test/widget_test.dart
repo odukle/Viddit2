@@ -201,9 +201,9 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
 
-    // Verify Region tile exists and tap it
-    expect(find.text('Region'), findsOneWidget);
-    await tester.tap(find.text('Region'));
+    // Verify Country tile exists and tap it
+    expect(find.text('Country'), findsOneWidget);
+    await tester.tap(find.text('Country'));
     await tester.pumpAndSettle();
 
     // Bottom sheet is now open
