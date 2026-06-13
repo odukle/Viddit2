@@ -42,41 +42,16 @@ workflows:
     instance_type: mac_mini_m1
     environment:
       groups:
-        # Define these environment variables in your Codemagic application settings:
-        # - APP_STORE_CONNECT_ISSUER_ID
-        # - APP_STORE_CONNECT_KEY_IDENTIFIER
-        # - APP_STORE_CONNECT_PRIVATE_KEY (Entire contents of the .p8 key file)
+        # Upload your .p12 certificate and .mobileprovision profiles to Codemagic's
+        # 'Code signing identities' under the group name 'apple_credentials'.
         - apple_credentials
       flutter: stable
       xcode: latest
       cocoapods: default
     scripts:
-      - name: Set up App Store Connect API credentials
-        script: |
-          if [ -z "$APP_STORE_CONNECT_PRIVATE_KEY" ]; then
-            echo "Error: APP_STORE_CONNECT_PRIVATE_KEY is empty."
-            echo "Please ensure the 'apple_credentials' variable group is added in Codemagic and contains the private key."
-            exit 1
-          fi
-          # Write the private key contents to a local .p8 file for the CLI
-          mkdir -p ~/.appstoreconnect
-          echo "$APP_STORE_CONNECT_PRIVATE_KEY" > ~/.appstoreconnect/private_key.p8
       - name: Initialize keychain
         script: |
           keychain initialize
-      - name: Fetch iOS Signing Files
-        script: |
-          if [ -z "$APP_STORE_CONNECT_ISSUER_ID" ] || [ -z "$APP_STORE_CONNECT_KEY_IDENTIFIER" ]; then
-            echo "Error: APP_STORE_CONNECT_ISSUER_ID or APP_STORE_CONNECT_KEY_IDENTIFIER is empty."
-            echo "Please check your 'apple_credentials' variable group configurations in the Codemagic UI."
-            exit 1
-          fi
-          # Automatically fetch or create certificates and provisioning profiles
-          app-store-connect fetch-signing-files "com.odukle.scroller" \
-            --type IOS_APP_STORE \
-            --create \
-            --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
-            --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER"
       - name: Add certificates to keychain
         script: |
           keychain add-certificates
