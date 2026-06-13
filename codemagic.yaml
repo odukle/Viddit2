@@ -2,40 +2,6 @@
 # Reference: https://docs.codemagic.io/yaml-quick-start/
 
 workflows:
-  android-release:
-    name: Android Release Build
-    max_build_duration: 30
-    instance_type: mac_mini_m1 # Mac or Linux can be used, Mac mini is versatile
-    environment:
-      groups:
-        - keystore_credentials # You can also specify keys here if using env variables later
-      flutter: stable
-      java: 17
-    scripts:
-      - name: Set up local properties
-        script: |
-          echo "flutter.sdk=$FLUTTER_ROOT" > android/local.properties
-      - name: Get Flutter packages
-        script: |
-          flutter pub get
-      - name: Build Android App Bundle (AAB)
-        script: |
-          # The signing configs in build.gradle.kts will automatically load key.properties
-          flutter build appbundle --release --build-name=1.0.0 --build-number=$BUILD_NUMBER
-      - name: Build Android APK (for testing)
-        script: |
-          flutter build apk --release --build-name=1.0.0 --build-number=$BUILD_NUMBER
-    artifacts:
-      - build/app/outputs/bundle/release/*.aab
-      - build/app/outputs/flutter-apk/*.apk
-    publishing:
-      email:
-        recipients:
-          - sodukle@gmail.com
-        notify:
-          success: true
-          failure: true
-
   ios-release:
     name: iOS Release Build
     max_build_duration: 45
