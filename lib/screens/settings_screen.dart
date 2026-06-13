@@ -481,7 +481,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           decoration: BoxDecoration(
             color: AppTheme.surfaceElevated,
             borderRadius:
-                BorderRadius.vertical(top: Radius.circular(AppTheme.radiusXl)),
+                const BorderRadius.vertical(top: Radius.circular(AppTheme.radiusXl)),
             border: Border(
                 top: BorderSide(color: AppTheme.glassBorder, width: 0.5)),
           ),
@@ -1233,7 +1233,7 @@ class __RegionSelectorBottomSheetState
       decoration: BoxDecoration(
         color: AppTheme.surface,
         borderRadius:
-            BorderRadius.vertical(top: Radius.circular(AppTheme.radiusXl)),
+            const BorderRadius.vertical(top: Radius.circular(AppTheme.radiusXl)),
         border: Border(
           top: BorderSide(color: AppTheme.glassBorder, width: 0.5),
         ),
@@ -1486,7 +1486,7 @@ class __CustomRegionSelectorBottomSheetState
       decoration: BoxDecoration(
         color: AppTheme.surface,
         borderRadius:
-            BorderRadius.vertical(top: Radius.circular(AppTheme.radiusXl)),
+            const BorderRadius.vertical(top: Radius.circular(AppTheme.radiusXl)),
         border: Border(
           top: BorderSide(color: AppTheme.glassBorder, width: 0.5),
         ),

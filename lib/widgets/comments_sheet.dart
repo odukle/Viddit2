@@ -112,7 +112,7 @@ class _CommentsSheetState extends State<CommentsSheet> {
       height: height,
       decoration: BoxDecoration(
         color: AppTheme.surface,
-        borderRadius: BorderRadius.only(
+        borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(28),
           topRight: Radius.circular(28),
         ),
@@ -553,7 +553,7 @@ class _CommentNodeWidgetState extends State<CommentNodeWidget> {
   bool _isSafetyRevealed = false;
 
   // 4 cycling colors for thread depth
-  static List<Color> _threadColors = [
+  static final List<Color> _threadColors = [
     AppTheme.accentOrange,
     AppTheme.accentPurple,
     AppTheme.accentCyan,
@@ -1127,7 +1127,7 @@ class _CommentNodeWidgetState extends State<CommentNodeWidget> {
                 });
               },
               child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 child: Text(
                   'Show',
                   style: TextStyle(
@@ -1239,7 +1239,7 @@ class _CommentNodeWidgetState extends State<CommentNodeWidget> {
                         onTap: _showEditDeleteSheet,
                         child: Padding(
                           padding:
-                              EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           child: Icon(
                             Icons.more_vert_rounded,
                             size: 16,
@@ -1398,7 +1398,7 @@ class _CommentNodeWidgetState extends State<CommentNodeWidget> {
                           hintStyle: TextStyle(
                               color: AppTheme.textMuted, fontSize: 13),
                           contentPadding:
-                              EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                           border: InputBorder.none,
                         ),
                       ),

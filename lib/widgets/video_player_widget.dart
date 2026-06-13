@@ -489,7 +489,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
           decoration: BoxDecoration(
             color: AppTheme.surfaceElevated,
             borderRadius:
-                BorderRadius.vertical(top: Radius.circular(AppTheme.radiusXl)),
+                const BorderRadius.vertical(top: Radius.circular(AppTheme.radiusXl)),
             border: Border(
                 top: BorderSide(color: AppTheme.glassBorder, width: 0.5)),
           ),
@@ -819,7 +819,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
           decoration: BoxDecoration(
             color: AppTheme.surfaceElevated,
             borderRadius:
-                BorderRadius.vertical(top: Radius.circular(AppTheme.radiusXl)),
+                const BorderRadius.vertical(top: Radius.circular(AppTheme.radiusXl)),
             border: Border(
                 top: BorderSide(color: AppTheme.glassBorder, width: 0.5)),
           ),
@@ -1583,8 +1583,8 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
                   children: [
                     Icon(Icons.fast_forward_rounded,
                         color: AppTheme.accentOrange, size: 18),
-                    SizedBox(width: 8),
-                    Text(
+                    const SizedBox(width: 8),
+                    const Text(
                       '2x Speed',
                       style: TextStyle(
                         color: Colors.white,

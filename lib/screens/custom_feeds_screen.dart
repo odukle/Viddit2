@@ -239,7 +239,7 @@ class _CustomFeedsScreenState extends State<CustomFeedsScreen> {
               height: MediaQuery.of(context).size.height * 0.7,
               decoration: BoxDecoration(
                 color: AppTheme.surfaceElevated,
-                borderRadius: BorderRadius.only(
+                borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(28),
                   topRight: Radius.circular(28),
                 ),
@@ -644,7 +644,7 @@ class _CustomFeedsScreenState extends State<CustomFeedsScreen> {
                 width: 3,
                 decoration: BoxDecoration(
                   gradient: AppTheme.brandGradient,
-                  borderRadius: BorderRadius.only(
+                  borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(AppTheme.radiusLg),
                     bottomLeft: Radius.circular(AppTheme.radiusLg),
                   ),
@@ -760,7 +760,7 @@ class _CustomFeedsScreenState extends State<CustomFeedsScreen> {
                   width: 3,
                   decoration: BoxDecoration(
                     gradient: AppTheme.warmGradient,
-                    borderRadius: BorderRadius.only(
+                    borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(AppTheme.radiusLg),
                       bottomLeft: Radius.circular(AppTheme.radiusLg),
                     ),

@@ -356,9 +356,9 @@ class AppTheme {
         selectedItemColor: accentOrange,
         unselectedItemColor: textSecondary,
         selectedLabelStyle:
-            TextStyle(fontWeight: FontWeight.w700, fontSize: 10),
+            const TextStyle(fontWeight: FontWeight.w700, fontSize: 10),
         unselectedLabelStyle:
-            TextStyle(fontWeight: FontWeight.w500, fontSize: 10),
+            const TextStyle(fontWeight: FontWeight.w500, fontSize: 10),
         elevation: 0,
       ),
       dialogTheme: DialogThemeData(

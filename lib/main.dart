@@ -96,26 +96,26 @@ class _NavigationContainerState extends State<NavigationContainer> {
                         fontWeight: FontWeight.bold,
                         fontSize: 13),
                   ),
-                  SizedBox(height: 12),
+                  const SizedBox(height: 12),
                   Text(
                     '1. Absolute Moderation:\nPosting, sharing, or encouraging abusive, harassing, threatening, spammy, or illegally explicit content is prohibited.',
                     style:
                         TextStyle(color: AppTheme.textSecondary, fontSize: 12),
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Text(
                     '2. Reporting & Blocking:\nScroller provides tools for all users to instantly report objectionable content and block abusive creators. Reported content and posts from blocked users will be hidden from your feed immediately.',
                     style:
                         TextStyle(color: AppTheme.textSecondary, fontSize: 12),
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Text(
                     '3. NSFW & Age Restrictions:\nAdult (NSFW) content is filtered and hidden by default. If sensitive or NSFW content appears, you must confirm you are 18+ years of age and explicitly agree to view it via a two-click confirmation prompt.',
                     style:
                         TextStyle(color: AppTheme.textSecondary, fontSize: 12),
                   ),
-                  SizedBox(height: 12),
-                  Text(
+                  const SizedBox(height: 12),
+                  const Text(
                     'Do you accept these terms and conditions?',
                     style: TextStyle(
                         color: Colors.white,
@@ -290,7 +290,7 @@ class _NavigationContainerState extends State<NavigationContainer> {
                   opacity: isSelected ? 1.0 : 0.0,
                   child: isSelected
                       ? Padding(
-                          padding: EdgeInsets.only(top: 3),
+                          padding: const EdgeInsets.only(top: 3),
                           child: Text(
                             label,
                             style: TextStyle(
