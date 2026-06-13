@@ -602,9 +602,12 @@ class VerticalFeedWidgetState extends State<VerticalFeedWidget>
           attempt < maxPagesToScan && freshPosts.length < targetPostCount;
           attempt++) {
         if (mounted && refresh) {
+          final double progress =
+              (freshPosts.length / targetPostCount).clamp(0.0, 1.0);
+          final int percentage = (progress * 100).toInt();
           setState(() {
             _loadingStatus =
-                'Scanning ${_getFeedDisplayName()} (page ${attempt + 1})...';
+                'Scanning ${_getFeedDisplayName()} (page ${attempt + 1}) — $percentage%...';
           });
         }
         final previousAfter = nextAfter;
@@ -651,9 +654,12 @@ class VerticalFeedWidgetState extends State<VerticalFeedWidget>
         freshPosts.addAll(uniquePosts);
 
         if (mounted && refresh) {
+          final double progress =
+              (freshPosts.length / targetPostCount).clamp(0.0, 1.0);
+          final int percentage = (progress * 100).toInt();
           setState(() {
             _loadingStatus =
-                'Found ${freshPosts.length} videos from ${_getFeedDisplayName()}...';
+                'Found ${freshPosts.length} videos from ${_getFeedDisplayName()} — $percentage%...';
           });
         }
 
