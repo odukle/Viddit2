@@ -815,9 +815,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     child: Icon(Icons.public_rounded,
                         color: AppTheme.accentOrange, size: 20),
                   ),
-                  title: Text('Region',
+                  title: Text('Country',
                       style: Theme.of(context).textTheme.titleSmall),
-                  subtitle: Text('Customize trending content location',
+                  subtitle: Text('Feed location',
                       style: Theme.of(context).textTheme.bodySmall),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -855,7 +855,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       child: Icon(Icons.edit_location_alt_rounded,
                           color: AppTheme.accentPurple, size: 20),
                     ),
-                    title: Text('Custom Region Override',
+                    title: Text('Subregion/State',
                         style: Theme.of(context).textTheme.titleSmall),
                     subtitle: Text('Manually enter state/province name',
                         style: Theme.of(context).textTheme.bodySmall),
@@ -1509,7 +1509,7 @@ class __CustomRegionSelectorBottomSheetState
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Custom Region Override',
+                  'Subregion/State',
                   style: GoogleFonts.outfit(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
