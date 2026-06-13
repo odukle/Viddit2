@@ -541,7 +541,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               _buildSupportOption(
                 icon: Icons.camera_alt_outlined,
                 title: 'Instagram Profile',
-                subtitle: 'Follow @odukle on Instagram',
+                subtitle: 'Message @odukle on Instagram',
                 color: AppTheme.accentOrange,
                 onTap: () => _launchURL('https://instagram.com/odukle'),
               ),
