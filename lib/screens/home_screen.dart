@@ -806,24 +806,7 @@ class VerticalFeedWidgetState extends State<VerticalFeedWidget>
 
   Future<void> _handleDownload(
       PostModel post, void Function(double) onProgress) async {
-    bool hasPermission = false;
-    if (Platform.isAndroid) {
-      if (await Permission.videos.status.isGranted) {
-        hasPermission = true;
-      } else if (await Permission.videos.request().isGranted) {
-        hasPermission = true;
-      }
 
-      if (!hasPermission) {
-        if (await Permission.storage.status.isGranted) {
-          hasPermission = true;
-        } else if (await Permission.storage.request().isGranted) {
-          hasPermission = true;
-        }
-      }
-    } else {
-      hasPermission = true;
-    }
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
