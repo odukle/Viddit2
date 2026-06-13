@@ -1264,7 +1264,7 @@ class VerticalFeedWidgetState extends State<VerticalFeedWidget>
             ),
           if (_isLoadingMore)
             Positioned(
-              bottom: 100,
+              top: 100,
               left: 0,
               right: 0,
               child: Center(
