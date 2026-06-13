@@ -6,9 +6,9 @@ workflows:
     name: iOS Release Build
     max_build_duration: 45
     instance_type: mac_mini_m1
+    integrations:
+      app_store_connect: "Cineverse iOS"
     environment:
-      groups:
-        - apple_credentials # Define APP_STORE_CONNECT_ISSUER_ID, APP_STORE_CONNECT_KEY_IDENTIFIER, and APP_STORE_CONNECT_PRIVATE_KEY in this group
       ios_signing:
         distribution_type: app_store
         bundle_identifier: com.odukle.scroller
@@ -47,7 +47,6 @@ workflows:
           success: true
           failure: true
       app_store_connect:
-        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
-        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
-        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+        auth: integration
         submit_to_testflight: true
+        submit_to_app_store: false
