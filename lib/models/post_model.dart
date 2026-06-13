@@ -5,7 +5,7 @@ class PostModel {
   final String subreddit;
   final String author;
   final double createdUtc;
-  final int score;
+  int score;
   final int commentCount;
   final String permalink;
   final bool isNsfw;

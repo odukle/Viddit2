@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:video_player/video_player.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -61,10 +62,29 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
   double _downloadProgress = 0.0;
   double _loadingProgress = 0.0;
   bool _isListeningToProgress = false;
-  bool _isSwitchingToCache = false;
+  bool _isInitializing = false;
   bool _isAppInForeground = true;
   bool _isRevealed = false;
   bool _isFastForwarding = false;
+  bool _hideOverlaysForLongPress = false;
+  bool _wasPlayingBeforeLongPress = false;
+  bool _isSeeking = false;
+  Duration _seekPosition = Duration.zero;
+  bool _wasPlayingBeforeSeek = false;
+
+  void _safeSetState(VoidCallback fn) {
+    if (!mounted) return;
+    if (SchedulerBinding.instance.schedulerPhase ==
+        SchedulerPhase.persistentCallbacks) {
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(fn);
+        }
+      });
+    } else {
+      setState(fn);
+    }
+  }
 
   @override
   void initState() {
@@ -82,11 +102,10 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
 
   void _onSafetyChanged() {
     if (mounted) {
-      setState(() {
-        if (_isSafetyBlocked && !_isRevealed) {
-          _pausePlayer();
-        }
-      });
+      if (_isSafetyBlocked && !_isRevealed) {
+        _pausePlayer();
+      }
+      setState(() {});
     }
   }
 
@@ -229,9 +248,6 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
       setState(() {
         _loadingProgress = progress;
       });
-      if (progress >= 1.0 && !_isInitialized && !_hasError) {
-        _switchToCachedPlayer();
-      }
     }
   }
 
@@ -254,81 +270,19 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     }
   }
 
-  Future<void> _switchToCachedPlayer() async {
-    if (_isSwitchingToCache || _isInitialized) {
-      return;
-    }
-    _isSwitchingToCache = true;
-    final targetPostId = widget.post.id;
-
-    try {
-      final cacheManager = VideoCacheManager();
-      final hlsUrl = widget.post.videoUrl;
-
-      final cachedProxyUrl = await cacheManager.getCacheOrDownload(hlsUrl);
-      if (!mounted || !widget.isActive || widget.post.id != targetPostId) {
-        return;
-      }
-
-      if (cachedProxyUrl != null) {
-        debugPrint(
-            '[VideoPlayerWidget] Switching to cached URL: $cachedProxyUrl');
-
-        final oldController = _controller;
-        _controller = null;
-        if (oldController != null) {
-          oldController.dispose();
-        }
-
-        final api = RedditApi();
-        final headers = await api.getDownloadHeaders();
-        if (!mounted || !widget.isActive || widget.post.id != targetPostId) {
-          return;
-        }
-
-        final controller = VideoPlayerController.networkUrl(
-          Uri.parse(cachedProxyUrl),
-          httpHeaders: headers,
-        );
-        _controller = controller;
-
-        await controller.initialize();
-        if (!mounted || !widget.isActive || widget.post.id != targetPostId) {
-          controller.dispose();
-          if (identical(_controller, controller)) {
-            _controller = null;
-          }
-          return;
-        }
-
-        _cleanupProgressListener();
-        await controller.setLooping(true);
-        await controller.setVolume(widget.isGlobalMuted ? 0.0 : 1.0);
-
-        setState(() {
-          _isInitialized = true;
-          _hasError = false;
-        });
-
-        if (widget.isActive && !_isNsfwBlocked) {
-          _playPlayer();
-        }
-      }
-    } catch (e) {
-      debugPrint('[VideoPlayerWidget] Error switching to cached player: $e');
-    } finally {
-      _isSwitchingToCache = false;
-    }
-  }
-
   Future<void> _initializePlayer() async {
     if (_isInitialized) {
       _playPlayer();
       return;
     }
+    if (_isInitializing) {
+      return;
+    }
+    _isInitializing = true;
 
     _disposePlayer();
     final targetPostId = widget.post.id;
+    VideoPlayerController? controllerToDisposeIfError;
 
     try {
       final cacheManager = VideoCacheManager();
@@ -362,6 +316,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
         httpHeaders: headers,
       );
       _controller = controller;
+      controllerToDisposeIfError = controller;
 
       await controller.initialize();
       if (!mounted || !widget.isActive || widget.post.id != targetPostId) {
@@ -388,12 +343,25 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     } catch (e) {
       _cleanupProgressListener();
       debugPrint('Video Initialize Error: $e');
+      if (controllerToDisposeIfError != null) {
+        try {
+          controllerToDisposeIfError.dispose();
+        } catch (disError) {
+          debugPrint(
+              'Error disposing controller on initialization failure: $disError');
+        }
+        if (identical(_controller, controllerToDisposeIfError)) {
+          _controller = null;
+        }
+      }
       if (mounted && widget.post.id == targetPostId) {
         setState(() {
           _hasError = true;
           _isInitialized = false;
         });
       }
+    } finally {
+      _isInitializing = false;
     }
   }
 
@@ -401,7 +369,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     if (_controller != null && !_isPlaying) {
       if (_isSafetyBlocked && !_isRevealed) return;
       _controller!.play();
-      setState(() {
+      _safeSetState(() {
         _isPlaying = true;
       });
     }
@@ -410,10 +378,39 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
   void _pausePlayer() {
     if (_controller != null && _isPlaying) {
       _controller!.pause();
-      setState(() {
+      _safeSetState(() {
         _isPlaying = false;
       });
     }
+  }
+
+  void _handleSeekingChanged(bool seeking) {
+    if (seeking) {
+      _wasPlayingBeforeSeek = _isPlaying;
+      _pausePlayer();
+      _safeSetState(() {
+        _isSeeking = true;
+      });
+    } else {
+      _safeSetState(() {
+        _isSeeking = false;
+      });
+      if (_wasPlayingBeforeSeek) {
+        _playPlayer();
+      }
+    }
+  }
+
+  void _handleSeekPositionChanged(Duration position) {
+    _safeSetState(() {
+      _seekPosition = position;
+    });
+  }
+
+  String _formatDuration(Duration duration) {
+    final minutes = duration.inMinutes;
+    final seconds = duration.inSeconds % 60;
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
   }
 
   void _togglePlayPause() {
@@ -425,16 +422,14 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
       _playPlayer();
     }
 
-    setState(() {
+    _safeSetState(() {
       _showPlayPauseIcon = true;
     });
 
     Timer(const Duration(milliseconds: 500), () {
-      if (mounted) {
-        setState(() {
-          _showPlayPauseIcon = false;
-        });
-      }
+      _safeSetState(() {
+        _showPlayPauseIcon = false;
+      });
     });
   }
 
@@ -442,16 +437,14 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     if (widget.post.userVote != 1) {
       _vote(1);
     }
-    setState(() {
+    _safeSetState(() {
       _showUpvoteHeart = true;
     });
 
     Timer(const Duration(milliseconds: 600), () {
-      if (mounted) {
-        setState(() {
-          _showUpvoteHeart = false;
-        });
-      }
+      _safeSetState(() {
+        _showUpvoteHeart = false;
+      });
     });
   }
 
@@ -463,16 +456,21 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     }
 
     final originalVote = widget.post.userVote;
+    final originalScore = widget.post.score;
     final newVote = originalVote == direction ? 0 : direction;
+
+    final scoreChange = newVote - originalVote;
 
     setState(() {
       widget.post.userVote = newVote;
+      widget.post.score = originalScore + scoreChange;
     });
 
     final success = await api.vote(widget.post.fullName, newVote);
     if (!success && mounted) {
       setState(() {
         widget.post.userVote = originalVote;
+        widget.post.score = originalScore;
       });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Failed to cast vote.')),
@@ -480,71 +478,77 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     }
   }
 
-  void _showSafetyOptions() {
+  void _showSafetyMenu() {
+    HapticFeedback.mediumImpact();
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppTheme.surfaceElevated,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
-        ),
-      ),
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.5),
       builder: (context) {
-        return SafeArea(
+        return Container(
+          decoration: BoxDecoration(
+            color: AppTheme.surfaceElevated,
+            borderRadius:
+                BorderRadius.vertical(top: Radius.circular(AppTheme.radiusXl)),
+            border: Border(
+                top: BorderSide(color: AppTheme.glassBorder, width: 0.5)),
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              const SizedBox(height: 8),
               Container(
-                width: 36,
+                width: 40,
                 height: 4,
-                margin: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: AppTheme.textMuted.withValues(alpha: 0.4),
-                  borderRadius: BorderRadius.circular(2),
+                  color: AppTheme.textSecondary.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                 ),
               ),
-              ListTile(
-                leading: Icon(Icons.flag_rounded, color: AppTheme.accentOrange),
-                title: const Text('Report Post',
-                    style: TextStyle(color: Colors.white)),
-                subtitle: Text(
-                    'Report this post for UGC violation, spam, or abuse',
-                    style:
-                        TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+              const SizedBox(height: 16),
+              Text(
+                'Safety Options',
+                style: Theme.of(context)
+                    .textTheme
+                    .titleLarge
+                    ?.copyWith(fontSize: 18),
+              ),
+              const SizedBox(height: 16),
+
+              // 1. Report Post
+              _buildQuickActionTile(
+                icon: Icons.flag_rounded,
+                label: 'Report Post',
+                color: AppTheme.accentOrange,
                 onTap: () {
                   Navigator.pop(context);
                   _showReportReasonDialog();
                 },
               ),
-              ListTile(
-                leading:
-                    Icon(Icons.block_rounded, color: AppTheme.accentPurple),
-                title: Text('Block u/${widget.post.author}',
-                    style: const TextStyle(color: Colors.white)),
-                subtitle: Text(
-                    'You won\'t see posts or comments from this user again',
-                    style:
-                        TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+
+              // 2. Block User
+              _buildQuickActionTile(
+                icon: Icons.block_rounded,
+                label: 'Block u/${widget.post.author}',
+                color: AppTheme.accentPurple,
                 onTap: () {
                   Navigator.pop(context);
                   _blockUserConfirm();
                 },
               ),
-              ListTile(
-                leading:
-                    Icon(Icons.no_accounts_rounded, color: AppTheme.accentWarm),
-                title: Text('Block ${widget.post.subreddit}',
-                    style: const TextStyle(color: Colors.white)),
-                subtitle: Text('You won\'t see posts from this subreddit again',
-                    style:
-                        TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+
+              // 3. Block Subreddit
+              _buildQuickActionTile(
+                icon: Icons.no_accounts_rounded,
+                label: 'Block ${widget.post.subreddit}',
+                color: AppTheme.accentWarm,
                 onTap: () {
                   Navigator.pop(context);
                   _blockSubredditConfirm();
                 },
               ),
-              const SizedBox(height: 8),
+
+              const SizedBox(height: 24),
             ],
           ),
         );
@@ -771,8 +775,15 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
         });
       }
     } else {
-      // Middle 30% -> Quick Actions Menu
-      _showQuickActionsMenu();
+      // Middle 30% -> Pause and Hide UI
+      if (_controller != null && _isInitialized) {
+        HapticFeedback.mediumImpact();
+        _wasPlayingBeforeLongPress = _isPlaying;
+        _pausePlayer();
+        setState(() {
+          _hideOverlaysForLongPress = true;
+        });
+      }
     }
   }
 
@@ -784,10 +795,19 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
       setState(() {
         _isFastForwarding = false;
       });
+    } else if (_hideOverlaysForLongPress) {
+      if (_controller != null && _isInitialized) {
+        if (_wasPlayingBeforeLongPress) {
+          _playPlayer();
+        }
+      }
+      setState(() {
+        _hideOverlaysForLongPress = false;
+      });
     }
   }
 
-  void _showQuickActionsMenu() {
+  void _showDownloadSaveOptions() {
     HapticFeedback.mediumImpact();
     showModalBottomSheet(
       context: context,
@@ -817,7 +837,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
               ),
               const SizedBox(height: 16),
               Text(
-                'Quick Actions',
+                'Options',
                 style: Theme.of(context)
                     .textTheme
                     .titleLarge
@@ -825,61 +845,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
               ),
               const SizedBox(height: 16),
 
-              // 1. Save/Unsave Post
-              _buildQuickActionTile(
-                icon: widget.post.isSaved
-                    ? Icons.star_rounded
-                    : Icons.star_border_rounded,
-                label: widget.post.isSaved ? 'Unsave Post' : 'Save Post',
-                color: widget.post.isSaved ? Colors.amber : Colors.white,
-                onTap: () async {
-                  Navigator.pop(context);
-                  if (!api.isLoggedIn) {
-                    _showSignInRequired();
-                    return;
-                  }
-                  final bool newSavedState = !widget.post.isSaved;
-                  setState(() {
-                    widget.post.isSaved = newSavedState;
-                  });
-                  final success =
-                      await api.savePost(widget.post.fullName, newSavedState);
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(success
-                            ? (newSavedState
-                                ? 'Saved post successfully! ⭐'
-                                : 'Unsaved post! ⭐')
-                            : 'Failed to update save state.'),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  }
-                },
-              ),
-
-              // 2. Copy Link
-              _buildQuickActionTile(
-                icon: Icons.link_rounded,
-                label: 'Copy Post Link',
-                color: Colors.white,
-                onTap: () async {
-                  Navigator.pop(context);
-                  await Clipboard.setData(ClipboardData(
-                      text: 'https://www.reddit.com${widget.post.permalink}'));
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Copied link to clipboard! 🔗'),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  }
-                },
-              ),
-
-              // 3. Download Video
+              // 1. Download Video option
               _buildQuickActionTile(
                 icon: Icons.download_rounded,
                 label: 'Download Video',
@@ -890,28 +856,41 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
                 },
               ),
 
-              // Divider
-              Divider(color: AppTheme.glassBorder, height: 16),
-
-              // 4. Report Post
-              _buildQuickActionTile(
-                icon: Icons.flag_outlined,
-                label: 'Report Post',
-                color: Colors.redAccent,
-                onTap: () {
-                  Navigator.pop(context);
-                  _showReportReasonDialog();
-                },
-              ),
-
-              // 5. Block User
-              _buildQuickActionTile(
-                icon: Icons.person_off_outlined,
-                label: 'Block u/${widget.post.author}',
-                color: Colors.redAccent,
-                onTap: () {
-                  Navigator.pop(context);
-                  _blockUserConfirm();
+              // 2. Save/Unsave Post option
+              StatefulBuilder(
+                builder: (context, setModalState) {
+                  return _buildQuickActionTile(
+                    icon: widget.post.isSaved
+                        ? Icons.star_rounded
+                        : Icons.star_border_rounded,
+                    label: widget.post.isSaved ? 'Unsave Post' : 'Save Post',
+                    color: widget.post.isSaved ? Colors.amber : Colors.white,
+                    onTap: () async {
+                      Navigator.pop(context);
+                      if (!api.isLoggedIn) {
+                        _showSignInRequired();
+                        return;
+                      }
+                      final bool newSavedState = !widget.post.isSaved;
+                      setState(() {
+                        widget.post.isSaved = newSavedState;
+                      });
+                      final success = await api.savePost(
+                          widget.post.fullName, newSavedState);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(success
+                                ? (newSavedState
+                                    ? 'Saved post successfully! ⭐'
+                                    : 'Unsaved post! ⭐')
+                                : 'Failed to update save state.'),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      }
+                    },
+                  );
                 },
               ),
 
@@ -1291,13 +1270,16 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
             ),
 
           // 6. Left side Details overlay (Title, Subreddit, user)
-          if (!_isNsfwBlocked && !(_isSafetyBlocked && !_isRevealed))
+          if (!_isNsfwBlocked &&
+              !(_isSafetyBlocked && !_isRevealed) &&
+              !_hideOverlaysForLongPress)
             Positioned(
               left: 0,
               bottom: actualBottomPadding,
               right: 0, // Leave space for side tray buttons
               child: Container(
-                padding: const EdgeInsets.all(12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
@@ -1326,6 +1308,9 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
                           _playPlayer();
                         }
                       },
+                      onDoubleTap: () {},
+                      onLongPress: () {},
+                      behavior: HitTestBehavior.opaque,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 6),
@@ -1377,6 +1362,9 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
                           _playPlayer();
                         }
                       },
+                      onDoubleTap: () {},
+                      onLongPress: () {},
+                      behavior: HitTestBehavior.opaque,
                       child: Padding(
                         padding: const EdgeInsets.only(left: 4),
                         child: Row(
@@ -1413,6 +1401,9 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
                           _isTitleExpanded = !_isTitleExpanded;
                         });
                       },
+                      onDoubleTap: () {},
+                      onLongPress: () {},
+                      behavior: HitTestBehavior.opaque,
                       child: Padding(
                         padding: const EdgeInsets.only(
                             left: 4, right: 60), // Leave space for side buttons
@@ -1450,95 +1441,105 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
             ),
 
           // 7. Right side controls tray (Upvote, comment, download, share, mute)
-          if (!_isNsfwBlocked && !(_isSafetyBlocked && !_isRevealed))
+          if (!_isNsfwBlocked &&
+              !(_isSafetyBlocked && !_isRevealed) &&
+              !_hideOverlaysForLongPress)
             Positioned(
               right: 12,
-              bottom: 8 + actualBottomPadding,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Upvote button
-                  _buildSideButton(
-                    icon: widget.post.userVote == 1
-                        ? Icons.arrow_upward_rounded
-                        : Icons.arrow_upward_outlined,
-                    label: widget.post.score.toString(),
-                    color: widget.post.userVote == 1
-                        ? AppTheme.accentOrange
-                        : Colors.white,
-                    onTap: () => _vote(1),
-                  ),
-                  const SizedBox(height: 16),
+              bottom: actualBottomPadding + 16,
+              child: GestureDetector(
+                onTap: () {},
+                onDoubleTap: () {},
+                onLongPress: () {},
+                behavior: HitTestBehavior.opaque,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Upvote button
+                    _buildSideButton(
+                      icon: widget.post.userVote == 1
+                          ? Icons.arrow_upward_rounded
+                          : Icons.arrow_upward_outlined,
+                      label: widget.post.score.toString(),
+                      color: widget.post.userVote == 1
+                          ? AppTheme.accentOrange
+                          : Colors.white,
+                      onTap: () => _vote(1),
+                    ),
+                    const SizedBox(height: 16),
 
-                  // Comments button
-                  _buildSideButton(
-                    icon: Icons.chat_bubble_outline_rounded,
-                    label: widget.post.commentCount.toString(),
-                    color: Colors.white,
-                    onTap: _openComments,
-                  ),
-                  const SizedBox(height: 16),
+                    // Comments button
+                    _buildSideButton(
+                      icon: Icons.chat_bubble_outline_rounded,
+                      label: widget.post.commentCount.toString(),
+                      color: Colors.white,
+                      onTap: _openComments,
+                    ),
+                    const SizedBox(height: 16),
 
-                  // Download button
-                  _buildSideButton(
-                    icon: Icons.download_rounded,
-                    label: _isDownloading
-                        ? '${(_downloadProgress * 100).toInt()}%'
-                        : 'Save',
-                    color: Colors.white,
-                    iconWidget: _isDownloading
-                        ? Padding(
-                            padding: const EdgeInsets.all(10.0),
-                            child: CircularProgressIndicator(
-                              value: _downloadProgress,
-                              strokeWidth: 2.5,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                  AppTheme.accentOrange),
-                              backgroundColor: Colors.white24,
-                            ),
-                          )
-                        : null,
-                    onTap: _startDownload,
-                  ),
-                  const SizedBox(height: 16),
+                    // Download button
+                    _buildSideButton(
+                      icon: widget.post.isSaved
+                          ? Icons.star_rounded
+                          : Icons.download_rounded,
+                      label: _isDownloading
+                          ? '${(_downloadProgress * 100).toInt()}%'
+                          : (widget.post.isSaved ? 'Saved' : 'Save'),
+                      color: widget.post.isSaved ? Colors.amber : Colors.white,
+                      iconWidget: _isDownloading
+                          ? Padding(
+                              padding: const EdgeInsets.all(10.0),
+                              child: CircularProgressIndicator(
+                                value: _downloadProgress,
+                                strokeWidth: 2.5,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                    AppTheme.accentOrange),
+                                backgroundColor: Colors.white24,
+                              ),
+                            )
+                          : null,
+                      onTap: _isDownloading ? () {} : _showDownloadSaveOptions,
+                    ),
+                    const SizedBox(height: 16),
 
-                  // Share button
-                  _buildSideButton(
-                    icon: Icons.share_rounded,
-                    label: 'Share',
-                    color: Colors.white,
-                    onTap: () {
-                      final url =
-                          'https://www.reddit.com${widget.post.permalink}';
-                      const extra = '\n\nShared via Scroller';
-                      Share.share('$url$extra');
-                    },
-                  ),
-                  const SizedBox(height: 16),
+                    // Share button
+                    _buildSideButton(
+                      icon: Icons.share_rounded,
+                      label: 'Share',
+                      color: Colors.white,
+                      onTap: () {
+                        final url =
+                            'https://www.reddit.com${widget.post.permalink}';
+                        const extra = '\n\nShared via Scroller';
+                        Share.share('$url$extra');
+                      },
+                    ),
+                    const SizedBox(height: 16),
 
-                  // Safety button (Report / Block)
-                  _buildSideButton(
-                    icon: Icons.shield_outlined,
-                    label: 'Safety',
-                    color: Colors.white,
-                    onTap: _showSafetyOptions,
-                  ),
-                  const SizedBox(height: 16),
+                    // Safety button (Report / Block)
+                    _buildSideButton(
+                      icon: Icons.shield_outlined,
+                      label: 'Safety',
+                      color: Colors.white,
+                      onTap: _showSafetyMenu,
+                    ),
+                    const SizedBox(height: 16),
 
-                  // Mute Toggle Button
-                  _buildSideButton(
-                    icon: widget.isGlobalMuted
-                        ? Icons.volume_off_rounded
-                        : Icons.volume_up_rounded,
-                    label: widget.isGlobalMuted ? 'Muted' : 'Sound',
-                    color: widget.isGlobalMuted
-                        ? AppTheme.accentOrange
-                        : Colors.white,
-                    onTap: () {
-                      widget.onMuteChanged(!widget.isGlobalMuted);
-                    },
-                  ),
-                ],
+                    // Mute Toggle Button
+                    _buildSideButton(
+                      icon: widget.isGlobalMuted
+                          ? Icons.volume_off_rounded
+                          : Icons.volume_up_rounded,
+                      label: widget.isGlobalMuted ? 'Muted' : 'Sound',
+                      color: widget.isGlobalMuted
+                          ? AppTheme.accentOrange
+                          : Colors.white,
+                      onTap: () {
+                        widget.onMuteChanged(!widget.isGlobalMuted);
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
 
@@ -1546,18 +1547,21 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
           if (_isInitialized &&
               _controller != null &&
               !_isNsfwBlocked &&
-              !(_isSafetyBlocked && !_isRevealed))
+              !(_isSafetyBlocked && !_isRevealed) &&
+              !_hideOverlaysForLongPress)
             Positioned(
               bottom: actualBottomPadding,
               left: 0,
               right: 0,
-              child: VideoProgressIndicator(
-                _controller!,
-                allowScrubbing: true,
-                colors: VideoProgressColors(
-                  playedColor: AppTheme.accentOrange,
-                  bufferedColor: Colors.white.withValues(alpha: 0.18),
-                  backgroundColor: Colors.white.withValues(alpha: 0.08),
+              child: GestureDetector(
+                onTap: () {},
+                onDoubleTap: () {},
+                onLongPress: () {},
+                behavior: HitTestBehavior.opaque,
+                child: VideoProgressBar(
+                  controller: _controller!,
+                  onSeekingChanged: _handleSeekingChanged,
+                  onSeekPositionChanged: _handleSeekPositionChanged,
                 ),
               ),
             ),
@@ -1565,7 +1569,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
           // 9. Fast Forwarding indicator overlay at the top center
           if (_isFastForwarding)
             Positioned(
-              top: MediaQuery.of(context).padding.top + 20,
+              top: 110,
               child: Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -1590,6 +1594,52 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
                       ),
                     ),
                   ],
+                ),
+              ),
+            ),
+
+          // 10. Seeking timestamp indicator overlay in the center
+          if (_isSeeking && _controller != null)
+            Positioned.fill(
+              child: Center(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: AppTheme.glassBorder,
+                          width: 0.8,
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.history_toggle_off_rounded,
+                            color: AppTheme.accentOrange,
+                            size: 32,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            '${_formatDuration(_seekPosition)}/${_formatDuration(_controller!.value.duration)}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Outfit',
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -1644,5 +1694,185 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
         ],
       ),
     );
+  }
+}
+
+class VideoProgressBar extends StatelessWidget {
+  final VideoPlayerController controller;
+  final ValueChanged<bool> onSeekingChanged;
+  final ValueChanged<Duration> onSeekPositionChanged;
+
+  const VideoProgressBar({
+    super.key,
+    required this.controller,
+    required this.onSeekingChanged,
+    required this.onSeekPositionChanged,
+  });
+
+  void _seekToRelativePosition(Offset localPosition, double boxWidth) async {
+    final Duration duration = controller.value.duration;
+    if (duration == Duration.zero) return;
+
+    double relative = localPosition.dx / boxWidth;
+    relative = relative.clamp(0.0, 1.0);
+    final Duration position = duration * relative;
+
+    onSeekPositionChanged(position);
+    await controller.seekTo(position);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final boxWidth = constraints.maxWidth;
+        return GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onHorizontalDragStart: (details) {
+            onSeekingChanged(true);
+          },
+          onHorizontalDragUpdate: (details) {
+            _seekToRelativePosition(details.localPosition, boxWidth);
+          },
+          onHorizontalDragEnd: (details) {
+            onSeekingChanged(false);
+          },
+          onTapDown: (details) {
+            onSeekingChanged(true);
+            _seekToRelativePosition(details.localPosition, boxWidth);
+          },
+          onTapUp: (details) {
+            onSeekingChanged(false);
+          },
+          onTapCancel: () {
+            onSeekingChanged(false);
+          },
+          child: Padding(
+            padding: const EdgeInsets.only(top: 0.0, bottom: 0.0),
+            child: ThickVideoProgressBar(
+              controller: controller,
+              playedColor: AppTheme.accentOrange,
+              bufferedColor: Colors.white.withValues(alpha: 0.18),
+              backgroundColor: Colors.white.withValues(alpha: 0.08),
+              thickness: 6,
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class ThickVideoProgressBar extends StatelessWidget {
+  final VideoPlayerController controller;
+  final Color playedColor;
+  final Color bufferedColor;
+  final Color backgroundColor;
+  final double thickness;
+
+  const ThickVideoProgressBar({
+    super.key,
+    required this.controller,
+    required this.playedColor,
+    required this.bufferedColor,
+    required this.backgroundColor,
+    this.thickness = 3.5,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<VideoPlayerValue>(
+      valueListenable: controller,
+      builder: (context, value, child) {
+        return SizedBox(
+          height: thickness,
+          width: double.infinity,
+          child: CustomPaint(
+            painter: VideoProgressPainter(
+              value: value,
+              playedColor: playedColor,
+              bufferedColor: bufferedColor,
+              backgroundColor: backgroundColor,
+              thickness: thickness,
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class VideoProgressPainter extends CustomPainter {
+  final VideoPlayerValue value;
+  final Color playedColor;
+  final Color bufferedColor;
+  final Color backgroundColor;
+  final double thickness;
+
+  VideoProgressPainter({
+    required this.value,
+    required this.playedColor,
+    required this.bufferedColor,
+    required this.backgroundColor,
+    required this.thickness,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final Paint paint = Paint()
+      ..style = PaintingStyle.fill
+      ..strokeWidth = thickness;
+
+    // 1. Draw background
+    paint.color = backgroundColor;
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(0, 0, size.width, size.height),
+        Radius.circular(thickness / 2),
+      ),
+      paint,
+    );
+
+    if (!value.isInitialized) {
+      return;
+    }
+
+    final int duration = value.duration.inMilliseconds;
+
+    // 2. Draw buffered ranges
+    paint.color = bufferedColor;
+    for (final DurationRange range in value.buffered) {
+      final double start = range.start.inMilliseconds / duration * size.width;
+      final double end = range.end.inMilliseconds / duration * size.width;
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(
+              start, 0, (end - start).clamp(0.0, size.width), size.height),
+          Radius.circular(thickness / 2),
+        ),
+        paint,
+      );
+    }
+
+    // 3. Draw played progress
+    paint.color = playedColor;
+    final double playedPart =
+        (value.position.inMilliseconds / duration) * size.width;
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(0, 0, playedPart.clamp(0.0, size.width), size.height),
+        Radius.circular(thickness / 2),
+      ),
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant VideoProgressPainter oldDelegate) {
+    return oldDelegate.value != value ||
+        oldDelegate.playedColor != playedColor ||
+        oldDelegate.bufferedColor != bufferedColor ||
+        oldDelegate.backgroundColor != backgroundColor ||
+        oldDelegate.thickness != thickness;
   }
 }

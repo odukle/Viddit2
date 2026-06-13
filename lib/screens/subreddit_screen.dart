@@ -14,12 +14,14 @@ import '../widgets/pressable_scale.dart';
 class SubredditScreen extends StatefulWidget {
   final String subredditName;
   final bool isUser;
+  final bool isSaved;
   final String? customTitle;
 
   const SubredditScreen({
     super.key,
     required this.subredditName,
     this.isUser = false,
+    this.isSaved = false,
     this.customTitle,
   });
 
@@ -105,6 +107,7 @@ class _SubredditScreenState extends State<SubredditScreen> {
   }
 
   Future<void> _loadAbout() async {
+    if (widget.isSaved) return;
     if (widget.isUser) {
       final data = await _api.fetchUserAbout(widget.subredditName);
       if (mounted) {
@@ -146,7 +149,8 @@ class _SubredditScreenState extends State<SubredditScreen> {
     for (var attempt = 0; attempt < maxPagesToScan; attempt++) {
       final previousAfter = nextAfter;
       final newPosts = await _api.fetchPosts(
-        feedType: widget.isUser ? 'user' : 'subreddit',
+        feedType:
+            widget.isSaved ? 'saved' : (widget.isUser ? 'user' : 'subreddit'),
         query: widget.subredditName,
         sort: _sort,
         time: _time,
@@ -685,20 +689,29 @@ class _SubredditScreenState extends State<SubredditScreen> {
   @override
   Widget build(BuildContext context) {
     final title = widget.customTitle ??
-        (widget.isUser
-            ? 'u/${widget.subredditName}'
-            : 'r/${widget.subredditName}');
-    final String subIcon = widget.isUser
-        ? (_userAbout?['icon_img'] ?? '').replaceAll('amp;', '')
-        : (_subreddit?.iconImage ?? '');
-    final String banner = widget.isUser ? '' : (_subreddit?.bannerImage ?? '');
-    final String subscribers =
-        widget.isUser ? '' : _formatSubscribers(_subreddit?.subscribers ?? '0');
-    final String description = widget.customTitle != null
-        ? 'Curated category feed for ${widget.customTitle}'
+        (widget.isSaved
+            ? 'Saved Posts'
+            : (widget.isUser
+                ? 'u/${widget.subredditName}'
+                : 'r/${widget.subredditName}'));
+    final String subIcon = widget.isSaved
+        ? ''
         : (widget.isUser
-            ? 'User submissions feed'
-            : (_subreddit?.description ?? ''));
+            ? (_userAbout?['icon_img'] ?? '').replaceAll('amp;', '')
+            : (_subreddit?.iconImage ?? ''));
+    final String banner = (widget.isUser || widget.isSaved)
+        ? ''
+        : (_subreddit?.bannerImage ?? '');
+    final String subscribers = (widget.isUser || widget.isSaved)
+        ? ''
+        : _formatSubscribers(_subreddit?.subscribers ?? '0');
+    final String description = widget.isSaved
+        ? 'View all video posts you saved on Reddit'
+        : (widget.customTitle != null
+            ? 'Curated category feed for ${widget.customTitle}'
+            : (widget.isUser
+                ? 'User submissions feed'
+                : (_subreddit?.description ?? '')));
 
     return Scaffold(
       body: NestedScrollView(
@@ -707,7 +720,7 @@ class _SubredditScreenState extends State<SubredditScreen> {
           return [
             // Sliver Header
             SliverAppBar(
-              expandedHeight: widget.isUser ? 180 : 260,
+              expandedHeight: (widget.isUser || widget.isSaved) ? 180 : 260,
               floating: false,
               pinned: true,
               backgroundColor: AppTheme.surface,
@@ -788,14 +801,19 @@ class _SubredditScreenState extends State<SubredditScreen> {
                             child: CircleAvatar(
                               radius: 34,
                               backgroundColor: AppTheme.surface,
-                              backgroundImage:
-                                  subIcon.isNotEmpty && subIcon != 'null'
+                              backgroundImage: widget.isSaved
+                                  ? null
+                                  : (subIcon.isNotEmpty && subIcon != 'null'
                                       ? CachedNetworkImageProvider(subIcon)
-                                      : null,
-                              child: subIcon.isEmpty || subIcon == 'null'
-                                  ? Icon(Icons.reddit,
-                                      color: AppTheme.accentOrange, size: 36)
-                                  : null,
+                                      : null),
+                              child: widget.isSaved
+                                  ? const Icon(Icons.star_rounded,
+                                      color: Colors.amber, size: 36)
+                                  : (subIcon.isEmpty || subIcon == 'null'
+                                      ? Icon(Icons.reddit,
+                                          color: AppTheme.accentOrange,
+                                          size: 36)
+                                      : null),
                             ),
                           ),
                           const SizedBox(width: 14),
@@ -914,6 +932,7 @@ class _SubredditScreenState extends State<SubredditScreen> {
               ),
               actions: [
                 if (!widget.isUser &&
+                    !widget.isSaved &&
                     _api.isLoggedIn &&
                     !widget.subredditName.contains('+'))
                   IconButton(
@@ -1006,7 +1025,9 @@ class _SubredditScreenState extends State<SubredditScreen> {
                             context,
                             MaterialPageRoute(
                               builder: (context) => HomeScreen(
-                                feedType: widget.isUser ? 'user' : 'subreddit',
+                                feedType: widget.isSaved
+                                    ? 'saved'
+                                    : (widget.isUser ? 'user' : 'subreddit'),
                                 query: widget.subredditName,
                                 initialPosts: _posts,
                                 initialIndex: index,

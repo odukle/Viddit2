@@ -385,6 +385,19 @@ void main() {
       expect(uri.queryParameters['restrict_sr'], equals('1'));
       expect(uri.queryParameters['q'], contains('site:v.redd.it'));
     });
+
+    test('saved feed type returns correct user saved path', () async {
+      SharedPreferences.setMockInitialValues({'username': 'test_user'});
+      api = RedditApi();
+      await api.init();
+      final uri = api.buildListingUriForTesting(
+        feedType: 'saved',
+        query: '',
+        sort: 'hot',
+        params: {'limit': '50'},
+      );
+      expect(uri.path, equals('/user/test_user/saved.json'));
+    });
   });
 
   testWidgets('comments sheet renders search bar and filter chips',

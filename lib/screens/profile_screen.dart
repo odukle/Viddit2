@@ -370,7 +370,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   style:
                                       Theme.of(context).textTheme.titleSmall),
                               subtitle: Text(
-                                  'NSFW, blocked users, and subreddits',
+                                  'Theme, location, data saver, and blocks',
                                   style: Theme.of(context).textTheme.bodySmall),
                               trailing: Icon(Icons.chevron_right_rounded,
                                   color: AppTheme.textMuted, size: 20),

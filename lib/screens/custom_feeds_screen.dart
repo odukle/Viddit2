@@ -6,6 +6,7 @@ import '../models/multireddit_model.dart';
 import '../theme/app_theme.dart';
 import 'home_screen.dart';
 import 'login_screen.dart';
+import 'subreddit_screen.dart';
 import '../widgets/pressable_scale.dart';
 
 class CustomFeedsScreen extends StatefulWidget {
@@ -588,119 +589,30 @@ class _CustomFeedsScreenState extends State<CustomFeedsScreen> {
                           lineWidth: 2.5,
                         ),
                       )
-                    : _feeds.isEmpty
-                        ? _buildEmptyState()
-                        : ListView.builder(
-                            itemCount: _feeds.length,
-                            padding: const EdgeInsets.only(bottom: 90),
-                            itemBuilder: (context, index) {
-                              final feed = _feeds[index];
-                              return Padding(
-                                padding: const EdgeInsets.only(bottom: 12),
-                                child: PressableScale(
-                                  onTap: () => _openFeedDetails(feed),
-                                  child: Container(
-                                    decoration: AppTheme.cardDecoration(),
-                                    child: IntrinsicHeight(
-                                      child: Row(
-                                        children: [
-                                          // Gradient accent strip
-                                          Container(
-                                            width: 3,
-                                            decoration: BoxDecoration(
-                                              gradient: AppTheme.warmGradient,
-                                              borderRadius: BorderRadius.only(
-                                                topLeft: Radius.circular(
-                                                    AppTheme.radiusLg),
-                                                bottomLeft: Radius.circular(
-                                                    AppTheme.radiusLg),
-                                              ),
-                                            ),
-                                          ),
-                                          Expanded(
-                                            child: Padding(
-                                              padding:
-                                                  const EdgeInsets.all(16.0),
-                                              child: Row(
-                                                children: [
-                                                  Container(
-                                                    decoration: BoxDecoration(
-                                                      shape: BoxShape.circle,
-                                                      border: Border.all(
-                                                          color: AppTheme
-                                                              .accentOrange
-                                                              .withValues(
-                                                                  alpha: 0.15),
-                                                          width: 1.5),
-                                                    ),
-                                                    child: CircleAvatar(
-                                                      radius: 22,
-                                                      backgroundColor:
-                                                          AppTheme.surfaceLight,
-                                                      backgroundImage: feed
-                                                              .iconUrl
-                                                              .isNotEmpty
-                                                          ? CachedNetworkImageProvider(
-                                                              feed.iconUrl)
-                                                          : null,
-                                                      child: feed
-                                                              .iconUrl.isEmpty
-                                                          ? const Icon(
-                                                              Icons
-                                                                  .star_rounded,
-                                                              color:
-                                                                  Colors.amber,
-                                                              size: 22)
-                                                          : null,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(width: 16),
-                                                  Expanded(
-                                                    child: Column(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        Text(
-                                                          feed.displayName,
-                                                          style:
-                                                              Theme.of(context)
-                                                                  .textTheme
-                                                                  .titleSmall
-                                                                  ?.copyWith(
-                                                                      fontSize:
-                                                                          15),
-                                                        ),
-                                                        const SizedBox(
-                                                            height: 4),
-                                                        Text(
-                                                          '${feed.subreddits.length} subreddits',
-                                                          style:
-                                                              Theme.of(context)
-                                                                  .textTheme
-                                                                  .bodySmall,
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                  Icon(
-                                                      Icons
-                                                          .arrow_forward_ios_rounded,
-                                                      size: 14,
-                                                      color:
-                                                          AppTheme.accentWarm),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
+                    : ListView(
+                        padding: const EdgeInsets.only(bottom: 90),
+                        children: [
+                          _buildSavedPostsCard(),
+                          const SizedBox(height: 24),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 4, bottom: 12),
+                            child: Text(
+                              'My Custom Feeds',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleMedium
+                                  ?.copyWith(
+                                    color: AppTheme.textSecondary,
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                ),
-                              );
-                            },
+                            ),
                           ),
+                          if (_feeds.isEmpty)
+                            _buildEmptyStateInline()
+                          else
+                            ..._feeds.map((feed) => _buildFeedCard(feed)),
+                        ],
+                      ),
               ),
             ],
           ),
@@ -709,33 +621,206 @@ class _CustomFeedsScreenState extends State<CustomFeedsScreen> {
     );
   }
 
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: AppTheme.surfaceElevated,
-              shape: BoxShape.circle,
+  Widget _buildSavedPostsCard() {
+    return PressableScale(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const SubredditScreen(
+              subredditName: '',
+              isSaved: true,
             ),
-            child: Icon(Icons.star_border_rounded,
-                color: AppTheme.textMuted, size: 48),
           ),
-          const SizedBox(height: 16),
-          Text(
-            'You haven\'t created any custom feeds.',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: AppTheme.textSecondary,
+        );
+      },
+      child: Container(
+        decoration: AppTheme.cardDecoration(),
+        child: IntrinsicHeight(
+          child: Row(
+            children: [
+              // Gradient accent strip
+              Container(
+                width: 3,
+                decoration: BoxDecoration(
+                  gradient: AppTheme.brandGradient,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(AppTheme.radiusLg),
+                    bottomLeft: Radius.circular(AppTheme.radiusLg),
+                  ),
                 ),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Row(
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                              color:
+                                  AppTheme.accentOrange.withValues(alpha: 0.15),
+                              width: 1.5),
+                        ),
+                        child: CircleAvatar(
+                          radius: 22,
+                          backgroundColor: AppTheme.surfaceLight,
+                          child: const Icon(
+                            Icons.star_rounded,
+                            color: Colors.amber,
+                            size: 24,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Saved Posts',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleSmall
+                                  ?.copyWith(fontSize: 15),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'View all video posts you saved on Reddit',
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: 14,
+                        color: AppTheme.accentOrange,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: _showCreateDialog,
-            child: const Text('Create New Feed'),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyStateInline() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 32),
+      child: Center(
+        child: Column(
+          children: [
+            Icon(Icons.star_border_rounded,
+                color: AppTheme.textMuted, size: 40),
+            const SizedBox(height: 12),
+            Text(
+              'No custom feeds created yet.',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppTheme.textSecondary,
+                  ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.surfaceLight,
+                side: BorderSide(color: AppTheme.glassBorder, width: 0.5),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              onPressed: _showCreateDialog,
+              child: Text(
+                'Create Custom Feed',
+                style: TextStyle(color: AppTheme.textPrimary, fontSize: 13),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFeedCard(MultiRedditModel feed) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: PressableScale(
+        onTap: () => _openFeedDetails(feed),
+        child: Container(
+          decoration: AppTheme.cardDecoration(),
+          child: IntrinsicHeight(
+            child: Row(
+              children: [
+                // Gradient accent strip
+                Container(
+                  width: 3,
+                  decoration: BoxDecoration(
+                    gradient: AppTheme.warmGradient,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(AppTheme.radiusLg),
+                      bottomLeft: Radius.circular(AppTheme.radiusLg),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Row(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                                color: AppTheme.accentOrange
+                                    .withValues(alpha: 0.15),
+                                width: 1.5),
+                          ),
+                          child: CircleAvatar(
+                            radius: 22,
+                            backgroundColor: AppTheme.surfaceLight,
+                            backgroundImage: feed.iconUrl.isNotEmpty
+                                ? CachedNetworkImageProvider(feed.iconUrl)
+                                : null,
+                            child: feed.iconUrl.isEmpty
+                                ? const Icon(Icons.star_rounded,
+                                    color: Colors.amber, size: 22)
+                                : null,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                feed.displayName,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleSmall
+                                    ?.copyWith(fontSize: 15),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${feed.subreddits.length} subreddits',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(Icons.arrow_forward_ios_rounded,
+                            size: 14, color: AppTheme.accentWarm),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ],
+        ),
       ),
     );
   }

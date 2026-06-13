@@ -381,6 +381,7 @@ class VerticalFeedWidgetState extends State<VerticalFeedWidget>
   final Set<String> _seenPostIds = {};
   final Set<String> _seenVideoUrls = {};
   String _lastGeolocation = 'AUTO';
+  String? _lastRegionOverride;
 
   Set<String> _viewedPostIds = {};
   Timer? _viewTimer;
@@ -396,6 +397,7 @@ class VerticalFeedWidgetState extends State<VerticalFeedWidget>
     _currentIndex = widget.initialIndex;
     _pageController = PageController(initialPage: _currentIndex);
     _lastGeolocation = _api.geolocation;
+    _lastRegionOverride = _api.regionOverride;
 
     _initHomeScreen();
     _api.addSafetyListener(_onSafetySettingsChanged);
@@ -527,7 +529,7 @@ class VerticalFeedWidgetState extends State<VerticalFeedWidget>
     if (!widget.isFeedActive) return;
     if (index < 0 || index >= _posts.length) return;
 
-    _viewTimer = Timer(const Duration(seconds: 3), () {
+    _viewTimer = Timer(const Duration(seconds: 1), () {
       if (index < _posts.length) {
         final postId = _posts[index].id;
         _recordPostViewed(postId);
@@ -547,6 +549,15 @@ class VerticalFeedWidgetState extends State<VerticalFeedWidget>
           _seenPostIds.clear();
           _seenVideoUrls.clear();
           _lastSubscribedSubreddits.clear();
+          _currentIndex = 0;
+        });
+        if (_pageController.hasClients) {
+          _pageController.jumpToPage(0);
+        }
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (_pageController.hasClients) {
+            _pageController.jumpToPage(0);
+          }
         });
       }
     }
@@ -563,6 +574,8 @@ class VerticalFeedWidgetState extends State<VerticalFeedWidget>
     const targetPostCount = 24;
     const maxEmptyBatches = 3;
 
+    final Map<String, int> subredditCounts = {};
+
     while (freshPosts.isEmpty && !exhausted && emptyBatches < maxEmptyBatches) {
       for (var attempt = 0;
           attempt < maxPagesToScan && freshPosts.length < targetPostCount;
@@ -578,12 +591,34 @@ class VerticalFeedWidgetState extends State<VerticalFeedWidget>
         errorMessage = _api.lastErrorMessage;
         nextAfter = _api.lastListingAfter ?? '';
 
+        final int maxLimitPerSubreddit =
+            (targetPostCount * 0.15).round().clamp(2, 6);
+
         final uniquePosts = newPosts.where((post) {
           if (post.id.isEmpty) return false;
-          if (_viewedPostIds.contains(post.id)) return false;
+          if (_activeFeedType != 'saved' && _viewedPostIds.contains(post.id)) {
+            return false;
+          }
+
+          final bool shouldApplyDiversityFilter = !_api.isLoggedIn &&
+              (_activeFeedType == 'front_page' || _activeFeedType == 'popular');
+          if (shouldApplyDiversityFilter) {
+            final sub = post.subreddit.toLowerCase();
+            final count = subredditCounts[sub] ?? 0;
+            if (count >= maxLimitPerSubreddit) {
+              return false;
+            }
+          }
+
           if (!_seenPostIds.add(post.id)) return false;
           final urlKey = post.videoUrl.split('?').first;
-          return _seenVideoUrls.add(urlKey);
+          if (!_seenVideoUrls.add(urlKey)) return false;
+
+          if (shouldApplyDiversityFilter) {
+            final sub = post.subreddit.toLowerCase();
+            subredditCounts[sub] = (subredditCounts[sub] ?? 0) + 1;
+          }
+          return true;
         }).toList();
 
         freshPosts.addAll(uniquePosts);
@@ -993,8 +1028,10 @@ class VerticalFeedWidgetState extends State<VerticalFeedWidget>
 
   void _onSafetySettingsChanged() {
     if (!mounted) return;
-    if (_lastGeolocation != _api.geolocation) {
+    if (_lastGeolocation != _api.geolocation ||
+        _lastRegionOverride != _api.regionOverride) {
       _lastGeolocation = _api.geolocation;
+      _lastRegionOverride = _api.regionOverride;
       _loadFeed(refresh: true);
       return;
     }

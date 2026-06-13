@@ -1686,6 +1686,12 @@ class RedditApi {
             ? '/$query/search.json'
             : '/user/$_username/m/$query/search.json';
         return _buildApiUri(path, searchParams);
+      case 'saved':
+        return _buildApiUri(
+          '/user/$_username/saved.json',
+          params,
+          usePublicHost: false,
+        );
       default:
         return _buildApiUri('/best.json', params);
     }
