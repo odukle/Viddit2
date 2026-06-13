@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../api/reddit_api.dart';
 import '../theme/app_theme.dart';
 import 'login_screen.dart';
@@ -384,7 +385,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                           // Help & Support
                           PressableScale(
-                            onTap: () {},
+                            onTap: _showHelpSupportBottomSheet,
                             child: ListTile(
                               contentPadding: const EdgeInsets.symmetric(
                                   horizontal: 16, vertical: 4),
@@ -471,6 +472,182 @@ class _ProfileScreenState extends State<ProfileScreen> {
             style: Theme.of(context).textTheme.bodySmall,
           ),
         ],
+      ),
+    );
+  }
+
+  void _showHelpSupportBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.5),
+      builder: (context) {
+        return Container(
+          decoration: BoxDecoration(
+            color: AppTheme.surfaceElevated,
+            borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(AppTheme.radiusXl)),
+            border: Border(
+                top: BorderSide(color: AppTheme.glassBorder, width: 0.5)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 8),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppTheme.textSecondary.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Help & Support',
+                style: Theme.of(context)
+                    .textTheme
+                    .titleLarge
+                    ?.copyWith(fontSize: 18),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Choose how you would like to get in touch or find help.',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppTheme.textSecondary,
+                    ),
+              ),
+              const SizedBox(height: 16),
+              
+              // Email Support
+              _buildSupportOption(
+                icon: Icons.mail_outline_rounded,
+                title: 'Email Support',
+                subtitle: 'Direct contact with developer',
+                color: AppTheme.accentCyan,
+                onTap: () => _launchURL('mailto:odukle@gmail.com?subject=Viddit%20Support'),
+              ),
+              
+              // GitHub Issues
+              _buildSupportOption(
+                icon: Icons.bug_report_outlined,
+                title: 'Report a Bug',
+                subtitle: 'Submit issues or feedback on GitHub',
+                color: AppTheme.accentPurple,
+                onTap: () => _launchURL('https://github.com/odukle/Viddit2/issues'),
+              ),
+              
+              // Reddit Support
+              _buildSupportOption(
+                icon: Icons.chat_bubble_outline_rounded,
+                title: 'Reddit Community',
+                subtitle: 'Message u/odukle on Reddit',
+                color: AppTheme.accentOrange,
+                onTap: () => _launchURL('https://reddit.com/u/odukle'),
+              ),
+              
+              const SizedBox(height: 24),
+              Text(
+                'Version 1.0.0+2 • Made with ❤️',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppTheme.textMuted,
+                      fontSize: 11,
+                    ),
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSupportOption({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return PressableScale(
+      onTap: () {
+        Navigator.pop(context);
+        onTap();
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: AppTheme.surfaceLight.withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+          border: Border.all(
+            color: AppTheme.glassBorder,
+            width: 0.5,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+              ),
+              child: Icon(icon, color: color, size: 20),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppTheme.textSecondary,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: AppTheme.textMuted,
+              size: 20,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _launchURL(String urlString) async {
+    final Uri url = Uri.parse(urlString);
+    try {
+      final success = await launchUrl(
+        url,
+        mode: LaunchMode.externalApplication,
+      );
+      if (!success && mounted) {
+        _showErrorSnackBar('Could not open $urlString');
+      }
+    } catch (e) {
+      if (mounted) {
+        _showErrorSnackBar('Error opening link: $e');
+      }
+    }
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.redAccent,
+        behavior: SnackBarBehavior.floating,
       ),
     );
   }
