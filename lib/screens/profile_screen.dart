@@ -525,7 +525,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 title: 'Email Support',
                 subtitle: 'Direct contact with developer',
                 color: AppTheme.accentCyan,
-                onTap: () => _launchURL('mailto:odukle@gmail.com?subject=Viddit%20Support'),
+                onTap: () => _launchURL('mailto:sodukle@gmail.com?subject=Viddit%20Support'),
               ),
               
               // GitHub Issues
