@@ -537,13 +537,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onTap: () => _launchURL('https://github.com/odukle/Viddit2/issues'),
               ),
               
-              // Reddit Support
+              // Instagram Support
               _buildSupportOption(
-                icon: Icons.chat_bubble_outline_rounded,
-                title: 'Reddit Community',
-                subtitle: 'Message u/odukle on Reddit',
+                icon: Icons.camera_alt_outlined,
+                title: 'Instagram Profile',
+                subtitle: 'Follow @odukle on Instagram',
                 color: AppTheme.accentOrange,
-                onTap: () => _launchURL('https://reddit.com/u/odukle'),
+                onTap: () => _launchURL('https://instagram.com/odukle'),
+              ),
+
+              // Privacy Policy
+              _buildSupportOption(
+                icon: Icons.privacy_tip_outlined,
+                title: 'Privacy Policy',
+                subtitle: 'Read the app\'s privacy policy',
+                color: AppTheme.accentWarm,
+                onTap: () => _launchURL('https://odukle.com/scroller/privacy.html'),
               ),
               
               const SizedBox(height: 24),
