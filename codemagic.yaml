@@ -78,7 +78,6 @@ workflows:
         notify:
           success: true
           failure: true
-      # Optional: Enable automatic upload to App Store Connect / TestFlight
-      # app_store_connect:
-      #   auth: integration
-      #   submit_to_testflight: true
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
