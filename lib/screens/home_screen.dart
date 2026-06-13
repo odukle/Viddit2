@@ -382,6 +382,7 @@ class VerticalFeedWidgetState extends State<VerticalFeedWidget>
   final Set<String> _seenVideoUrls = {};
   String _lastGeolocation = 'AUTO';
   String? _lastRegionOverride;
+  String _loadingStatus = 'Initializing feed...';
 
   Set<String> _viewedPostIds = {};
   Timer? _viewTimer;
@@ -537,6 +538,25 @@ class VerticalFeedWidgetState extends State<VerticalFeedWidget>
     });
   }
 
+  String _getFeedDisplayName() {
+    switch (_activeFeedType) {
+      case 'front_page':
+        return 'Home Feed';
+      case 'popular':
+        return 'Popular Feed';
+      case 'subreddit':
+        return 'r/${widget.query}';
+      case 'custom_feed':
+        return 'Custom Feed';
+      case 'user':
+        return 'u/${widget.query}';
+      case 'saved':
+        return 'Saved Posts';
+      default:
+        return 'Feed';
+    }
+  }
+
   Future<void> _loadFeed({bool refresh = false}) async {
     if (refresh) {
       if (mounted) {
@@ -550,6 +570,7 @@ class VerticalFeedWidgetState extends State<VerticalFeedWidget>
           _seenVideoUrls.clear();
           _lastSubscribedSubreddits.clear();
           _currentIndex = 0;
+          _loadingStatus = 'Connecting to Reddit...';
         });
         if (_pageController.hasClients) {
           _pageController.jumpToPage(0);
@@ -580,6 +601,12 @@ class VerticalFeedWidgetState extends State<VerticalFeedWidget>
       for (var attempt = 0;
           attempt < maxPagesToScan && freshPosts.length < targetPostCount;
           attempt++) {
+        if (mounted && refresh) {
+          setState(() {
+            _loadingStatus =
+                'Scanning ${_getFeedDisplayName()} (page ${attempt + 1})...';
+          });
+        }
         final previousAfter = nextAfter;
         final newPosts = await _api.fetchPosts(
           feedType: _activeFeedType,
@@ -622,6 +649,13 @@ class VerticalFeedWidgetState extends State<VerticalFeedWidget>
         }).toList();
 
         freshPosts.addAll(uniquePosts);
+
+        if (mounted && refresh) {
+          setState(() {
+            _loadingStatus =
+                'Found ${freshPosts.length} videos from ${_getFeedDisplayName()}...';
+          });
+        }
 
         if (errorMessage != null) {
           break;
@@ -1105,10 +1139,26 @@ class VerticalFeedWidgetState extends State<VerticalFeedWidget>
         children: [
           _isLoading
               ? Center(
-                  child: SpinKitRing(
-                    color: AppTheme.accentOrange,
-                    size: 60.0,
-                    lineWidth: 4,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SpinKitRing(
+                        color: AppTheme.accentOrange,
+                        size: 60.0,
+                        lineWidth: 4,
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        _loadingStatus,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          fontFamily: 'Inter',
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ],
                   ),
                 )
               : _posts.isEmpty
