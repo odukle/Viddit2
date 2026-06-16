@@ -136,18 +136,22 @@ class _NavigationContainerState extends State<NavigationContainer> {
                 child: const Text('Decline',
                     style: TextStyle(color: Colors.redAccent)),
               ),
-              ElevatedButton(
-                onPressed: () async {
-                  final prefs = await SharedPreferences.getInstance();
-                  await prefs.setBool('viddit_eula_accepted', true);
-                  if (context.mounted) {
-                    Navigator.pop(context);
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.accentOrange),
-                child:
-                    const Text('Accept', style: TextStyle(color: Colors.white)),
+              Semantics(
+                identifier: 'eula_accept_button',
+                label: 'Accept EULA',
+                child: ElevatedButton(
+                  onPressed: () async {
+                    final prefs = await SharedPreferences.getInstance();
+                    await prefs.setBool('viddit_eula_accepted', true);
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.accentOrange),
+                  child:
+                      const Text('Accept', style: TextStyle(color: Colors.white)),
+                ),
               ),
             ],
           ),
@@ -241,9 +245,12 @@ class _NavigationContainerState extends State<NavigationContainer> {
     final inactiveColor = AppTheme.textSecondary;
 
     return Expanded(
-      child: PressableScale(
-        onTap: () => _onTabTapped(index),
-        child: AnimatedContainer(
+      child: Semantics(
+        identifier: 'nav_tab_${label.toLowerCase()}',
+        label: label,
+        child: PressableScale(
+          onTap: () => _onTabTapped(index),
+          child: AnimatedContainer(
           duration: const Duration(milliseconds: 280),
           curve: Curves.easeOutCubic,
           child: Column(
@@ -311,6 +318,7 @@ class _NavigationContainerState extends State<NavigationContainer> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

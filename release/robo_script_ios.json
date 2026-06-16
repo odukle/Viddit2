@@ -1,0 +1,46 @@
+[
+  {
+    "eventType": "VIEW_CLICKED",
+    "elementDescriptors": [
+      {
+        "accessibilityIdentifier": "eula_accept_button"
+      }
+    ]
+  },
+  {
+    "eventType": "WAIT",
+    "delayTime": 1500
+  },
+  {
+    "eventType": "VIEW_CLICKED",
+    "elementDescriptors": [
+      {
+        "accessibilityIdentifier": "nav_tab_profile"
+      }
+    ]
+  },
+  {
+    "eventType": "WAIT",
+    "delayTime": 1500
+  },
+  {
+    "eventType": "VIEW_CLICKED",
+    "elementDescriptors": [
+      {
+        "accessibilityIdentifier": "btn_help_support"
+      }
+    ]
+  },
+  {
+    "eventType": "WAIT",
+    "delayTime": 1500
+  },
+  {
+    "eventType": "VIEW_CLICKED",
+    "elementDescriptors": [
+      {
+        "accessibilityIdentifier": "btn_support_privacy_policy"
+      }
+    ]
+  }
+]

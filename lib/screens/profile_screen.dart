@@ -384,27 +384,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               endIndent: 16),
 
                           // Help & Support
-                          PressableScale(
-                            onTap: _showHelpSupportBottomSheet,
-                            child: ListTile(
-                              contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 4),
-                              leading: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: AppTheme.accentCyan
-                                      .withValues(alpha: 0.12),
-                                  borderRadius:
-                                      BorderRadius.circular(AppTheme.radiusSm),
+                          Semantics(
+                            identifier: 'btn_help_support',
+                            label: 'Help and Support',
+                            child: PressableScale(
+                              onTap: _showHelpSupportBottomSheet,
+                              child: ListTile(
+                                contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 4),
+                                leading: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.accentCyan
+                                        .withValues(alpha: 0.12),
+                                    borderRadius:
+                                        BorderRadius.circular(AppTheme.radiusSm),
+                                  ),
+                                  child: Icon(Icons.help_outline_rounded,
+                                      color: AppTheme.accentCyan, size: 20),
                                 ),
-                                child: Icon(Icons.help_outline_rounded,
-                                    color: AppTheme.accentCyan, size: 20),
+                                title: Text('Help & Support',
+                                    style:
+                                        Theme.of(context).textTheme.titleSmall),
+                                trailing: Icon(Icons.chevron_right_rounded,
+                                    color: AppTheme.textMuted, size: 20),
                               ),
-                              title: Text('Help & Support',
-                                  style:
-                                      Theme.of(context).textTheme.titleSmall),
-                              trailing: Icon(Icons.chevron_right_rounded,
-                                  color: AppTheme.textMuted, size: 20),
                             ),
                           ),
                           Divider(
@@ -578,57 +582,61 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required Color color,
     required VoidCallback onTap,
   }) {
-    return PressableScale(
-      onTap: () {
-        Navigator.pop(context);
-        onTap();
-      },
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: AppTheme.surfaceLight.withValues(alpha: 0.5),
-          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-          border: Border.all(
-            color: AppTheme.glassBorder,
-            width: 0.5,
+    return Semantics(
+      identifier: 'btn_support_${title.toLowerCase().replaceAll(' ', '_')}',
+      label: title,
+      child: PressableScale(
+        onTap: () {
+          Navigator.pop(context);
+          onTap();
+        },
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: AppTheme.surfaceLight.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+            border: Border.all(
+              color: AppTheme.glassBorder,
+              width: 0.5,
+            ),
           ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                ),
+                child: Icon(icon, color: color, size: 20),
               ),
-              child: Icon(icon, color: color, size: 20),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppTheme.textSecondary,
-                        ),
-                  ),
-                ],
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppTheme.textSecondary,
+                          ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            Icon(
-              Icons.chevron_right_rounded,
-              color: AppTheme.textMuted,
-              size: 20,
-            ),
-          ],
+              Icon(
+                Icons.chevron_right_rounded,
+                color: AppTheme.textMuted,
+                size: 20,
+              ),
+            ],
+          ),
         ),
       ),
     );
