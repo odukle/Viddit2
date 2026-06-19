@@ -14,10 +14,9 @@ import AVFoundation
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
 
-    let controller = engineBridge as! FlutterViewController
     let channel = FlutterMethodChannel(
       name: "com.odukle.scroller/media",
-      binaryMessenger: controller.binaryMessenger
+      binaryMessenger: engineBridge.applicationRegistrar.messenger()
     )
 
     channel.setMethodCallHandler { [weak self] (call, result) in
