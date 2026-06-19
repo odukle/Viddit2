@@ -144,7 +144,7 @@ class RedditApi {
     _reportedCommentIds.clear();
     _reportedCommentIds.addAll(reportedComments);
 
-    _nsfwAllowed = true;
+    _nsfwAllowed = prefs.getBool('NSFW') ?? false;
     _geolocation = prefs.getString('geolocation') ?? 'AUTO';
     _regionOverride = prefs.getString('geolocation_region_override');
     _detectedCountryCode = await _detectUserCountry();
