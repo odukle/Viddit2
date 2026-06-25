@@ -165,8 +165,12 @@ class _HlsProxyServer {
       final originPath = originUri.path;
       final originDir =
           originPath.substring(0, originPath.lastIndexOf('/') + 1);
-      final networkUrl =
+      var networkUrl =
           '${originUri.scheme}://${originUri.host}$originDir$relativePath';
+      if (originUri.hasQuery) {
+        final separator = networkUrl.contains('?') ? '&' : '?';
+        networkUrl = '$networkUrl$separator${originUri.query}';
+      }
 
       if (relativePath.endsWith('.m3u8')) {
         // Playlists: download, rewrite, and serve locally
@@ -479,8 +483,12 @@ class VideoCacheManager {
         // It is a master playlist — download first video variant and audio variant
 
         // A. Video variant
-        final videoVariantUrl =
+        var videoVariantUrl =
             _extractFirstVariant(masterPlaylistContent, baseDir);
+        if (videoVariantUrl != null && playlistUri.hasQuery) {
+          final separator = videoVariantUrl.contains('?') ? '&' : '?';
+          videoVariantUrl = '$videoVariantUrl$separator${playlistUri.query}';
+        }
         if (videoVariantUrl != null) {
           final videoVariantResponse =
               await dio.get<String>(videoVariantUrl, cancelToken: cancelToken);
@@ -498,6 +506,7 @@ class VideoCacheManager {
 
             final rewrittenVideoPlaylist = await _downloadSegments(
                 dio, videoPlaylistContent, videoDir, hlsCacheDir,
+                parentUrl: videoVariantUrl,
                 cancelToken: cancelToken,
                 onProgress: (p) => _notifyProgress(key, p));
 
@@ -510,8 +519,12 @@ class VideoCacheManager {
         }
 
         // B. Audio variant
-        final audioVariantUrl =
+        var audioVariantUrl =
             _extractAudioVariant(masterPlaylistContent, baseDir);
+        if (audioVariantUrl != null && playlistUri.hasQuery) {
+          final separator = audioVariantUrl.contains('?') ? '&' : '?';
+          audioVariantUrl = '$audioVariantUrl$separator${playlistUri.query}';
+        }
         if (audioVariantUrl != null) {
           final audioVariantResponse =
               await dio.get<String>(audioVariantUrl, cancelToken: cancelToken);
@@ -529,6 +542,7 @@ class VideoCacheManager {
 
             final rewrittenAudioPlaylist = await _downloadSegments(
                 dio, audioPlaylistContent, audioDir, hlsCacheDir,
+                parentUrl: audioVariantUrl,
                 cancelToken: cancelToken);
 
             final localAudioPlaylist =
@@ -542,6 +556,7 @@ class VideoCacheManager {
         // Already a media playlist (e.g. no master, direct video stream)
         final rewrittenPlaylist = await _downloadSegments(
             dio, masterPlaylistContent, baseDir, hlsCacheDir,
+            parentUrl: hlsUrl,
             cancelToken: cancelToken,
             onProgress: (p) => _notifyProgress(key, p));
         final tempPlaylist = File('${localPlaylist.path}.tmp');
@@ -599,6 +614,7 @@ class VideoCacheManager {
     String playlistContent,
     String baseDir,
     Directory hlsCacheDir, {
+    required String parentUrl,
     CancelToken? cancelToken,
     void Function(double)? onProgress,
   }) async {
@@ -613,6 +629,8 @@ class VideoCacheManager {
     }
     final totalSegments = segments.length;
     var downloadedCount = 0;
+
+    final parentUri = Uri.parse(parentUrl);
 
     for (final line in lines) {
       final trimmed = line.trim();
@@ -629,8 +647,12 @@ class VideoCacheManager {
         );
       }
 
-      final segmentUrl =
+      var segmentUrl =
           trimmed.startsWith('http') ? trimmed : '$baseDir$trimmed';
+      if (parentUri.hasQuery && !segmentUrl.contains('?')) {
+        final separator = segmentUrl.contains('?') ? '&' : '?';
+        segmentUrl = '$segmentUrl$separator${parentUri.query}';
+      }
       final segmentName = trimmed.split('/').last.split('?').first;
       final localFile = File('${hlsCacheDir.path}/$segmentName');
 
@@ -711,7 +733,11 @@ class VideoCacheManager {
 
       // 2. Resolve master playlist → media playlist
       if (playlistContent.contains('#EXT-X-STREAM-INF')) {
-        final variantUrl = _extractFirstVariant(playlistContent, baseDir);
+        var variantUrl = _extractFirstVariant(playlistContent, baseDir);
+        if (variantUrl != null && playlistUri.hasQuery) {
+          final separator = variantUrl.contains('?') ? '&' : '?';
+          variantUrl = '$variantUrl$separator${playlistUri.query}';
+        }
         if (variantUrl != null) {
           final variantResponse = await dio.get<String>(variantUrl);
           if (variantResponse.statusCode == 200 &&
@@ -733,9 +759,13 @@ class VideoCacheManager {
       for (final line in lines) {
         final trimmed = line.trim();
         if (trimmed.isEmpty || trimmed.startsWith('#')) continue;
-        final url = trimmed.startsWith('http') ? trimmed : '$baseDir$trimmed';
+        var url = trimmed.startsWith('http') ? trimmed : '$baseDir$trimmed';
+        if (playlistUri.hasQuery && !url.contains('?')) {
+          final separator = url.contains('?') ? '&' : '?';
+          url = '$url$separator${playlistUri.query}';
+        }
         segmentUrls.add(url);
-        segmentNames.add(trimmed.split('/').last);
+        segmentNames.add(trimmed.split('/').last.split('?').first);
       }
 
       if (segmentUrls.isEmpty) return null;
