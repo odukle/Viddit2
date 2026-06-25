@@ -2004,31 +2004,13 @@ class RedditApi {
     return null;
   }
 
-  /// Returns the headers (User-Agent and optional OAuth bearer token)
-  /// needed for downloading media from Reddit CDNs.
+  /// Returns the headers (User-Agent) needed for downloading media from Reddit CDNs.
   Future<Map<String, String>> getDownloadHeaders([String? url]) async {
-    try {
-      if (!isLoggedIn) {
-        await _ensureGuestToken();
-      } else {
-        await _checkAndRefreshToken();
-      }
-    } catch (_) {}
-    final token = isLoggedIn ? _accessToken : _guestAccessToken;
-    
-    // CDN hosts (like v.redd.it, i.redd.it, and redditsave.com) or local loopback/proxy
-    // reject or do not require OAuth bearer tokens. Sending it to v.redd.it causes
-    // HTTP 400 Bad Request.
-    final isCdnOrProxy = url != null && (
-      url.contains('.redd.it') ||
-      url.contains('redditsave.com') ||
-      url.contains('127.0.0.1') ||
-      url.contains('localhost')
-    );
-
+    // Public CDN hosts and local proxy servers reject or do not require OAuth bearer tokens.
+    // Sending them causes server errors (like HTTP 400 Bad Request or abrupt connection drops).
+    // Therefore, we only provide the custom User-Agent.
     return {
       'User-Agent': userAgent,
-      if (token != null && !isCdnOrProxy) 'Authorization': 'bearer $token',
     };
   }
 
