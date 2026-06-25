@@ -3,7 +3,7 @@
     "eventType": "VIEW_CLICKED",
     "elementDescriptors": [
       {
-        "accessibilityIdentifier": "eula_accept_button"
+        "contentDescription": "Accept EULA"
       }
     ]
   },
@@ -47,7 +47,7 @@
     "eventType": "VIEW_CLICKED",
     "elementDescriptors": [
       {
-        "accessibilityIdentifier": "nav_tab_profile"
+        "contentDescription": "Profile"
       }
     ]
   },
@@ -59,7 +59,7 @@
     "eventType": "VIEW_CLICKED",
     "elementDescriptors": [
       {
-        "accessibilityIdentifier": "btn_help_support"
+        "contentDescription": "Help and Support"
       }
     ]
   },
@@ -71,7 +71,7 @@
     "eventType": "VIEW_CLICKED",
     "elementDescriptors": [
       {
-        "accessibilityIdentifier": "btn_support_privacy_policy"
+        "contentDescription": "Privacy Policy"
       }
     ]
   }

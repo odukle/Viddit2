@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'reddit_api.dart';
 
 class HlsVariant {
   final String streamInfLine;
@@ -170,8 +171,10 @@ class _HlsProxyServer {
       if (relativePath.endsWith('.m3u8')) {
         // Playlists: download, rewrite, and serve locally
         try {
+          final api = RedditApi();
+          final headers = await api.getDownloadHeaders();
           final response = await http
-              .get(Uri.parse(networkUrl))
+              .get(Uri.parse(networkUrl), headers: headers)
               .timeout(const Duration(seconds: 15));
           if (response.statusCode == 200) {
             await localFile.parent.create(recursive: true);
@@ -316,10 +319,6 @@ class VideoCacheManager {
       _activeVideoKey = key;
       final hlsCacheDir = Directory('${cacheDir.path}/$key');
 
-      // Ensure proxy server is running
-      final port = await _ensureProxy();
-      _proxy.register(hlsUrl, hlsCacheDir.path);
-
       // Start background download/caching if not already active
       if (!_activeDownloads.contains(key)) {
         // Cancel one running preload if at limit to prioritize this active video download
@@ -344,8 +343,17 @@ class VideoCacheManager {
             cancelToken: cancelToken);
       }
 
-      final encoded = base64Url.encode(utf8.encode(hlsUrl));
-      return 'http://127.0.0.1:$port/proxy/$encoded/playlist.m3u8';
+      // ONLY return the local proxy URL if the HLS stream is fully cached!
+      final masterPlaylistFile = File('${hlsCacheDir.path}/playlist.m3u8');
+      if (await masterPlaylistFile.exists()) {
+        final content = await masterPlaylistFile.readAsString();
+        if (await _isHlsFullyCached(hlsCacheDir, content)) {
+          final port = await _ensureProxy();
+          _proxy.register(hlsUrl, hlsCacheDir.path);
+          final encoded = base64Url.encode(utf8.encode(hlsUrl));
+          return 'http://127.0.0.1:$port/proxy/$encoded/playlist.m3u8';
+        }
+      }
     } catch (e) {
       debugPrint('Error checking HLS cache: $e');
     }
@@ -438,6 +446,9 @@ class VideoCacheManager {
       final dio = Dio();
       dio.options.connectTimeout = const Duration(seconds: 30);
       dio.options.receiveTimeout = const Duration(seconds: 30);
+      final api = RedditApi();
+      final headers = await api.getDownloadHeaders();
+      dio.options.headers.addAll(headers);
 
       // 1. Download master / playlist
       final playlistResponse =
@@ -681,6 +692,9 @@ class VideoCacheManager {
     final dio = Dio();
     dio.options.connectTimeout = const Duration(seconds: 30);
     dio.options.receiveTimeout = const Duration(seconds: 30);
+    final api = RedditApi();
+    final headers = await api.getDownloadHeaders();
+    dio.options.headers.addAll(headers);
 
     try {
       // 1. Fetch playlist
