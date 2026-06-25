@@ -397,8 +397,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   decoration: BoxDecoration(
                                     color: AppTheme.accentCyan
                                         .withValues(alpha: 0.12),
-                                    borderRadius:
-                                        BorderRadius.circular(AppTheme.radiusSm),
+                                    borderRadius: BorderRadius.circular(
+                                        AppTheme.radiusSm),
                                   ),
                                   child: Icon(Icons.help_outline_rounded,
                                       color: AppTheme.accentCyan, size: 20),
@@ -522,25 +522,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
               ),
               const SizedBox(height: 16),
-              
+
               // Email Support
               _buildSupportOption(
                 icon: Icons.mail_outline_rounded,
                 title: 'Email Support',
                 subtitle: 'Direct contact with developer',
                 color: AppTheme.accentCyan,
-                onTap: () => _launchURL('mailto:sodukle@gmail.com?subject=Viddit%20Support'),
+                onTap: () => _launchURL(
+                    'mailto:sodukle@gmail.com?subject=Viddit%20Support'),
               ),
-              
+
               // GitHub Issues
               _buildSupportOption(
                 icon: Icons.bug_report_outlined,
                 title: 'Report a Bug',
                 subtitle: 'Submit issues or feedback on GitHub',
                 color: AppTheme.accentPurple,
-                onTap: () => _launchURL('https://github.com/odukle/Viddit2/issues'),
+                onTap: () =>
+                    _launchURL('https://github.com/odukle/Viddit2/issues'),
               ),
-              
+
               // Instagram Support
               _buildSupportOption(
                 icon: Icons.camera_alt_outlined,
@@ -556,9 +558,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 title: 'Privacy Policy',
                 subtitle: 'Read the app\'s privacy policy',
                 color: AppTheme.accentWarm,
-                onTap: () => _launchURL('https://odukle.com/scroller/privacy.html'),
+                onTap: () =>
+                    _launchURL('https://odukle.com/scroller/privacy.html'),
               ),
-              
+
               const SizedBox(height: 24),
               Text(
                 'Version 1.0.0+2 • Made with ❤️',

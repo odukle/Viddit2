@@ -149,8 +149,8 @@ class _NavigationContainerState extends State<NavigationContainer> {
                   },
                   style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.accentOrange),
-                  child:
-                      const Text('Accept', style: TextStyle(color: Colors.white)),
+                  child: const Text('Accept',
+                      style: TextStyle(color: Colors.white)),
                 ),
               ),
             ],
@@ -251,74 +251,74 @@ class _NavigationContainerState extends State<NavigationContainer> {
         child: PressableScale(
           onTap: () => _onTabTapped(index),
           child: AnimatedContainer(
-          duration: const Duration(milliseconds: 280),
-          curve: Curves.easeOutCubic,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Glowing gradient pill behind active icon
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 280),
-                curve: Curves.easeOutCubic,
-                padding: EdgeInsets.symmetric(
-                  horizontal: isSelected ? 18 : 14,
-                  vertical: isSelected ? 6 : 6,
-                ),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? activeColor.withValues(alpha: 0.15)
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-                  boxShadow: isSelected
-                      ? [
-                          BoxShadow(
-                            color: activeColor.withValues(alpha: 0.12),
-                            blurRadius: 12,
-                            spreadRadius: 0,
-                          ),
-                        ]
-                      : [],
-                ),
-                // Animated icon size transition
-                child: AnimatedSize(
+            duration: const Duration(milliseconds: 280),
+            curve: Curves.easeOutCubic,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Glowing gradient pill behind active icon
+                AnimatedContainer(
                   duration: const Duration(milliseconds: 280),
                   curve: Curves.easeOutCubic,
-                  child: Icon(
-                    icon,
-                    color: isSelected ? activeColor : inactiveColor,
-                    size: isSelected ? 26 : 22,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isSelected ? 18 : 14,
+                    vertical: isSelected ? 6 : 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? activeColor.withValues(alpha: 0.15)
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                    boxShadow: isSelected
+                        ? [
+                            BoxShadow(
+                              color: activeColor.withValues(alpha: 0.12),
+                              blurRadius: 12,
+                              spreadRadius: 0,
+                            ),
+                          ]
+                        : [],
+                  ),
+                  // Animated icon size transition
+                  child: AnimatedSize(
+                    duration: const Duration(milliseconds: 280),
+                    curve: Curves.easeOutCubic,
+                    child: Icon(
+                      icon,
+                      color: isSelected ? activeColor : inactiveColor,
+                      size: isSelected ? 26 : 22,
+                    ),
                   ),
                 ),
-              ),
-              // Label: visible only for active tab with smooth transition
-              AnimatedSize(
-                duration: const Duration(milliseconds: 280),
-                curve: Curves.easeOutCubic,
-                child: AnimatedOpacity(
-                  duration: const Duration(milliseconds: 200),
-                  opacity: isSelected ? 1.0 : 0.0,
-                  child: isSelected
-                      ? Padding(
-                          padding: const EdgeInsets.only(top: 3),
-                          child: Text(
-                            label,
-                            style: TextStyle(
-                              color: AppTheme.textPrimary,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 10,
-                              letterSpacing: 0.2,
+                // Label: visible only for active tab with smooth transition
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 280),
+                  curve: Curves.easeOutCubic,
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 200),
+                    opacity: isSelected ? 1.0 : 0.0,
+                    child: isSelected
+                        ? Padding(
+                            padding: const EdgeInsets.only(top: 3),
+                            child: Text(
+                              label,
+                              style: TextStyle(
+                                color: AppTheme.textPrimary,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 10,
+                                letterSpacing: 0.2,
+                              ),
                             ),
-                          ),
-                        )
-                      : const SizedBox.shrink(),
+                          )
+                        : const SizedBox.shrink(),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 }

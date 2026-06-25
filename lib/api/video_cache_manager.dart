@@ -153,7 +153,7 @@ class _HlsProxyServer {
       final localFile = File('$cacheDir/$relativePath');
       if (await localFile.exists()) {
         final bytes = await localFile.readAsBytes();
-        
+
         // Support HTTP Range requests (crucial for iOS AVPlayer HLS segment range requests)
         final rangeHeader = request.headers.value(HttpHeaders.rangeHeader);
         if (rangeHeader != null && rangeHeader.startsWith('bytes=')) {
@@ -162,20 +162,20 @@ class _HlsProxyServer {
             final totalLength = bytes.length;
             int start = int.tryParse(parts[0]) ?? 0;
             int end = int.tryParse(parts[1]) ?? (totalLength - 1);
-            
+
             // Handle format like Range: bytes=-500 (suffix range)
             if (parts[0].isEmpty && parts[1].isNotEmpty) {
               final suffix = int.tryParse(parts[1]) ?? 0;
               start = totalLength - suffix;
               end = totalLength - 1;
             }
-            
+
             if (start < 0) start = 0;
             if (end >= totalLength) end = totalLength - 1;
             if (start > end) start = end;
 
             final rangeBytes = bytes.sublist(start, end + 1);
-            
+
             request.response.statusCode = HttpStatus.partialContent;
             request.response.headers.set(
               HttpHeaders.contentRangeHeader,
@@ -584,8 +584,7 @@ class VideoCacheManager {
 
             final rewrittenAudioPlaylist = await _downloadSegments(
                 dio, audioPlaylistContent, audioDir, hlsCacheDir,
-                parentUrl: audioVariantUrl,
-                cancelToken: cancelToken);
+                parentUrl: audioVariantUrl, cancelToken: cancelToken);
 
             final localAudioPlaylist =
                 File('${hlsCacheDir.path}/$audioVariantFilename');

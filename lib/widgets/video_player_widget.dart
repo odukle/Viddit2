@@ -72,6 +72,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
   bool _isSeeking = false;
   Duration _seekPosition = Duration.zero;
   bool _wasPlayingBeforeSeek = false;
+  final GlobalKey _shareButtonKey = GlobalKey();
 
   void _safeSetState(VoidCallback fn) {
     if (!mounted) return;
@@ -345,7 +346,8 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     } catch (e) {
       _cleanupProgressListener();
       final errStr = e.toString();
-      nativeLog('Video Initialize Error for post ${widget.post.id} (URL: ${widget.post.videoUrl}): $errStr');
+      nativeLog(
+          'Video Initialize Error for post ${widget.post.id} (URL: ${widget.post.videoUrl}): $errStr');
       if (controllerToDisposeIfError != null) {
         try {
           controllerToDisposeIfError.dispose();
@@ -492,8 +494,8 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
         return Container(
           decoration: BoxDecoration(
             color: AppTheme.surfaceElevated,
-            borderRadius:
-                const BorderRadius.vertical(top: Radius.circular(AppTheme.radiusXl)),
+            borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(AppTheme.radiusXl)),
             border: Border(
                 top: BorderSide(color: AppTheme.glassBorder, width: 0.5)),
           ),
@@ -822,8 +824,8 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
         return Container(
           decoration: BoxDecoration(
             color: AppTheme.surfaceElevated,
-            borderRadius:
-                const BorderRadius.vertical(top: Radius.circular(AppTheme.radiusXl)),
+            borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(AppTheme.radiusXl)),
             border: Border(
                 top: BorderSide(color: AppTheme.glassBorder, width: 0.5)),
           ),
@@ -1002,7 +1004,8 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
                             if (_lastInitializeError != null) ...[
                               const SizedBox(height: 8),
                               Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 24.0),
                                 child: Text(
                                   _lastInitializeError!,
                                   textAlign: TextAlign.center,
@@ -1523,6 +1526,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
 
                     // Share button
                     _buildSideButton(
+                      key: _shareButtonKey,
                       icon: Icons.share_rounded,
                       label: 'Share',
                       color: Colors.white,
@@ -1530,7 +1534,21 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
                         final url =
                             'https://www.reddit.com${widget.post.permalink}';
                         const extra = '\n\nShared via Scroller';
-                        Share.share('$url$extra');
+
+                        RenderBox? box;
+                        if (_shareButtonKey.currentContext != null) {
+                          box = _shareButtonKey.currentContext!
+                              .findRenderObject() as RenderBox?;
+                        }
+
+                        final sharePositionOrigin = box != null
+                            ? box.localToGlobal(Offset.zero) & box.size
+                            : null;
+
+                        Share.share(
+                          '$url$extra',
+                          sharePositionOrigin: sharePositionOrigin,
+                        );
                       },
                     ),
                     const SizedBox(height: 16),
@@ -1668,6 +1686,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
   }
 
   Widget _buildSideButton({
+    Key? key,
     required IconData icon,
     required String label,
     required Color color,
@@ -1675,6 +1694,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
     Widget? iconWidget,
   }) {
     return PressableScale(
+      key: key,
       onTap: onTap,
       child: Column(
         children: [

@@ -805,8 +805,6 @@ class VerticalFeedWidgetState extends State<VerticalFeedWidget>
 
   Future<void> _handleDownload(
       PostModel post, void Function(double) onProgress) async {
-
-
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Starting download...')),

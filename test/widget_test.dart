@@ -172,8 +172,7 @@ void main() {
     expect(api.geolocation, 'IN');
   });
 
-  testWidgets('Region bottom sheet and search',
-      (WidgetTester tester) async {
+  testWidgets('Region bottom sheet and search', (WidgetTester tester) async {
     SharedPreferences.setMockInitialValues({
       'viddit_eula_accepted': true,
     });

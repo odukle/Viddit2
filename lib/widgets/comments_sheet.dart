@@ -1238,8 +1238,8 @@ class _CommentNodeWidgetState extends State<CommentNodeWidget> {
                       PressableScale(
                         onTap: _showEditDeleteSheet,
                         child: Padding(
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
                           child: Icon(
                             Icons.more_vert_rounded,
                             size: 16,
@@ -1397,8 +1397,8 @@ class _CommentNodeWidgetState extends State<CommentNodeWidget> {
                           hintText: 'Write a reply...',
                           hintStyle: TextStyle(
                               color: AppTheme.textMuted, fontSize: 13),
-                          contentPadding:
-                              const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
                           border: InputBorder.none,
                         ),
                       ),
