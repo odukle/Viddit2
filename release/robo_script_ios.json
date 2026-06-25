@@ -12,52 +12,32 @@
     "delayTime": 8000
   },
   {
-    "eventType": "SWIPE",
-    "direction": "UP",
-    "elementDescriptors": [
-      {
-        "accessibilityIdentifier": "home_video_feed"
-      }
-    ]
+    "eventType": "ONE_POINT_GESTURE",
+    "coordinates": "(50%,75%)->(50%,25%)"
   },
   {
     "eventType": "WAIT",
     "delayTime": 5000
   },
   {
-    "eventType": "SWIPE",
-    "direction": "UP",
-    "elementDescriptors": [
-      {
-        "accessibilityIdentifier": "home_video_feed"
-      }
-    ]
+    "eventType": "ONE_POINT_GESTURE",
+    "coordinates": "(50%,75%)->(50%,25%)"
   },
   {
     "eventType": "WAIT",
     "delayTime": 5000
   },
   {
-    "eventType": "SWIPE",
-    "direction": "UP",
-    "elementDescriptors": [
-      {
-        "accessibilityIdentifier": "home_video_feed"
-      }
-    ]
+    "eventType": "ONE_POINT_GESTURE",
+    "coordinates": "(50%,75%)->(50%,25%)"
   },
   {
     "eventType": "WAIT",
     "delayTime": 5000
   },
   {
-    "eventType": "SWIPE",
-    "direction": "UP",
-    "elementDescriptors": [
-      {
-        "accessibilityIdentifier": "home_video_feed"
-      }
-    ]
+    "eventType": "ONE_POINT_GESTURE",
+    "coordinates": "(50%,75%)->(50%,25%)"
   },
   {
     "eventType": "WAIT",
