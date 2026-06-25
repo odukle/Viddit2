@@ -306,7 +306,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
 
       final playUrl = cachedProxyUrl ?? hlsUrl;
       final api = RedditApi();
-      final headers = await api.getDownloadHeaders();
+      final headers = await api.getDownloadHeaders(playUrl);
       if (!mounted || !widget.isActive || widget.post.id != targetPostId) {
         _cleanupProgressListener();
         return;

@@ -172,7 +172,7 @@ class _HlsProxyServer {
         // Playlists: download, rewrite, and serve locally
         try {
           final api = RedditApi();
-          final headers = await api.getDownloadHeaders();
+          final headers = await api.getDownloadHeaders(networkUrl);
           final response = await http
               .get(Uri.parse(networkUrl), headers: headers)
               .timeout(const Duration(seconds: 15));
@@ -447,7 +447,7 @@ class VideoCacheManager {
       dio.options.connectTimeout = const Duration(seconds: 30);
       dio.options.receiveTimeout = const Duration(seconds: 30);
       final api = RedditApi();
-      final headers = await api.getDownloadHeaders();
+      final headers = await api.getDownloadHeaders(hlsUrl);
       dio.options.headers.addAll(headers);
 
       // 1. Download master / playlist
@@ -693,7 +693,7 @@ class VideoCacheManager {
     dio.options.connectTimeout = const Duration(seconds: 30);
     dio.options.receiveTimeout = const Duration(seconds: 30);
     final api = RedditApi();
-    final headers = await api.getDownloadHeaders();
+    final headers = await api.getDownloadHeaders(hlsUrl);
     dio.options.headers.addAll(headers);
 
     try {
