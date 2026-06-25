@@ -153,6 +153,48 @@ class _HlsProxyServer {
       final localFile = File('$cacheDir/$relativePath');
       if (await localFile.exists()) {
         final bytes = await localFile.readAsBytes();
+        
+        // Support HTTP Range requests (crucial for iOS AVPlayer HLS segment range requests)
+        final rangeHeader = request.headers.value(HttpHeaders.rangeHeader);
+        if (rangeHeader != null && rangeHeader.startsWith('bytes=')) {
+          final parts = rangeHeader.substring(6).split('-');
+          if (parts.length == 2) {
+            final totalLength = bytes.length;
+            int start = int.tryParse(parts[0]) ?? 0;
+            int end = int.tryParse(parts[1]) ?? (totalLength - 1);
+            
+            // Handle format like Range: bytes=-500 (suffix range)
+            if (parts[0].isEmpty && parts[1].isNotEmpty) {
+              final suffix = int.tryParse(parts[1]) ?? 0;
+              start = totalLength - suffix;
+              end = totalLength - 1;
+            }
+            
+            if (start < 0) start = 0;
+            if (end >= totalLength) end = totalLength - 1;
+            if (start > end) start = end;
+
+            final rangeBytes = bytes.sublist(start, end + 1);
+            
+            request.response.statusCode = HttpStatus.partialContent;
+            request.response.headers.set(
+              HttpHeaders.contentRangeHeader,
+              'bytes $start-$end/$totalLength',
+            );
+            request.response.headers.set(
+              HttpHeaders.acceptRangesHeader,
+              'bytes',
+            );
+            _setContentType(request.response, relativePath);
+            request.response.contentLength = rangeBytes.length;
+            request.response.add(rangeBytes);
+            await request.response.close();
+            return;
+          }
+        }
+
+        // Standard 200 OK response
+        request.response.headers.set(HttpHeaders.acceptRangesHeader, 'bytes');
         _setContentType(request.response, relativePath);
         request.response.contentLength = bytes.length;
         request.response.add(bytes);
