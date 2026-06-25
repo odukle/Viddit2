@@ -51,6 +51,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
   VideoPlayerController? _controller;
   bool _isInitialized = false;
   bool _hasError = false;
+  String? _lastInitializeError;
   bool _showPlayPauseIcon = false;
   bool _isPlaying = false;
   bool _showUpvoteHeart = false;
@@ -335,6 +336,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
       setState(() {
         _isInitialized = true;
         _hasError = false;
+        _lastInitializeError = null;
       });
 
       if (widget.isActive && !_isNsfwBlocked && _isAppInForeground) {
@@ -342,7 +344,8 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
       }
     } catch (e) {
       _cleanupProgressListener();
-      debugPrint('Video Initialize Error: $e');
+      final errStr = e.toString();
+      nativeLog('Video Initialize Error for post ${widget.post.id} (URL: ${widget.post.videoUrl}): $errStr');
       if (controllerToDisposeIfError != null) {
         try {
           controllerToDisposeIfError.dispose();
@@ -358,6 +361,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
         setState(() {
           _hasError = true;
           _isInitialized = false;
+          _lastInitializeError = errStr;
         });
       }
     } finally {
@@ -986,15 +990,30 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget>
                     ),
                   )
                 : _hasError
-                    ? const Center(
+                    ? Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.error_outline,
+                            const Icon(Icons.error_outline,
                                 color: Colors.redAccent, size: 48),
-                            SizedBox(height: 12),
-                            Text('Error playing video',
+                            const SizedBox(height: 12),
+                            const Text('Error playing video',
                                 style: TextStyle(color: Colors.white70)),
+                            if (_lastInitializeError != null) ...[
+                              const SizedBox(height: 8),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                                child: Text(
+                                  _lastInitializeError!,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    color: Colors.redAccent,
+                                    fontSize: 12,
+                                    fontFamily: 'Inter',
+                                  ),
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                       )

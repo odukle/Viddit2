@@ -1159,84 +1159,87 @@ class VerticalFeedWidgetState extends State<VerticalFeedWidget>
                 )
               : _posts.isEmpty
                   ? _buildEmptyState()
-                  : PageView.builder(
-                      scrollDirection: Axis.vertical,
-                      controller: _pageController,
-                      onPageChanged: _onPageChanged,
-                      itemCount: _posts.length,
-                      itemBuilder: (context, index) {
-                        return VideoPlayerWidget(
-                          post: _posts[index],
-                          isActive:
-                              index == _currentIndex && widget.isFeedActive,
-                          isGlobalMuted: _isGlobalMuted,
-                          onMuteChanged: _onMuteChanged,
-                          onDownload: _handleDownload,
-                          hasBottomNavBar: widget.hasBottomNavBar,
-                          onPostReported: () {
-                            setState(() {
-                              _posts.removeAt(index);
-                              if (_currentIndex >= _posts.length &&
-                                  _posts.isNotEmpty) {
-                                _currentIndex = _posts.length - 1;
-                              }
-                            });
-                          },
-                          onUserBlocked: (username) {
-                            setState(() {
-                              _posts.removeWhere((post) =>
-                                  post.author.toLowerCase() ==
-                                  username.toLowerCase());
-                              if (_currentIndex >= _posts.length &&
-                                  _posts.isNotEmpty) {
-                                _currentIndex = _posts.length - 1;
-                              }
-                            });
-                          },
-                          onSubredditBlocked: (subName) {
-                            setState(() {
-                              _posts.removeWhere((post) =>
-                                  post.subreddit
-                                      .replaceAll('r/', '')
-                                      .trim()
-                                      .toLowerCase() ==
-                                  subName
-                                      .replaceAll('r/', '')
-                                      .trim()
-                                      .toLowerCase());
-                              if (_currentIndex >= _posts.length &&
-                                  _posts.isNotEmpty) {
-                                _currentIndex = _posts.length - 1;
-                              }
-                            });
-                          },
-                          onSubredditTap: () async {
-                            final res = await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => SubredditScreen(
-                                  subredditName: _posts[index].subreddit,
+                  : Semantics(
+                      identifier: 'home_video_feed',
+                      child: PageView.builder(
+                        scrollDirection: Axis.vertical,
+                        controller: _pageController,
+                        onPageChanged: _onPageChanged,
+                        itemCount: _posts.length,
+                        itemBuilder: (context, index) {
+                          return VideoPlayerWidget(
+                            post: _posts[index],
+                            isActive:
+                                index == _currentIndex && widget.isFeedActive,
+                            isGlobalMuted: _isGlobalMuted,
+                            onMuteChanged: _onMuteChanged,
+                            onDownload: _handleDownload,
+                            hasBottomNavBar: widget.hasBottomNavBar,
+                            onPostReported: () {
+                              setState(() {
+                                _posts.removeAt(index);
+                                if (_currentIndex >= _posts.length &&
+                                    _posts.isNotEmpty) {
+                                  _currentIndex = _posts.length - 1;
+                                }
+                              });
+                            },
+                            onUserBlocked: (username) {
+                              setState(() {
+                                _posts.removeWhere((post) =>
+                                    post.author.toLowerCase() ==
+                                    username.toLowerCase());
+                                if (_currentIndex >= _posts.length &&
+                                    _posts.isNotEmpty) {
+                                  _currentIndex = _posts.length - 1;
+                                }
+                              });
+                            },
+                            onSubredditBlocked: (subName) {
+                              setState(() {
+                                _posts.removeWhere((post) =>
+                                    post.subreddit
+                                        .replaceAll('r/', '')
+                                        .trim()
+                                        .toLowerCase() ==
+                                    subName
+                                        .replaceAll('r/', '')
+                                        .trim()
+                                        .toLowerCase());
+                                if (_currentIndex >= _posts.length &&
+                                    _posts.isNotEmpty) {
+                                  _currentIndex = _posts.length - 1;
+                                }
+                              });
+                            },
+                            onSubredditTap: () async {
+                              final res = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => SubredditScreen(
+                                    subredditName: _posts[index].subreddit,
+                                  ),
                                 ),
-                              ),
-                            );
-                            _syncFeedOnSubscriptionChange();
-                            return res;
-                          },
-                          onAuthorTap: () async {
-                            final res = await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => SubredditScreen(
-                                  subredditName: _posts[index].author,
-                                  isUser: true,
+                              );
+                              _syncFeedOnSubscriptionChange();
+                              return res;
+                            },
+                            onAuthorTap: () async {
+                              final res = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => SubredditScreen(
+                                    subredditName: _posts[index].author,
+                                    isUser: true,
+                                  ),
                                 ),
-                              ),
-                            );
-                            _syncFeedOnSubscriptionChange();
-                            return res;
-                          },
-                        );
-                      },
+                              );
+                              _syncFeedOnSubscriptionChange();
+                              return res;
+                            },
+                          );
+                        },
+                      ),
                     ),
           if (widget.initialPosts != null ||
               widget.feedType == 'subreddit' ||

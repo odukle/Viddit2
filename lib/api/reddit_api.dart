@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/comment_model.dart';
@@ -2059,4 +2060,10 @@ class RedditApi {
     return List.generate(length, (_) => chars[random.nextInt(chars.length)])
         .join();
   }
+}
+
+void nativeLog(String message) {
+  const platform = MethodChannel('com.odukle.scroller/media');
+  platform.invokeMethod('nativeLog', {'message': message}).catchError((_) {});
+  debugPrint(message);
 }

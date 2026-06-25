@@ -9,7 +9,59 @@
   },
   {
     "eventType": "WAIT",
-    "delayTime": 1500
+    "delayTime": 8000
+  },
+  {
+    "eventType": "SWIPE",
+    "direction": "UP",
+    "elementDescriptors": [
+      {
+        "accessibilityIdentifier": "home_video_feed"
+      }
+    ]
+  },
+  {
+    "eventType": "WAIT",
+    "delayTime": 5000
+  },
+  {
+    "eventType": "SWIPE",
+    "direction": "UP",
+    "elementDescriptors": [
+      {
+        "accessibilityIdentifier": "home_video_feed"
+      }
+    ]
+  },
+  {
+    "eventType": "WAIT",
+    "delayTime": 5000
+  },
+  {
+    "eventType": "SWIPE",
+    "direction": "UP",
+    "elementDescriptors": [
+      {
+        "accessibilityIdentifier": "home_video_feed"
+      }
+    ]
+  },
+  {
+    "eventType": "WAIT",
+    "delayTime": 5000
+  },
+  {
+    "eventType": "SWIPE",
+    "direction": "UP",
+    "elementDescriptors": [
+      {
+        "accessibilityIdentifier": "home_video_feed"
+      }
+    ]
+  },
+  {
+    "eventType": "WAIT",
+    "delayTime": 5000
   },
   {
     "eventType": "VIEW_CLICKED",
@@ -21,7 +73,7 @@
   },
   {
     "eventType": "WAIT",
-    "delayTime": 1500
+    "delayTime": 2000
   },
   {
     "eventType": "VIEW_CLICKED",
@@ -33,7 +85,7 @@
   },
   {
     "eventType": "WAIT",
-    "delayTime": 1500
+    "delayTime": 2000
   },
   {
     "eventType": "VIEW_CLICKED",

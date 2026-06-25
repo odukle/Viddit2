@@ -35,6 +35,14 @@ import AVFoundation
                             audioPath: audioPath,
                             outputPath: outputPath,
                             result: result)
+      case "nativeLog":
+        guard let args = call.arguments as? [String: Any],
+              let message = args["message"] as? String else {
+          result(nil)
+          return
+        }
+        NSLog("[FlutterNativeLog] %@", message)
+        result(nil)
       default:
         result(FlutterMethodNotImplemented)
       }
