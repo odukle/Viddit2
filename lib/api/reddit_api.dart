@@ -2020,10 +2020,8 @@ class RedditApi {
     // reject or do not require OAuth bearer tokens. Sending it to v.redd.it causes
     // HTTP 400 Bad Request.
     final isCdnOrProxy = url != null && (
-      url.contains('v.redd.it') ||
+      url.contains('.redd.it') ||
       url.contains('redditsave.com') ||
-      url.contains('i.redd.it') ||
-      url.contains('preview.redd.it') ||
       url.contains('127.0.0.1') ||
       url.contains('localhost')
     );
