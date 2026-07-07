@@ -56,13 +56,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  Future<void> _handleSignOut() async {
+  Future<void> _handleCommunityConnect() async {
+    final success = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+    );
+    if (success == true) {
+      widget.onLoginStateChanged();
+      _loadUserData();
+    }
+  }
+
+  Future<void> _handleDisconnectAccount() async {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Sign Out'),
+        title: const Text('Disconnect Account'),
         content: const Text(
-            'Are you sure you want to sign out from your Reddit account?'),
+          'This will remove the connected community account from this device. You can continue browsing public videos as a guest.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -84,7 +96,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 });
               }
             },
-            child: const Text('Sign Out'),
+            child: const Text('Disconnect'),
           ),
         ],
       ),
@@ -132,104 +144,83 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      const Spacer(),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 24, vertical: 32),
-                        decoration: AppTheme.cardDecoration(
-                            color: AppTheme.surfaceElevated,
-                            borderRadius: AppTheme.radiusXl),
-                        child: Column(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(18),
-                              decoration: BoxDecoration(
-                                gradient: AppTheme.warmGradient,
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppTheme.accentOrange
-                                        .withValues(alpha: 0.3),
-                                    blurRadius: 20,
-                                    spreadRadius: 2,
-                                  ),
-                                ],
-                              ),
-                              child: const Icon(Icons.account_circle_outlined,
-                                  color: Colors.white, size: 48),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 24.0, vertical: 24),
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 32),
+                      decoration: AppTheme.cardDecoration(
+                          color: AppTheme.surfaceElevated,
+                          borderRadius: AppTheme.radiusXl),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(18),
+                            decoration: BoxDecoration(
+                              gradient: AppTheme.warmGradient,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppTheme.accentOrange
+                                      .withValues(alpha: 0.3),
+                                  blurRadius: 20,
+                                  spreadRadius: 2,
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 24),
-                            Text(
-                              'Unlock Your Profile',
-                              style: Theme.of(context).textTheme.titleLarge,
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              'Sign in to sync your upvotes, comment on posts, view your karma, and manage custom feeds.',
-                              textAlign: TextAlign.center,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.copyWith(height: 1.5),
-                            ),
-                            const SizedBox(height: 32),
-                            SizedBox(
-                              width: double.infinity,
-                              child: PressableScale(
-                                onTap: () async {
-                                  final success = await Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) =>
-                                            const LoginScreen()),
-                                  );
-                                  if (success == true) {
-                                    widget.onLoginStateChanged();
-                                    _loadUserData();
-                                  }
-                                },
-                                child: Container(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 15),
-                                  decoration: BoxDecoration(
-                                    gradient: AppTheme.warmGradient,
-                                    borderRadius: BorderRadius.circular(
-                                        AppTheme.radiusMd),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: AppTheme.accentOrange
-                                            .withValues(alpha: 0.35),
-                                        blurRadius: 15,
-                                        offset: const Offset(0, 5),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      'Sign in with Reddit',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .labelLarge
-                                          ?.copyWith(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.w700,
-                                          ),
-                                    ),
+                            child: const Icon(Icons.account_circle_outlined,
+                                color: Colors.white, size: 48),
+                          ),
+                          const SizedBox(height: 24),
+                          Text(
+                            'Browse as Guest',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Connect your community account only when you want account-specific features like voting, comments, saved posts, subscriptions, and custom feeds.',
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(height: 1.5),
+                          ),
+                          const SizedBox(height: 32),
+                          SizedBox(
+                            width: double.infinity,
+                            child: PressableScale(
+                              onTap: _handleCommunityConnect,
+                              child: Container(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 15),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.surfaceLight,
+                                  borderRadius:
+                                      BorderRadius.circular(AppTheme.radiusMd),
+                                  border: Border.all(
+                                      color: AppTheme.glassBorder, width: 0.5),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    'Connect community account',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelLarge
+                                        ?.copyWith(
+                                          color: AppTheme.textPrimary,
+                                          fontWeight: FontWeight.w700,
+                                        ),
                                   ),
                                 ),
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 110),
-                    ],
+                    ),
                   ),
                 ),
               ),
@@ -417,9 +408,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               indent: 16,
                               endIndent: 16),
 
-                          // Sign Out
+                          // Disconnect Account
                           PressableScale(
-                            onTap: _handleSignOut,
+                            onTap: _handleDisconnectAccount,
                             child: ListTile(
                               contentPadding: const EdgeInsets.symmetric(
                                   horizontal: 16, vertical: 4),
@@ -434,13 +425,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 child: const Icon(Icons.logout_rounded,
                                     color: Colors.redAccent, size: 20),
                               ),
-                              title: Text('Sign Out',
+                              title: Text('Disconnect Community Account',
                                   style: Theme.of(context)
                                       .textTheme
                                       .titleSmall
                                       ?.copyWith(
                                         color: Colors.redAccent,
                                       )),
+                              subtitle: Text(
+                                  'Remove account access from this device',
+                                  style: Theme.of(context).textTheme.bodySmall),
                             ),
                           ),
                         ],

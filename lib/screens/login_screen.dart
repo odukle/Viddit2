@@ -75,7 +75,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Sign in with Reddit',
+          'Connect Community Account',
           style: Theme.of(context).textTheme.titleMedium,
         ),
         backgroundColor: AppTheme.surfaceElevated,

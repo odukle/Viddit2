@@ -1092,10 +1092,10 @@ class VerticalFeedWidgetState extends State<VerticalFeedWidget>
       builder: (dialogContext) => AlertDialog(
         backgroundColor: AppTheme.surfaceElevated,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Reddit Rate Limit Exceeded',
+        title: const Text('Guest Rate Limit Exceeded',
             style: TextStyle(color: Colors.white)),
         content: Text(
-          'You are currently browsing as a guest. Reddit enforces strict rate limits on guest users. Sign in to enjoy unlimited browsing!',
+          'You are currently browsing as a guest. Sign in to reduce guest browsing limits.',
           style: TextStyle(color: AppTheme.textSecondary),
         ),
         actions: [
@@ -1322,8 +1322,7 @@ class VerticalFeedWidgetState extends State<VerticalFeedWidget>
             style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.accentOrange),
             onPressed: () => _loadFeed(refresh: true),
-            child: Text(
-                _feedError == null ? 'Refresh Feed' : 'Retry Reddit Request'),
+            child: Text(_feedError == null ? 'Refresh Feed' : 'Retry Request'),
           ),
         ],
       ),

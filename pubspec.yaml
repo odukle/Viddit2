@@ -1,5 +1,5 @@
 name: viddit
-description: A modern, optimized Reddit client built specifically for scrolling vertical videos and GIFs.
+description: A modern, optimized app built specifically for scrolling vertical videos and GIFs from online communities.
 version: 1.0.0+2
 
 environment:

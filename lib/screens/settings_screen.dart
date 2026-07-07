@@ -683,7 +683,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           title: const Text('Sign In Required',
               style: TextStyle(color: Colors.white)),
           content: Text(
-            'Please sign in to your Reddit account to customize feed content settings.',
+            'Please connect an account to customize feed content settings.',
             style: TextStyle(color: AppTheme.textSecondary),
           ),
           actions: [

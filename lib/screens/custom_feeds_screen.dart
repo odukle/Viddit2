@@ -480,7 +480,7 @@ class _CustomFeedsScreenState extends State<CustomFeedsScreen> {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        'Sign in to your Reddit account to create personalized custom feeds aggregating your favorite video subreddits.',
+                        'Connect an account to create personalized custom feeds for your favorite video communities.',
                         textAlign: TextAlign.center,
                         style: Theme.of(context)
                             .textTheme
@@ -518,7 +518,7 @@ class _CustomFeedsScreenState extends State<CustomFeedsScreen> {
                             ),
                             child: Center(
                               child: Text(
-                                'Sign in with Reddit',
+                                'Connect Community Account',
                                 style: Theme.of(context)
                                     .textTheme
                                     .labelLarge
@@ -687,7 +687,7 @@ class _CustomFeedsScreenState extends State<CustomFeedsScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'View all video posts you saved on Reddit',
+                              'View all video posts you saved',
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
                           ],

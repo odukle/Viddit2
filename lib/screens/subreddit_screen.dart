@@ -654,10 +654,10 @@ class _SubredditScreenState extends State<SubredditScreen> {
       builder: (dialogContext) => AlertDialog(
         backgroundColor: AppTheme.surfaceElevated,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Reddit Rate Limit Exceeded',
+        title: const Text('Guest Rate Limit Exceeded',
             style: TextStyle(color: Colors.white)),
         content: Text(
-          'You are currently browsing as a guest. Reddit enforces strict rate limits on guest users. Sign in to enjoy unlimited browsing!',
+          'You are currently browsing as a guest. Sign in to reduce guest browsing limits.',
           style: TextStyle(color: AppTheme.textSecondary),
         ),
         actions: [
@@ -706,7 +706,7 @@ class _SubredditScreenState extends State<SubredditScreen> {
         ? ''
         : _formatSubscribers(_subreddit?.subscribers ?? '0');
     final String description = widget.isSaved
-        ? 'View all video posts you saved on Reddit'
+        ? 'View all video posts you saved'
         : (widget.customTitle != null
             ? 'Curated category feed for ${widget.customTitle}'
             : (widget.isUser
@@ -1292,8 +1292,7 @@ class _SubredditScreenState extends State<SubredditScreen> {
           const SizedBox(height: 24),
           ElevatedButton(
             onPressed: () => _loadPosts(refresh: true),
-            child:
-                Text(_postsError == null ? 'Refresh' : 'Retry Reddit Request'),
+            child: Text(_postsError == null ? 'Refresh' : 'Retry Request'),
           ),
         ],
       ),

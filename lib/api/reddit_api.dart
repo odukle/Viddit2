@@ -173,14 +173,14 @@ class RedditApi {
       final uri = Uri.parse(url);
       final error = uri.queryParameters['error'];
       if (error != null) {
-        _setError('Reddit sign-in failed: $error');
+        _setError('Account connection failed: $error');
         return false;
       }
 
       final code = uri.queryParameters['code'];
       final state = uri.queryParameters['state'];
       if (code == null || state == null || state != _pendingAuthState) {
-        _setError('Reddit sign-in returned an invalid authorization response.');
+        _setError('Account connection returned an invalid response.');
         return false;
       }
 
@@ -787,7 +787,7 @@ class RedditApi {
           if (firstError is List && firstError.length > 1) {
             _setError(firstError[1].toString());
           } else {
-            _setError('Reddit returned an error: $errors');
+            _setError('The service returned an error: $errors');
           }
           return null;
         }
@@ -846,7 +846,7 @@ class RedditApi {
           if (firstError is List && firstError.length > 1) {
             _setError(firstError[1].toString());
           } else {
-            _setError('Reddit returned an error: $errors');
+            _setError('The service returned an error: $errors');
           }
           return null;
         }
@@ -978,7 +978,8 @@ class RedditApi {
 
     _username = data['name']?.toString();
     if (_username == null || _username!.isEmpty) {
-      _setError('Reddit did not return a valid username for this account.');
+      _setError(
+          'The service did not return a valid username for this account.');
       return null;
     }
 
@@ -1212,7 +1213,7 @@ class RedditApi {
 
       return response;
     } catch (e) {
-      _setError('Network error while contacting Reddit: $e');
+      _setError('Network error while contacting the service: $e');
       return null;
     }
   }
@@ -1879,7 +1880,7 @@ class RedditApi {
   dynamic _decodeJsonBody(String body) {
     final trimmed = body.trimLeft();
     if (trimmed.isEmpty) {
-      _setError('Reddit returned an empty response.');
+      _setError('The service returned an empty response.');
       return null;
     }
 
@@ -1891,7 +1892,7 @@ class RedditApi {
     try {
       return jsonDecode(body);
     } catch (e) {
-      _setError('Reddit returned malformed JSON: $e');
+      _setError('The service returned malformed JSON: $e');
       return null;
     }
   }
@@ -1899,18 +1900,18 @@ class RedditApi {
   String _responseErrorMessage(int statusCode, String body) {
     final lowerBody = body.toLowerCase();
     if (lowerBody.contains('blocked by network security')) {
-      return 'Reddit is blocking requests from this network right now. Try a different connection or sign in again later.';
+      return 'The service is blocking requests from this network right now. Try a different connection or sign in again later.';
     }
     if (statusCode == 401) {
-      return 'Reddit authentication expired. Please sign in again.';
+      return 'Authentication expired. Please sign in again.';
     }
     if (statusCode == 403) {
-      return 'Reddit denied this request. This can happen because of API restrictions, missing scopes, or network security filtering.';
+      return 'The service denied this request. This can happen because of API restrictions, missing scopes, or network security filtering.';
     }
     if (statusCode == 429) {
-      return 'Reddit rate-limited the app. Wait a moment and try again.';
+      return 'The service rate-limited the app. Wait a moment and try again.';
     }
-    return 'Reddit request failed with HTTP $statusCode.';
+    return 'Request failed with HTTP $statusCode.';
   }
 
   Future<void> _saveCredentials() async {
